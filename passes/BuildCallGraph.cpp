@@ -1,18 +1,14 @@
-/// @brief There are some function
-
 #include <set>
 
-#include "CollectGCLeafFunction.hpp"
-#include "fmt/base.h"
-#include "support/Debug.hpp"
+#include "BuildCallGraph.hpp"
 #include "support/name.h"
 #include "wasm.h"
 
-#define DEBUG_PREFIX "[GCLeafFunction] "
+#define DEBUG_PREFIX "[CallGraph] "
 
-namespace warpo::passes::as_gc {
+namespace warpo::passes {
 
-CallGraph CallCollector::createCallGraph(wasm::Module &m) {
+CallGraph CallGraphBuilder::createResults(wasm::Module &m) {
   CallGraph ret{};
   for (std::unique_ptr<wasm::Function> const &f : m.functions) {
     // we treat imported function as leaf function because in cdc, nest wasm call is not allowed.
@@ -21,9 +17,9 @@ CallGraph CallCollector::createCallGraph(wasm::Module &m) {
   return ret;
 }
 
-void CallCollector::visitCall(wasm::Call *expr) { cg_.at(getFunction()->name).insert(expr->target); }
+void CallGraphBuilder::visitCall(wasm::Call *expr) { cg_.at(getFunction()->name).insert(expr->target); }
 
-void CallCollector::visitCallIndirect(wasm::CallIndirect *expr) {
+void CallGraphBuilder::visitCallIndirect(wasm::CallIndirect *expr) {
   wasm::Module *m = getModule();
   std::set<wasm::Name> &call = cg_.at(getFunction()->name);
   std::vector<wasm::Expression *> const &potentialTargets = m->getElementSegment(expr->table)->data;
@@ -58,30 +54,20 @@ static std::set<wasm::Name> collectLeafFunctions(const CallGraph &cg, std::set<w
   return leaf;
 }
 
-void LeafFunctionCollector::run(wasm::Module *m) {
-  results_ = collectLeafFunctions(cg_, taint_);
-  if (support::isDebug()) {
-    for (wasm::Name const &name : results_)
-      fmt::println(DEBUG_PREFIX "leaf function: '{}'", name.str);
-  }
-}
-
-} // namespace warpo::passes::as_gc
+} // namespace warpo::passes
 
 #ifdef WARPO_ENABLE_UNIT_TESTS
 
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
 
-#include "Runner.hpp"
+#include "../Runner.hpp"
 
 namespace warpo::passes::ut {
 
-using namespace as_gc;
 using ::testing::Contains;
-using ::testing::Not;
 
-TEST(GCLeafFunctionTest, BuildCallGraph) {
+TEST(BuildCallGraph, Base) {
   auto m = loadWat(R"(
       (module
         (type $v_v (func))
@@ -106,9 +92,9 @@ TEST(GCLeafFunctionTest, BuildCallGraph) {
       )
     )");
 
-  auto CG = CallCollector::createCallGraph(*m);
+  auto CG = CallGraphBuilder::createResults(*m);
   wasm::PassRunner runner{m.get()};
-  runner.add(std::unique_ptr<wasm::Pass>{new CallCollector(CG)});
+  runner.add(std::unique_ptr<wasm::Pass>{new CallGraphBuilder(CG)});
   runner.run();
 
   EXPECT_TRUE(CG.at("leaf").empty());
@@ -124,22 +110,6 @@ TEST(GCLeafFunctionTest, BuildCallGraph) {
 
   EXPECT_EQ(CG.at("call_indirect_i").size(), 1);
   EXPECT_THAT(CG.at("call_indirect_i"), Contains("leaf_i32"));
-}
-
-TEST(GCLeafFunctionTest, LeafFunction) {
-  CallGraph CG{};
-  CG["poison"] = {};
-  CG["leaf"] = {};
-  CG["parent_1"] = {"leaf"};
-  CG["parent_poison"] = {"leaf", "poison"};
-
-  std::set<wasm::Name> leaf = collectLeafFunctions(CG, {"poison"});
-
-  EXPECT_THAT(leaf, Contains("leaf"));
-  EXPECT_THAT(leaf, Contains("parent_1"));
-
-  EXPECT_THAT(leaf, Not(Contains("poison")));
-  EXPECT_THAT(leaf, Not(Contains("parent_poison")));
 }
 
 } // namespace warpo::passes::ut
