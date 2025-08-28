@@ -81,8 +81,8 @@ static std::string readFile(std::string const &path) {
   return std::move(buffer).str();
 }
 
-constexpr std::string libraryPrefix = "~lib/";
-constexpr std::string extension = ".ts";
+const std::string libraryPrefix = "~lib/";
+const std::string extension = ".ts";
 
 int32_t FrontendCompiler::allocString(std::string_view str) {
   // FIXME: convert utf8 to utf16 need library
