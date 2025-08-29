@@ -27,7 +27,7 @@ namespace warpo::passes::gc {
 
 void ToStackCallLower::runOnFunction(wasm::Module *m, wasm::Function *func) {
   StackPosition const &stackPosition = stackPositions_->at(func);
-  StackInsertPoint const &insertPoint = stackInsertPositions_->at(func);
+  StackInsertPoint const insertPoint = stackInsertPositions_ ? stackInsertPositions_->at(func) : StackInsertPoint{};
   uint32_t const maxShadowStackOffset = replaceCallExprrunOnFunction(m, func, stackPosition);
   if (maxShadowStackOffset == 0)
     return;

@@ -5,7 +5,6 @@
 #include <fmt/base.h>
 #include <fmt/format.h>
 #include <fstream>
-#include <vector>
 
 #include "warpo/frontend/Compiler.hpp"
 #include "warpo/support/Opt.hpp"
@@ -16,13 +15,6 @@ static warpo::cli::Opt<std::string> outputPath{
     [](argparse::Argument &arg) -> void { arg.help("output text file").required(); },
 };
 
-static warpo::cli::Opt<std::vector<std::string>> entryPaths{
-    "entries",
-    [](argparse::Argument &arg) -> void {
-      arg.help("entry files").required().nargs(argparse::nargs_pattern::at_least_one);
-    },
-};
-
 int main(int argc, const char *argv[]) {
   using namespace warpo;
 
@@ -31,7 +23,7 @@ int main(int argc, const char *argv[]) {
   argparse::ArgumentParser program("warpo_compiler");
   cli::init(program, argc, argv);
 
-  BinaryenModuleRef const m = frontend::compile(entryPaths.get());
+  BinaryenModuleRef const m = frontend::compile();
   if (m == nullptr)
     return -1;
 

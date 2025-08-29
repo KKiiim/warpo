@@ -8,11 +8,15 @@ endif()
 
 message("build assemblyscript target: ${AS_BUILD_TARGET}")
 
-file(GLOB asc_sources "${PROJECT_SOURCE_DIR}/assemblyscript/**/*")
+file(GLOB_RECURSE asc_sources
+  "${PROJECT_SOURCE_DIR}/assemblyscript/src/*.ts"
+  "${PROJECT_SOURCE_DIR}/assemblyscript/std/*.ts"
+  "${PROJECT_SOURCE_DIR}/assemblyscript/scripts/*.js"
+)
 add_custom_command(
   COMMENT "Build ASC<${AS_BUILD_TARGET}> to WASM"
   OUTPUT ${PROJECT_SOURCE_DIR}/build-as/assemblyscript.inc ${PROJECT_SOURCE_DIR}/build-as/library_sources.inc
-  DEPENDS ${asc_sources} ${CMAKE_CURRENT_SOURCE_DIR}/gen.mjs
+  DEPENDS ${asc_sources} ${CMAKE_CURRENT_SOURCE_DIR}/gen.mjs ${PROJECT_SOURCE_DIR}/asconfig.json
   WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
 
   COMMAND node
