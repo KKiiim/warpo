@@ -19,7 +19,7 @@ private:
   wasm::Expression *expr_;
 };
 
-inline wasm::Expression **findExpressionPointer(wasm::Expression *expr, wasm::Function *func) {
+inline wasm::Expression **findExprPointer(wasm::Expression *expr, wasm::Function *func) {
   FindExpr finder{expr};
   finder.walk(func->body);
   return finder.ptr_;

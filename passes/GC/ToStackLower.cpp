@@ -5,8 +5,8 @@
 #include <memory>
 #include <optional>
 
+#include "../helper/ExprInserter.hpp"
 #include "../helper/FindExpr.hpp"
-#include "../helper/ToString.hpp"
 #include "GCInfo.hpp"
 #include "ShrinkWrap.hpp"
 #include "StackAssigner.hpp"
@@ -152,55 +152,6 @@ void ToStackCallLower::replaceReturnExprWithEpilogue(wasm::Module *m, wasm::Func
   }
 }
 
-static bool canInsertBefore(wasm::Function *func, wasm::Expression *targetExpr) {
-  if (targetExpr->is<wasm::GlobalGet>() || targetExpr->is<wasm::LocalGet>() || targetExpr->is<wasm::Const>())
-    return true;
-  fmt::println("[" PASS_NAME "] fn '{}', insert before {}", func->name.str, toString(targetExpr));
-  return false;
-}
-static void insertBefore(wasm::Function *func, wasm::Expression *targetExpr, wasm::Builder &b,
-                         wasm::Expression *insertedExpr) {
-  assert(insertedExpr->type == wasm::Type::none);
-  wasm::Expression **ptr = findExpressionPointer(targetExpr, func);
-  switch (targetExpr->_id) {
-  case wasm::Expression::GlobalGetId:
-  case wasm::Expression::LocalGetId:
-  case wasm::Expression::ConstId:
-    *ptr = b.makeBlock({insertedExpr, *ptr}, (*ptr)->type);
-    break;
-  default:
-    __builtin_unreachable();
-  }
-}
-static bool canInsertAfter(wasm::Function *func, wasm::Expression *targetExpr) {
-  if (targetExpr->type == wasm::Type::none)
-    return true;
-  if (targetExpr->is<wasm::Return>())
-    return true;
-  fmt::println("[" PASS_NAME "] fn '{}', insert after {}", func->name.str, toString(targetExpr));
-  return false;
-}
-static void insertAfter(wasm::Function *func, wasm::Expression *targetExpr, wasm::Builder &b,
-                        wasm::Expression *insertedExpr) {
-  assert(insertedExpr->type == wasm::Type::none);
-  if (targetExpr->type == wasm::Type::none) {
-    wasm::Expression **ptr = findExpressionPointer(targetExpr, func);
-    *ptr = b.makeBlock({*ptr, insertedExpr}, wasm::Type::none);
-    return;
-  }
-  if (auto *const returnExpr = targetExpr->dynCast<wasm::Return>()) {
-    if (returnExpr->value == nullptr) {
-      returnExpr->value = insertedExpr;
-    } else {
-      wasm::Type const localType = returnExpr->value->type;
-      wasm::Index const tmpLocal = b.addVar(func, localType);
-      returnExpr->value = b.makeBlock(
-          {b.makeLocalSet(tmpLocal, returnExpr->value), insertedExpr, b.makeLocalGet(tmpLocal, localType)}, localType);
-    }
-    return;
-  }
-}
-
 bool ToStackCallLower::tryInsertPrologueAndEpilogue(wasm::Module *m, wasm::Function *func,
                                                     uint32_t maxShadowStackOffset,
                                                     std::optional<wasm::Index> const &scratchReturnValueLocalIndex,
@@ -208,15 +159,17 @@ bool ToStackCallLower::tryInsertPrologueAndEpilogue(wasm::Module *m, wasm::Funct
   wasm::Type const resultType = func->getResults();
   wasm::Builder b{*m};
 
-  bool const isInsertedPrologue = canInsertBefore(func, prologue);
-  bool const isInsertedEpilogue = canInsertAfter(func, epilogue);
+  ExprInserter inserter{func};
+
+  bool const isInsertedPrologue = inserter.canInsertBefore(prologue);
+  bool const isInsertedEpilogue = inserter.canInsertAfter(epilogue);
   if (isInsertedPrologue && isInsertedEpilogue) {
-    insertBefore(
-        func, prologue, b,
-        b.makeCall("~lib/rt/__decrease_sp", {b.makeConst(wasm::Literal(maxShadowStackOffset))}, wasm::Type::none));
-    insertAfter(
-        func, epilogue, b,
-        b.makeCall("~lib/rt/__increase_sp", {b.makeConst(wasm::Literal(maxShadowStackOffset))}, wasm::Type::none));
+    inserter.insertBefore(
+        b, b.makeCall("~lib/rt/__decrease_sp", {b.makeConst(wasm::Literal(maxShadowStackOffset))}, wasm::Type::none),
+        findExprPointer(prologue, func));
+    inserter.insertAfter(
+        b, b.makeCall("~lib/rt/__increase_sp", {b.makeConst(wasm::Literal(maxShadowStackOffset))}, wasm::Type::none),
+        findExprPointer(epilogue, func));
   }
   return isInsertedPrologue && isInsertedEpilogue;
 }
@@ -225,13 +178,13 @@ bool ToStackCallLower::tryInsertPrologue(wasm::Module *m, wasm::Function *func, 
                                          std::optional<wasm::Index> const &scratchReturnValueLocalIndex,
                                          wasm::Expression *prologue) {
   wasm::Type const resultType = func->getResults();
-  bool const isInsertedPrologue = canInsertBefore(func, prologue);
+  ExprInserter inserter{func};
+  bool const isInsertedPrologue = inserter.canInsertBefore(prologue);
   wasm::Builder b{*m};
   if (isInsertedPrologue) {
-    fmt::println("[" PASS_NAME "] insert prologue to function '{}' before {}", func->name.str, toString(prologue));
-    insertBefore(
-        func, prologue, b,
-        b.makeCall("~lib/rt/__decrease_sp", {b.makeConst(wasm::Literal(maxShadowStackOffset))}, wasm::Type::none));
+    inserter.insertBefore(
+        b, b.makeCall("~lib/rt/__decrease_sp", {b.makeConst(wasm::Literal(maxShadowStackOffset))}, wasm::Type::none),
+        findExprPointer(prologue, func));
   }
   return isInsertedPrologue;
 }
