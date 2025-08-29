@@ -4,7 +4,6 @@
 #include <fmt/format.h>
 #include <map>
 #include <optional>
-#include <stdexcept>
 #include <string>
 #include <vector>
 
@@ -59,30 +58,6 @@ static cli::Opt<std::vector<std::string>> disableFeatureOptions{
           .append();
     },
 };
-static Features operator|(Features a, Features b) {
-  return static_cast<Features>(static_cast<uint32_t>(a) | static_cast<uint32_t>(b));
-}
-static Features unset(Features a, Features b) {
-  return static_cast<Features>(static_cast<uint32_t>(a) & ~static_cast<uint32_t>(b));
-}
-static Features getFeatures() {
-  Features res = Features::MutableGlobals | Features::SignExtension | Features::NontrappingF2I | Features::BulkMemory;
-  std::vector<std::string> const &disableFeatures = disableFeatureOptions.get();
-  for (std::string const &disableFeature : disableFeatures) {
-    if (disableFeature == "sign-extension") {
-      res = unset(res, Features::SignExtension);
-    } else if (disableFeature == "mutable-globals") {
-      res = unset(res, Features::MutableGlobals);
-    } else if (disableFeature == "nontrapping-f2i") {
-      res = unset(res, Features::NontrappingF2I);
-    } else if (disableFeature == "bulk-memory") {
-      res = unset(res, Features::BulkMemory);
-    } else {
-      throw std::runtime_error("unknown feature: " + disableFeature);
-    }
-  }
-  return res;
-}
 
 static cli::Opt<std::string> exportStartOption{
     "--exportStart",
@@ -124,7 +99,7 @@ BinaryenModuleRef warpo::frontend::compile() {
   Config config{
       .uses = getUses(),
       .ascWasmPath = convertEmptyStringToNullOpt(ascWasmOption.get()),
-      .features = getFeatures(),
+      .features = common::Features::fromCLI(),
       .exportStart = convertEmptyStringToNullOpt(exportStartOption.get()),
       .exportRuntime = exportRuntimeOption.get(),
       .exportTable = exportTableOption.get(),

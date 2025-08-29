@@ -1,0 +1,48 @@
+#include <cstdint>
+
+namespace warpo::common {
+
+class Features {
+  enum class FeaturesEnum : uint32_t {
+    None = 0,
+    MutableGlobals = 1 << 0,
+    SignExtension = 1 << 1,
+    NontrappingF2I = 1 << 2,
+    BulkMemory = 1 << 3,
+    All = static_cast<uint32_t>(-1),
+  };
+
+  FeaturesEnum features;
+
+  constexpr explicit Features(FeaturesEnum features) : features(features) {}
+
+public:
+  static Features fromCLI();
+  constexpr static Features none() { return Features{FeaturesEnum::None}; }
+  constexpr static Features all() { return Features{FeaturesEnum::All}; }
+  constexpr static Features mutableGlobals() { return Features{FeaturesEnum::MutableGlobals}; }
+  constexpr static Features signExtension() { return Features{FeaturesEnum::SignExtension}; }
+  constexpr static Features nontrappingF2I() { return Features{FeaturesEnum::NontrappingF2I}; }
+  constexpr static Features bulkMemory() { return Features{FeaturesEnum::BulkMemory}; }
+
+  Features(Features const &) = default;
+  Features(Features &&) = default;
+  Features &operator=(Features const &) = default;
+  Features &operator=(Features &&) = default;
+
+  Features operator|(Features other) const {
+    return Features{static_cast<FeaturesEnum>(static_cast<uint32_t>(features) | static_cast<uint32_t>(other.features))};
+  }
+  Features operator&(Features other) const {
+    return Features{static_cast<FeaturesEnum>(static_cast<uint32_t>(features) & static_cast<uint32_t>(other.features))};
+  }
+  Features operator~() const { return Features{static_cast<FeaturesEnum>(~static_cast<uint32_t>(features))}; }
+  bool operator==(Features const &other) const { return features == other.features; }
+  bool operator!=(Features const &other) const { return features != other.features; }
+
+  bool has(Features feature) const { return (*this & feature) == feature; }
+
+  uint32_t toASFeaturesFlags() const;
+};
+
+} // namespace warpo::common

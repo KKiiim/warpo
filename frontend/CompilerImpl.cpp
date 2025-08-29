@@ -240,10 +240,9 @@ wasm::Module *FrontendCompiler::compile(std::vector<std::string> const &entryFil
     m.callExportedFunctionWithName<0>(stackTop, "setStackSize", option, stackSize);
 
     enum class SetFeatureOn : uint32_t { OFF = 0, ON = 1 };
-    m.callExportedFunctionWithName<0>(stackTop, "setFeature", option, static_cast<uint32_t>(config.features),
-                                      SetFeatureOn::ON);
-    m.callExportedFunctionWithName<0>(stackTop, "setFeature", option, ~static_cast<uint32_t>(config.features),
-                                      SetFeatureOn::OFF);
+    uint32_t const asFeatureFlags = config.features.toASFeaturesFlags();
+    m.callExportedFunctionWithName<0>(stackTop, "setFeature", option, ~asFeatureFlags, SetFeatureOn::OFF);
+    m.callExportedFunctionWithName<0>(stackTop, "setFeature", option, asFeatureFlags, SetFeatureOn::ON);
 
     enum WasmFFIBool : uint32_t { WASM_FALSE = 0, WASM_TRUE = 1 };
     m.callExportedFunctionWithName<0>(stackTop, "setExportTable", option,
