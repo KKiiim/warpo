@@ -5,18 +5,19 @@
 #include <memory>
 #include <string>
 
+#include "BaseLower.hpp"
 #include "CollectLeafFunction.hpp"
 #include "GCInfo.hpp"
 #include "LeafFunctionFilter.hpp"
-#include "Lowering.hpp"
 #include "MergeSSA.hpp"
 #include "ObjLivenessAnalyzer.hpp"
+#include "OptLower.hpp"
+#include "PrologEpilogInserter.hpp"
 #include "SSAObj.hpp"
 #include "ShrinkWrap.hpp"
 #include "StackAssigner.hpp"
-#include "ToStackLower.hpp"
+#include "ToStackReplacer.hpp"
 #include "argparse/argparse.hpp"
-#include "literal.h"
 #include "pass.h"
 #include "passes/passes.h"
 #include "support/name.h"
@@ -25,9 +26,9 @@
 #include "wasm-type.h"
 #include "wasm.h"
 
-#define PASS_NAME "GCLowering"
+#define PASS_NAME "GCOptLower"
 
-namespace warpo::passes {
+namespace warpo::passes::gc {
 
 static cli::Opt<bool> NoLeafFunctionFilter{
     "--no-gc-leaf-function-filter",
@@ -49,42 +50,21 @@ static cli::Opt<bool> TestOnlyControlGroup{
     [](argparse::Argument &arg) { arg.flag().hidden(); },
 };
 
-namespace gc {
-
-struct PostLowering : public wasm::Pass {
-  std::shared_ptr<gc::StackPositions> stackPosition_;
-  explicit PostLowering(std::shared_ptr<gc::StackPositions> stackPosition) : stackPosition_(stackPosition) {
-    name = "PostLowering";
+struct PostLower : public wasm::Pass {
+  std::shared_ptr<StackPositions> stackPosition_;
+  explicit PostLower(std::shared_ptr<StackPositions> stackPosition) : stackPosition_(stackPosition) {
+    name = "PostLower";
   }
   void run(wasm::Module *m) override {
     wasm::Builder b{*m};
     wasm::Name const memoryName = m->memories.front()->name;
     wasm::Type const i32 = wasm::Type::i32;
-    m->addFunction(b.makeFunction(
-        "~lib/rt/__decrease_sp", wasm::Signature(i32, wasm::Type::none), {},
-        b.makeBlock({
-            b.makeGlobalSet(
-                VarStackPointer,
-                b.makeBinary(wasm::BinaryOp::SubInt32, b.makeGlobalGet(VarStackPointer, i32), b.makeLocalGet(0, i32))),
-            b.makeMemoryFill(b.makeGlobalGet(VarStackPointer, i32), b.makeConst(wasm::Literal::makeZero(i32)),
-                             b.makeLocalGet(0, i32), memoryName),
-            b.makeIf(b.makeBinary(wasm::BinaryOp::LtSInt32, b.makeGlobalGet(VarStackPointer, i32),
-                                  b.makeGlobalGet(VarDataEnd, i32)),
-                     b.makeUnreachable()),
 
-        })));
-    m->addFunction(
-        b.makeFunction("~lib/rt/__increase_sp", wasm::Signature(i32, wasm::Type::none), {},
-                       b.makeBlock({
-                           b.makeGlobalSet(VarStackPointer,
-                                           b.makeBinary(wasm::BinaryOp::AddInt32, b.makeGlobalGet(VarStackPointer, i32),
-                                                        b.makeLocalGet(0, i32))),
-
-                       })));
+    addStackStackOperationFunction(m);
     uint32_t const maxShadowStackOffset = getMaxShadowStackOffset();
     for (size_t offset = 0U; offset <= maxShadowStackOffset; offset += 4U) {
       m->addFunction(b.makeFunction(
-          ToStackCallLower::getToStackFunctionName(offset), wasm::Signature(i32, i32), {},
+          ToStackReplacer::getToStackFunctionName(offset), wasm::Signature(i32, i32), {},
           b.makeBlock({
               b.makeStore(4, offset, 1, b.makeGlobalGet(VarStackPointer, i32), b.makeLocalGet(0, i32), i32, memoryName),
               b.makeLocalGet(0, i32),
@@ -107,16 +87,14 @@ private:
   }
 };
 
-} // namespace gc
-
-void GCLowering::preprocess(wasm::PassRunner &runner) {
+void OptLower::preprocess(wasm::PassRunner &runner) {
   // cleanup without changing the overall code structure
   runner.add("vacuum");
   // reduce basic blocks count to avoid to many fixed pointer calculations
   runner.add("merge-blocks");
 }
 
-void GCLowering::run(wasm::Module *m) {
+void OptLower::run(wasm::Module *m) {
   wasm::PassRunner runner{getPassRunner()};
 
   preprocess(runner);
@@ -126,39 +104,39 @@ void GCLowering::run(wasm::Module *m) {
     return;
   }
 
-  gc::ModuleLevelSSAMap const moduleLevelSSAMap = gc::ModuleLevelSSAMap::create(m);
+  ModuleLevelSSAMap const moduleLevelSSAMap = ModuleLevelSSAMap::create(m);
 
   std::shared_ptr<CallGraph const> cg = CallGraphBuilder::addToPass(runner);
 
-  std::shared_ptr<gc::LeafFunc> leafFunc;
+  std::shared_ptr<LeafFunc> leafFunc;
   if (!NoLeafFunctionFilter.get()) {
-    leafFunc = gc::LeafFunctionCollector::addToPass(runner, cg);
+    leafFunc = LeafFunctionCollector::addToPass(runner, cg);
   }
 
-  std::shared_ptr<gc::ObjLivenessInfo> livenessInfo = gc::ObjLivenessAnalyzer::addToPass(runner, moduleLevelSSAMap);
+  std::shared_ptr<ObjLivenessInfo> livenessInfo = ObjLivenessAnalyzer::addToPass(runner, moduleLevelSSAMap);
 
   if (!NoMergeSSA.get()) {
     // now merge ssa should be done firstly, it is depends on liveness info as local's possible values.
     // After LeafFunctionFilter, liveness info is not correct anymore.
     // TODO: use def-uses chain instead of liveness info
-    gc::MergeSSA::addToPass(runner, moduleLevelSSAMap, livenessInfo);
+    MergeSSA::addToPass(runner, moduleLevelSSAMap, livenessInfo);
   }
 
   if (!NoLeafFunctionFilter.get()) {
     assert(leafFunc != nullptr);
-    runner.add(std::unique_ptr<wasm::Pass>(new gc::LeafFunctionFilter(leafFunc, livenessInfo)));
+    runner.add(std::unique_ptr<wasm::Pass>(new LeafFunctionFilter(leafFunc, livenessInfo)));
   }
 
-  gc::StackAssigner::Mode const stackAssignerMode = NoOptimizedStackPositionAssigner.get()
-                                                        ? gc::StackAssigner::Mode::Vanilla
-                                                        : gc::StackAssigner::Mode::GreedyConflictGraph;
-  std::shared_ptr<gc::StackPositions> stackPositions =
-      gc::StackAssigner::addToPass(runner, stackAssignerMode, livenessInfo);
-  std::shared_ptr<gc::StackInsertPoints> stackInsertPositions = gc::ShrinkWrapAnalysis::addToPass(runner, livenessInfo);
-  runner.add(std::unique_ptr<wasm::Pass>(new gc::ToStackCallLower(stackInsertPositions, stackPositions)));
-  runner.add(std::unique_ptr<wasm::Pass>(new gc::PostLowering(stackPositions)));
+  StackAssigner::Mode const stackAssignerMode =
+      NoOptimizedStackPositionAssigner.get() ? StackAssigner::Mode::Vanilla : StackAssigner::Mode::GreedyConflictGraph;
+  std::shared_ptr<StackPositions> stackPositions = StackAssigner::addToPass(runner, stackAssignerMode, livenessInfo);
+  std::shared_ptr<InsertPositionHints> const stackInsertPositions = ShrinkWrapAnalysis::addToPass(runner, livenessInfo);
+  runner.add(std::unique_ptr<wasm::Pass>(new ToStackReplacer(stackPositions)));
+  runner.add(std::unique_ptr<wasm::Pass>(
+      new PrologEpilogInserter(stackInsertPositions, MaxShadowStackOffsetsFromStackPositions::create(stackPositions))));
+  runner.add(std::unique_ptr<wasm::Pass>(new PostLower(stackPositions)));
 
   runner.run();
 }
 
-} // namespace warpo::passes
+} // namespace warpo::passes::gc

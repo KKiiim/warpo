@@ -1,3 +1,5 @@
+#include <cassert>
+#include <exception>
 #include <fmt/base.h>
 #include <fmt/format.h>
 #include <memory>
@@ -9,7 +11,8 @@
 #include "AdvancedInlining.hpp"
 #include "ConditionalReturn.hpp"
 #include "ExtractMostFrequentlyUsedGlobals.hpp"
-#include "GC/Lowering.hpp"
+#include "GC/FastLower.hpp"
+#include "GC/OptLower.hpp"
 #include "Runner.hpp"
 #include "binaryen-c.h"
 #include "helper/ToString.hpp"
@@ -26,13 +29,17 @@
 
 namespace warpo {
 
-static const cli::Opt<bool> EnableGCLoweringPassForTesting{
-    "--enable-gc-lowering-pass-for-testing",
-    [](argparse::Argument &arg) { arg.help("Enable advanced inlining pass").flag().hidden(); },
+static const cli::Opt<bool> EnableGCOptLowerPassForTesting{
+    "--enable-gc-opt-lower-pass-for-testing",
+    [](argparse::Argument &arg) { arg.flag().hidden(); },
+};
+static const cli::Opt<bool> EnableGCFastLowerPassForTesting{
+    "--enable-gc-fast-lower-pass-for-testing",
+    [](argparse::Argument &arg) { arg.flag().hidden(); },
 };
 static const cli::Opt<bool> EnableAdvancedInliningPassForTesting{
     "--enable-advanced-inlining-pass-for-testing",
-    [](argparse::Argument &arg) { arg.help("Enable advanced inlining pass").flag().hidden(); },
+    [](argparse::Argument &arg) { arg.flag().hidden(); },
 };
 
 static void ensureValidate(wasm::Module &m) {
@@ -86,7 +93,10 @@ static std::unique_ptr<wasm::PassRunner> createPassRunner(wasm::Module *const m)
 static void lowering(wasm::Module *const m) {
   {
     std::unique_ptr<wasm::PassRunner> const passRunner = createPassRunner(m);
-    passRunner->add(std::unique_ptr<wasm::Pass>{new passes::GCLowering()});
+    if (passRunner->options.shrinkLevel > 0 || passRunner->options.optimizeLevel > 0)
+      passRunner->add(std::unique_ptr<wasm::Pass>{new passes::gc::OptLower()});
+    else
+      passRunner->add(std::unique_ptr<wasm::Pass>{new passes::gc::FastLower()});
     passRunner->run();
   }
 #ifndef WARPO_RELEASE_BUILD
@@ -127,7 +137,8 @@ passes::Output passes::runOnModule(BinaryenModuleRef const m) {
   ensureValidate(*m);
 #endif
   lowering(m);
-  optimize(m);
+  if (common::getOptimizationLevel() > 0U || common::getShrinkLevel() > 0U)
+    optimize(m);
   return {.wat = outputWat(m), .wasm = outputWasm(m)};
 }
 
@@ -139,8 +150,14 @@ passes::Output passes::runOnWat(std::string const &input) {
 std::string passes::runOnWatForTesting(std::string const &input, std::regex const &targetFunctionRegex) {
   std::unique_ptr<wasm::Module> m = passes::loadWat(input);
   wasm::PassRunner passRunner(m.get());
-  if (EnableGCLoweringPassForTesting.get())
-    passRunner.add(std::unique_ptr<wasm::Pass>{new passes::GCLowering()});
+  if ((EnableGCFastLowerPassForTesting.get() == true && EnableGCOptLowerPassForTesting.get() == true)) {
+    fmt::println("Do not allow to enable FastLower and OptLower at the same time");
+    std::terminate();
+  }
+  if (EnableGCOptLowerPassForTesting.get())
+    passRunner.add(std::unique_ptr<wasm::Pass>{new passes::gc::OptLower()});
+  if (EnableGCFastLowerPassForTesting.get())
+    passRunner.add(std::unique_ptr<wasm::Pass>{new passes::gc::FastLower()});
   if (EnableAdvancedInliningPassForTesting.get())
     passRunner.add(std::unique_ptr<wasm::Pass>{passes::createAdvancedInliningPass()});
   passRunner.run();

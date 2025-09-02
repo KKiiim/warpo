@@ -1,0 +1,4 @@
+{
+  "optPass": ["--enable-gc-fast-lower-pass-for-testing"],
+  "basePass": []
+}

@@ -23,7 +23,6 @@ namespace warpo::passes::gc {
 namespace {
 
 struct IAssigner {
-  static constexpr const size_t ShadowStackElementSize = 4U;
   virtual ~IAssigner() = default;
   virtual size_t getStackPosition(size_t ssaIndex) = 0;
 };

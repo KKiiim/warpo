@@ -1,9 +1,9 @@
 {
   "optPass": [
-    "--enable-gc-lowering-pass-for-testing",
+    "--enable-gc-opt-lower-pass-for-testing",
     "--no-gc-leaf-function-filter",
     "--no-gc-merge-ssa",
     "--no-gc-optimized-stack-position-assigner"
   ],
-  "basePass": ["--enable-gc-lowering-pass-for-testing", "--gc-test-only-control-group"]
+  "basePass": ["--enable-gc-opt-lower-pass-for-testing", "--gc-test-only-control-group"]
 }

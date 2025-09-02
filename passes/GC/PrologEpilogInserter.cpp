@@ -8,9 +8,8 @@
 #include "../helper/ExprInserter.hpp"
 #include "../helper/FindExpr.hpp"
 #include "GCInfo.hpp"
+#include "PrologEpilogInserter.hpp"
 #include "ShrinkWrap.hpp"
-#include "StackAssigner.hpp"
-#include "ToStackLower.hpp"
 #include "fmt/base.h"
 #include "literal.h"
 #include "support/index.h"
@@ -21,14 +20,21 @@
 #include "wasm-type.h"
 #include "wasm.h"
 
-#define PASS_NAME "TO_STACK_LOWER"
+#define PASS_NAME "PrologEpilogInserter"
 
 namespace warpo::passes::gc {
 
-void ToStackCallLower::runOnFunction(wasm::Module *m, wasm::Function *func) {
+uint32_t MaxShadowStackOffsetsFromStackPositions::at(wasm::Function *func) const {
   StackPosition const &stackPosition = stackPositions_->at(func);
-  StackInsertPoint const insertPoint = stackInsertPositions_ ? stackInsertPositions_->at(func) : StackInsertPoint{};
-  uint32_t const maxShadowStackOffset = replaceCallExprrunOnFunction(m, func, stackPosition);
+  auto const maxElement = std::max_element(stackPosition.begin(), stackPosition.end(),
+                                           [](auto const &a, auto const &b) { return a.second < b.second; });
+  return maxElement != stackPosition.end() ? maxElement->second + ShadowStackElementSize : 0U;
+}
+
+void PrologEpilogInserter::runOnFunction(wasm::Module *m, wasm::Function *func) {
+  uint32_t const maxShadowStackOffset = maxShadowStackOffsets_->at(func);
+  InsertPositionHint const insertPointHint =
+      insertPositionHints_ ? insertPositionHints_->at(func) : InsertPositionHint{};
   if (maxShadowStackOffset == 0)
     return;
   wasm::Type const resultType = func->getResults();
@@ -37,16 +43,16 @@ void ToStackCallLower::runOnFunction(wasm::Module *m, wasm::Function *func) {
                                                : std::optional<wasm::Index>{wasm::Builder::addVar(func, resultType)};
   enum class OptInsertState { None, PrologueOnly, PrologueAndEpilogue };
   OptInsertState optState = OptInsertState::None;
-  if (insertPoint.prologue != nullptr && insertPoint.epilogue != nullptr) {
+  if (insertPointHint.prologue != nullptr && insertPointHint.epilogue != nullptr) {
     bool const success = tryInsertPrologueAndEpilogue(m, func, maxShadowStackOffset, scratchReturnValueLocalIndex,
-                                                      insertPoint.prologue, insertPoint.epilogue);
+                                                      insertPointHint.prologue, insertPointHint.epilogue);
     if (success)
       optState = OptInsertState::PrologueAndEpilogue;
   }
-  if (insertPoint.prologue != nullptr && insertPoint.epilogue == nullptr) {
+  if (insertPointHint.prologue != nullptr && insertPointHint.epilogue == nullptr) {
     // when inserting prologue, we should make sure epilogue is in the exit BB.
     bool const success =
-        tryInsertPrologue(m, func, maxShadowStackOffset, scratchReturnValueLocalIndex, insertPoint.prologue);
+        tryInsertPrologue(m, func, maxShadowStackOffset, scratchReturnValueLocalIndex, insertPointHint.prologue);
     if (success)
       optState = OptInsertState::PrologueOnly;
   }
@@ -73,37 +79,9 @@ void ToStackCallLower::runOnFunction(wasm::Module *m, wasm::Function *func) {
   }
 }
 
-uint32_t ToStackCallLower::replaceCallExprrunOnFunction(wasm::Module *m, wasm::Function *func,
-                                                        StackPosition const &stackPosition) {
-  struct CallReplacer : public wasm::PostWalker<CallReplacer> {
-    wasm::Function *func;
-    StackPosition const &stackPosition_;
-    uint32_t maxShadowStackOffset_ = 0;
-    explicit CallReplacer(StackPosition const &input, wasm::Function *func) : stackPosition_(input), func(func) {}
-    void visitCall(wasm::Call *expr) {
-      if (expr->target != FnLocalToStack && expr->target != FnTmpToStack)
-        return;
-
-      auto it = stackPosition_.find(expr);
-      if (it == stackPosition_.end()) {
-        // no need to tostack
-        assert(expr->operands.size() == 1);
-        replaceCurrent(expr->operands.front());
-      } else {
-        uint32_t const offset = it->second;
-        maxShadowStackOffset_ = std::max(offset + 4U, maxShadowStackOffset_);
-        wasm::Builder builder{*getModule()};
-        expr->target = getToStackFunctionName(offset);
-      }
-    }
-  };
-  CallReplacer callReplacer{stackPosition, func};
-  callReplacer.walkFunctionInModule(func, m);
-  return callReplacer.maxShadowStackOffset_;
-}
-void ToStackCallLower::replaceReturnExprWithEpilogue(wasm::Module *m, wasm::Function *func,
-                                                     uint32_t maxShadowStackOffset,
-                                                     std::optional<wasm::Index> const &scratchReturnValueLocalIndex) {
+void PrologEpilogInserter::replaceReturnExprWithEpilogue(
+    wasm::Module *m, wasm::Function *func, uint32_t maxShadowStackOffset,
+    std::optional<wasm::Index> const &scratchReturnValueLocalIndex) {
   struct ReturnWithResultReplacer : public wasm::PostWalker<ReturnWithResultReplacer> {
     wasm::Index const scratchReturnValueLocalIndex_;
     uint32_t const maxShadowStackOffset_;
@@ -118,8 +96,7 @@ void ToStackCallLower::replaceReturnExprWithEpilogue(wasm::Module *m, wasm::Func
       replaceCurrent(b.makeBlock(
           {
               b.makeLocalSet(scratchReturnValueLocalIndex_, expr->value),
-              b.makeCall("~lib/rt/__increase_sp", {b.makeConst(wasm::Literal(maxShadowStackOffset_))},
-                         wasm::Type::none),
+              b.makeCall(FnIncreaseSP, {b.makeConst(wasm::Literal(maxShadowStackOffset_))}, wasm::Type::none),
               expr,
           },
           wasm::Type::unreachable));
@@ -134,8 +111,7 @@ void ToStackCallLower::replaceReturnExprWithEpilogue(wasm::Module *m, wasm::Func
       wasm::Builder b{*getModule()};
       replaceCurrent(b.makeBlock(
           {
-              b.makeCall("~lib/rt/__increase_sp", {b.makeConst(wasm::Literal(maxShadowStackOffset_))},
-                         wasm::Type::none),
+              b.makeCall(FnIncreaseSP, {b.makeConst(wasm::Literal(maxShadowStackOffset_))}, wasm::Type::none),
               expr,
           },
           wasm::Type::unreachable));
@@ -152,10 +128,10 @@ void ToStackCallLower::replaceReturnExprWithEpilogue(wasm::Module *m, wasm::Func
   }
 }
 
-bool ToStackCallLower::tryInsertPrologueAndEpilogue(wasm::Module *m, wasm::Function *func,
-                                                    uint32_t maxShadowStackOffset,
-                                                    std::optional<wasm::Index> const &scratchReturnValueLocalIndex,
-                                                    wasm::Expression *prologue, wasm::Expression *epilogue) {
+bool PrologEpilogInserter::tryInsertPrologueAndEpilogue(wasm::Module *m, wasm::Function *func,
+                                                        uint32_t maxShadowStackOffset,
+                                                        std::optional<wasm::Index> const &scratchReturnValueLocalIndex,
+                                                        wasm::Expression *prologue, wasm::Expression *epilogue) {
   wasm::Type const resultType = func->getResults();
   wasm::Builder b{*m};
 
@@ -165,31 +141,31 @@ bool ToStackCallLower::tryInsertPrologueAndEpilogue(wasm::Module *m, wasm::Funct
   bool const isInsertedEpilogue = inserter.canInsertAfter(epilogue);
   if (isInsertedPrologue && isInsertedEpilogue) {
     inserter.insertBefore(
-        b, b.makeCall("~lib/rt/__decrease_sp", {b.makeConst(wasm::Literal(maxShadowStackOffset))}, wasm::Type::none),
+        b, b.makeCall(FnDecreaseSP, {b.makeConst(wasm::Literal(maxShadowStackOffset))}, wasm::Type::none),
         findExprPointer(prologue, func));
-    inserter.insertAfter(
-        b, b.makeCall("~lib/rt/__increase_sp", {b.makeConst(wasm::Literal(maxShadowStackOffset))}, wasm::Type::none),
-        findExprPointer(epilogue, func));
+    inserter.insertAfter(b,
+                         b.makeCall(FnIncreaseSP, {b.makeConst(wasm::Literal(maxShadowStackOffset))}, wasm::Type::none),
+                         findExprPointer(epilogue, func));
   }
   return isInsertedPrologue && isInsertedEpilogue;
 }
 
-bool ToStackCallLower::tryInsertPrologue(wasm::Module *m, wasm::Function *func, uint32_t maxShadowStackOffset,
-                                         std::optional<wasm::Index> const &scratchReturnValueLocalIndex,
-                                         wasm::Expression *prologue) {
+bool PrologEpilogInserter::tryInsertPrologue(wasm::Module *m, wasm::Function *func, uint32_t maxShadowStackOffset,
+                                             std::optional<wasm::Index> const &scratchReturnValueLocalIndex,
+                                             wasm::Expression *prologue) {
   wasm::Type const resultType = func->getResults();
   ExprInserter inserter{func};
   bool const isInsertedPrologue = inserter.canInsertBefore(prologue);
   wasm::Builder b{*m};
   if (isInsertedPrologue) {
     inserter.insertBefore(
-        b, b.makeCall("~lib/rt/__decrease_sp", {b.makeConst(wasm::Literal(maxShadowStackOffset))}, wasm::Type::none),
+        b, b.makeCall(FnDecreaseSP, {b.makeConst(wasm::Literal(maxShadowStackOffset))}, wasm::Type::none),
         findExprPointer(prologue, func));
   }
   return isInsertedPrologue;
 }
 
-void ToStackCallLower::insertDefaultPrologueAndEpilogue(
+void PrologEpilogInserter::insertDefaultPrologueAndEpilogue(
     wasm::Module *m, wasm::Function *func, uint32_t maxShadowStackOffset,
     std::optional<wasm::Index> const &scratchReturnValueLocalIndex) {
   wasm::Type const resultType = func->getResults();
@@ -197,36 +173,36 @@ void ToStackCallLower::insertDefaultPrologueAndEpilogue(
   wasm::Block *const block = b.makeBlock(std::initializer_list<wasm::Expression *>{}, resultType);
   if (resultType == wasm::Type::none) {
     block->list.push_back(
-        b.makeCall("~lib/rt/__decrease_sp", {b.makeConst(wasm::Literal(maxShadowStackOffset))}, wasm::Type::none));
+        b.makeCall(FnDecreaseSP, {b.makeConst(wasm::Literal(maxShadowStackOffset))}, wasm::Type::none));
     block->list.push_back(func->body);
     block->list.push_back(
-        b.makeCall("~lib/rt/__increase_sp", {b.makeConst(wasm::Literal(maxShadowStackOffset))}, wasm::Type::none));
+        b.makeCall(FnIncreaseSP, {b.makeConst(wasm::Literal(maxShadowStackOffset))}, wasm::Type::none));
     func->body = block;
   } else {
     block->list.push_back(
-        b.makeCall("~lib/rt/__decrease_sp", {b.makeConst(wasm::Literal(maxShadowStackOffset))}, wasm::Type::none));
+        b.makeCall(FnDecreaseSP, {b.makeConst(wasm::Literal(maxShadowStackOffset))}, wasm::Type::none));
     block->list.push_back(b.makeLocalSet(scratchReturnValueLocalIndex.value(), func->body));
     block->list.push_back(
-        b.makeCall("~lib/rt/__increase_sp", {b.makeConst(wasm::Literal(maxShadowStackOffset))}, wasm::Type::none));
+        b.makeCall(FnIncreaseSP, {b.makeConst(wasm::Literal(maxShadowStackOffset))}, wasm::Type::none));
     block->list.push_back(b.makeLocalGet(scratchReturnValueLocalIndex.value(), resultType));
   }
   func->body = block;
 }
 
-void ToStackCallLower::insertDefaultEpilogue(wasm::Module *m, wasm::Function *func, uint32_t maxShadowStackOffset,
-                                             std::optional<wasm::Index> const &scratchReturnValueLocalIndex) {
+void PrologEpilogInserter::insertDefaultEpilogue(wasm::Module *m, wasm::Function *func, uint32_t maxShadowStackOffset,
+                                                 std::optional<wasm::Index> const &scratchReturnValueLocalIndex) {
   wasm::Type const resultType = func->getResults();
   wasm::Builder b{*m};
   wasm::Block *const block = b.makeBlock(std::initializer_list<wasm::Expression *>{}, resultType);
   if (resultType == wasm::Type::none) {
     block->list.push_back(func->body);
     block->list.push_back(
-        b.makeCall("~lib/rt/__increase_sp", {b.makeConst(wasm::Literal(maxShadowStackOffset))}, wasm::Type::none));
+        b.makeCall(FnIncreaseSP, {b.makeConst(wasm::Literal(maxShadowStackOffset))}, wasm::Type::none));
     func->body = block;
   } else {
     block->list.push_back(b.makeLocalSet(scratchReturnValueLocalIndex.value(), func->body));
     block->list.push_back(
-        b.makeCall("~lib/rt/__increase_sp", {b.makeConst(wasm::Literal(maxShadowStackOffset))}, wasm::Type::none));
+        b.makeCall(FnIncreaseSP, {b.makeConst(wasm::Literal(maxShadowStackOffset))}, wasm::Type::none));
     block->list.push_back(b.makeLocalGet(scratchReturnValueLocalIndex.value(), resultType));
   }
   func->body = block;

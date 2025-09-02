@@ -9,7 +9,7 @@ namespace warpo::common {
 static cli::Opt<uint32_t> optimizeLevelOption{
     "--optimizeLevel",
     [](argparse::Argument &arg) -> void {
-      arg.help("How much to focus on optimizing code. [0-3]").nargs(1U).default_value(2U);
+      arg.help("How much to focus on optimizing code. [0-3]").nargs(1U).default_value(0U);
     },
 };
 
