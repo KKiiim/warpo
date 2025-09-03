@@ -8,6 +8,7 @@
 #include <vector>
 
 #include "CompilerImpl.hpp"
+#include "warpo/common/DebugLevel.hpp"
 #include "warpo/common/OptLevel.hpp"
 #include "warpo/frontend/Compiler.hpp"
 #include "warpo/support/Opt.hpp"
@@ -49,15 +50,6 @@ static std::map<std::string, std::string> getUses() {
 static cli::Opt<std::string> ascWasmOption{
     "--asc-wasm",
     [](argparse::Argument &arg) -> void { arg.help("WASM files for the frontend compiler").hidden(); },
-};
-
-static cli::Opt<std::vector<std::string>> disableFeatureOptions{
-    "--disable-feature",
-    [](argparse::Argument &arg) -> void {
-      arg.help("disable mutable-globals, sign-extension, nontrapping-f2i, bulk-memory")
-          .nargs(argparse::nargs_pattern::at_least_one)
-          .append();
-    },
 };
 
 static cli::Opt<std::string> exportStartOption{
@@ -109,6 +101,8 @@ BinaryenModuleRef warpo::frontend::compile() {
                            : std::optional<uint32_t>{initialMemoryOption.get()},
       .optimizationLevel = common::getOptimizationLevel(),
       .shrinkLevel = common::getShrinkLevel(),
+      // currently, AS only support debug line via source map
+      .emitDebugLine = common::isEmitDebugLineInfo(),
   };
 
   return compile(entryPaths.get(), config);

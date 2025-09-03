@@ -252,6 +252,8 @@ wasm::Module *FrontendCompiler::compile(std::vector<std::string> const &entryFil
     if (config.exportStart.has_value())
       m.callExportedFunctionWithName<0>(stackTop, "setExportStart", option, allocString(*config.exportStart));
     m.callExportedFunctionWithName<0>(stackTop, "setDebugInfo", option, WasmFFIBool::WASM_TRUE);
+    m.callExportedFunctionWithName<0>(stackTop, "setSourceMap", option,
+                                      config.emitDebugLine ? WasmFFIBool::WASM_TRUE : WasmFFIBool::WASM_FALSE);
     if (config.initialMemory.has_value())
       m.callExportedFunctionWithName<0>(stackTop, "setInitialMemory", option, *config.initialMemory);
 

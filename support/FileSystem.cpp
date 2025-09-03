@@ -25,4 +25,17 @@ void ensureDirectory(const std::filesystem::path &dirPath) {
   }
 }
 
+std::string getBaseName(std::filesystem::path const &path) { return path.filename().string(); }
+
 } // namespace warpo
+
+#ifdef WARPO_ENABLE_UNIT_TESTS
+
+#include <gtest/gtest.h>
+namespace warpo::ut {
+
+TEST(FsTest, BaseName) { EXPECT_EQ(getBaseName("a/b/c.d"), "c.d"); }
+
+} // namespace warpo::ut
+
+#endif

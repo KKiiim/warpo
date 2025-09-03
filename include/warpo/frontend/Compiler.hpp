@@ -22,6 +22,7 @@ struct Config {
   std::optional<uint32_t> initialMemory;
   uint32_t optimizationLevel;
   uint32_t shrinkLevel;
+  bool emitDebugLine;
 };
 
 BinaryenModuleRef compile();

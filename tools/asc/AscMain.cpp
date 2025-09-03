@@ -5,13 +5,11 @@
 #include <exception>
 #include <fmt/base.h>
 #include <fmt/format.h>
-#include <fstream>
-#include <iostream>
-#include <vector>
+#include <stdexcept>
+#include <string>
 
 #include "warpo/frontend/Compiler.hpp"
 #include "warpo/passes/Runner.hpp"
-#include "warpo/support/FileSystem.hpp"
 #include "warpo/support/Opt.hpp"
 
 static warpo::cli::Opt<std::string> outputPath{
@@ -20,7 +18,7 @@ static warpo::cli::Opt<std::string> outputPath{
     [](argparse::Argument &arg) -> void { arg.help("output file").required(); },
 };
 
-int main(int argc, const char *argv[]) {
+void ascMain(int argc, const char *argv[]) {
   using namespace warpo;
 
   frontend::init();
@@ -28,41 +26,18 @@ int main(int argc, const char *argv[]) {
 
   argparse::ArgumentParser program("warpo_asc", "git@" GIT_COMMIT);
 
+  cli::init(program, argc, argv);
+
+  BinaryenModuleRef const m = frontend::compile();
+  if (m == nullptr)
+    throw std::runtime_error{"compilation failed"};
+
+  passes::runAndEmit(m, outputPath.get());
+}
+
+int main(int argc, const char *argv[]) {
   try {
-    cli::init(program, argc, argv);
-
-    BinaryenModuleRef const m = frontend::compile();
-    if (m == nullptr)
-      return -1;
-    passes::Output const output = passes::runOnModule(m);
-
-    std::string watPathStr{};
-    std::string wasmPathStr{};
-    if (outputPath.get().ends_with("wat")) {
-      watPathStr = outputPath.get();
-      wasmPathStr = outputPath.get().substr(0, outputPath.get().size() - 3) + "wasm";
-    } else if (outputPath.get().ends_with("wasm")) {
-      watPathStr = outputPath.get().substr(0, outputPath.get().size() - 4) + "wat";
-      wasmPathStr = outputPath.get();
-    } else {
-      fmt::println("ERROR: invalid file extension: {}", outputPath.get());
-      return 1;
-    }
-
-    ensureFileDirectory(wasmPathStr);
-
-    std::ofstream wasmOf{wasmPathStr, std::ios::binary | std::ios::out};
-    if (!wasmOf.good()) {
-      fmt::println("ERROR: failed to open file: {}", outputPath.get());
-      return 1;
-    }
-    wasmOf.write(reinterpret_cast<char const *>(output.wasm.data()), static_cast<std::streamsize>(output.wasm.size()));
-    std::ofstream watOf{watPathStr, std::ios::out};
-    if (!watOf.good()) {
-      fmt::println("ERROR: failed to open file: {}", outputPath.get());
-      return 1;
-    }
-    watOf.write(output.wat.data(), static_cast<std::streamsize>(output.wat.size()));
+    ascMain(argc, argv);
   } catch (std::exception const &e) {
     fmt::println("ERROR: {}", e.what());
     return 1;

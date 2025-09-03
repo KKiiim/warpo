@@ -1,9 +1,13 @@
 #include <cassert>
 #include <fmt/base.h>
 #include <fmt/format.h>
+#include <fstream>
+#include <ios>
 #include <memory>
 #include <sstream>
+#include <stdexcept>
 #include <string>
+#include <utility>
 #include <vector>
 
 #include "AdvancedInlining.hpp"
@@ -15,9 +19,11 @@
 #include "binaryen-c.h"
 #include "parser/wat-parser.h"
 #include "pass.h"
+#include "warpo/common/DebugLevel.hpp"
 #include "warpo/common/Features.hpp"
 #include "warpo/common/OptLevel.hpp"
 #include "warpo/passes/Runner.hpp"
+#include "warpo/support/FileSystem.hpp"
 #include "wasm-binary.h"
 #include "wasm-features.h"
 #include "wasm-stack.h"
@@ -49,22 +55,6 @@ std::unique_ptr<wasm::Module> passes::loadWat(std::string_view wat) {
 }
 
 void passes::init() { Colors::setEnabled(false); }
-
-static std::vector<uint8_t> outputWasm(wasm::Module *m) {
-  wasm::BufferWithRandomAccess buffer;
-  wasm::PassOptions options = wasm::PassOptions::getWithoutOptimization();
-  wasm::WasmBinaryWriter writer(m, buffer, options);
-  writer.setNamesSection(false);
-  writer.setEmitModuleName(false);
-  writer.write();
-  return static_cast<std::vector<uint8_t>>(buffer);
-}
-
-static std::string outputWat(wasm::Module *m) {
-  std::stringstream ss{};
-  wasm::printStackIR(ss, m, wasm::PassOptions::getWithoutOptimization());
-  return std::move(ss).str();
-}
 
 static std::unique_ptr<wasm::PassRunner> createPassRunner(wasm::Module *const m) {
   auto passRunner = std::make_unique<wasm::PassRunner>(m);
@@ -115,19 +105,91 @@ static void optimize(wasm::Module *const m) {
   ensureValidate(*m);
 }
 
-passes::Output passes::runOnModule(BinaryenModuleRef const m) {
+passes::Output passes::runOnModule(BinaryenModuleRef const m, Config const &config) {
 #ifndef WARPO_RELEASE_BUILD
   ensureValidate(*m);
 #endif
   lowering(m);
   if (common::getOptimizationLevel() > 0U || common::getShrinkLevel() > 0U)
     optimize(m);
-  return {.wat = outputWat(m), .wasm = outputWasm(m)};
+
+  // wasm and source map
+  wasm::BufferWithRandomAccess buffer;
+  wasm::PassOptions options = wasm::PassOptions::getWithoutOptimization();
+  wasm::WasmBinaryWriter writer(m, buffer, options);
+  std::stringstream sourceMapStream;
+  if (common::isEmitDebugLineInfo()) {
+    assert(!config.sourceMapURL.empty());
+    writer.setSourceMap(&sourceMapStream, config.sourceMapURL);
+  }
+  writer.setNamesSection(false);
+  writer.setEmitModuleName(false);
+  writer.write();
+
+  // wat
+  std::stringstream ss{};
+  wasm::printStackIR(ss, m, wasm::PassOptions::getWithoutOptimization());
+
+  return {
+      .wat = std::move(ss).str(),
+      .wasm = static_cast<std::vector<uint8_t>>(buffer),
+      .sourceMap = std::move(sourceMapStream).str(),
+  };
 }
 
-passes::Output passes::runOnWat(std::string const &input) {
+passes::Output passes::runOnWat(std::string const &input, Config const &config) {
   std::unique_ptr<wasm::Module> m = passes::loadWat(input);
-  return runOnModule(m.get());
+  return runOnModule(m.get(), config);
+}
+
+static std::string removeWasmExt(std::string const &path) {
+  if (path.ends_with(".wat")) {
+    return path.substr(0, path.size() - 4);
+  } else if (path.ends_with(".wasm")) {
+    return path.substr(0, path.size() - 5);
+  } else {
+    throw std::runtime_error{fmt::format("invalid file extension: {}", path)};
+  }
+}
+
+void passes::runAndEmit(BinaryenModuleRef const m, std::string const &outputPath) {
+  std::string const outputPathWithoutExt = removeWasmExt(outputPath);
+  ensureFileDirectory(outputPathWithoutExt);
+
+  std::string const watPathStr = outputPathWithoutExt + ".wat";
+  std::string const wasmPathStr = outputPathWithoutExt + ".wasm";
+  std::string const sourceMapPathStr = outputPathWithoutExt + ".map";
+
+  passes::Output const output = runOnModule(m, passes::Config{.sourceMapURL = getBaseName(sourceMapPathStr)});
+
+  if (std::ofstream of{wasmPathStr, std::ios::binary | std::ios::out}; of.good()) {
+    of.write(reinterpret_cast<char const *>(output.wasm.data()), static_cast<std::streamsize>(output.wasm.size()));
+  } else {
+    throw std::runtime_error{fmt::format("ERROR: failed to open file: {}", outputPath)};
+  }
+  if (std::ofstream of{watPathStr, std::ios::out}; of.good()) {
+    of.write(output.wat.data(), static_cast<std::streamsize>(output.wat.size()));
+  } else {
+    throw std::runtime_error{fmt::format("failed to open file: {}", outputPath)};
+  }
+  if (common::isEmitDebugLineInfo()) {
+    if (std::ofstream of{sourceMapPathStr, std::ios::out}; of.good()) {
+      of.write(output.sourceMap.data(), static_cast<std::streamsize>(output.sourceMap.size()));
+    } else {
+      throw std::runtime_error{fmt::format("failed to open file: {}", outputPath)};
+    }
+  }
+}
+
+void passes::runAndEmit(std::string const &inputPath, std::string const &outputPath) {
+  if (!inputPath.ends_with("wat") && !inputPath.ends_with("wast"))
+    throw std::runtime_error{fmt::format("invalid file extension: {}, expected 'wat' or 'wast'", inputPath)};
+  std::ifstream ifstream{inputPath, std::ios::in};
+  if (!ifstream.good())
+    throw std::runtime_error{fmt::format("failed to open file: {}", inputPath)};
+  std::string const wat{std::istreambuf_iterator<char>{ifstream}, {}};
+  std::unique_ptr<wasm::Module> const m = loadWat(wat);
+  runAndEmit(m.get(), outputPath);
 }
 
 } // namespace warpo

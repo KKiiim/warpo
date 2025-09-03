@@ -1,10 +1,10 @@
 aux_source_directory(${CMAKE_CURRENT_SOURCE_DIR} sources)
 
-add_executable(warpo ${sources})
+add_executable(warpo_opt ${sources})
 
 target_link_libraries(
-    warpo PUBLIC warpo_passes
+    warpo_opt PUBLIC warpo_passes
 )
 target_include_directories(
-    warpo SYSTEM PUBLIC "${PROJECT_SOURCE_DIR}/third_party"
+    warpo_opt SYSTEM PUBLIC "${PROJECT_SOURCE_DIR}/third_party"
 )
