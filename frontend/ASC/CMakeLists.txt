@@ -13,6 +13,9 @@ file(GLOB_RECURSE asc_sources
   "${PROJECT_SOURCE_DIR}/assemblyscript/std/*.ts"
   "${PROJECT_SOURCE_DIR}/assemblyscript/scripts/*.js"
 )
+
+# Ensure the build-as directory exists
+file(MAKE_DIRECTORY ${PROJECT_SOURCE_DIR}/build-as)
 add_custom_command(
   COMMENT "Build ASC<${AS_BUILD_TARGET}> to WASM"
   OUTPUT ${PROJECT_SOURCE_DIR}/build-as/assemblyscript.inc ${PROJECT_SOURCE_DIR}/build-as/library_sources.inc
