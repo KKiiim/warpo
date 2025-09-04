@@ -21,6 +21,7 @@
 #include "warpo/frontend/Compiler.hpp"
 #include "warpo/support/Debug.hpp"
 #include "warpo/support/FileSystem.hpp"
+#include "warpo/support/Statistics.hpp"
 #include "wasm-compiler/src/WasmModule/WasmModule.hpp"
 #include "wasm-compiler/src/core/common/ILogger.hpp"
 #include "wasm-compiler/src/core/common/NativeSymbol.hpp"
@@ -174,6 +175,7 @@ FrontendCompiler::Dependency FrontendCompiler::getDependencyForUserCode(std::str
 }
 FrontendCompiler::Dependency FrontendCompiler::getDependency(std::string const &nextFileInternalPath, int32_t program,
                                                              int32_t nextFile) {
+  support::PerformanceStatisticRange const r{support::PerfItemKind::CompilationHIR_Parsing_DepsResolve};
   if (nextFileInternalPath.starts_with(libraryPrefix)) {
     std::string const plainName = nextFileInternalPath.substr(libraryPrefix.size());
     if (embed_library_sources.contains(plainName)) {
@@ -232,6 +234,7 @@ FrontendCompiler::FrontendCompiler(Config const &config)
         vb::Span<const uint8_t>{reinterpret_cast<uint8_t const *>(wasmBytes.data()), wasmBytes.size()},
         vb::Span<vb::NativeSymbol const>{warpo::frontend::linkedAPI.data(), warpo::frontend::linkedAPI.size()});
   } else {
+    support::PerformanceStatisticRange const range{support::PerfItemKind::CompilationHIR_PrepareWASMModule};
     static vb::WasmModule::CompileResult const embedJitCode = m.compile(
         vb::Span<const uint8_t>{embed_asc_wasm.data(), embed_asc_wasm.size()},
         vb::Span<vb::NativeSymbol const>{warpo::frontend::linkedAPI.data(), warpo::frontend::linkedAPI.size()});
@@ -245,6 +248,7 @@ FrontendCompiler::FrontendCompiler(Config const &config)
 warpo::frontend::Result FrontendCompiler::compile(std::vector<std::string> const &entryFilePaths,
                                                   Config const &config) {
   try {
+    support::PerformanceStatisticRange initStat{support::PerfItemKind::CompilationHIR_Init};
     m.start(stackTop);
     m.callExportedFunctionWithName<0>(stackTop, "_initialize");
 
@@ -281,16 +285,19 @@ warpo::frontend::Result FrontendCompiler::compile(std::vector<std::string> const
 
     int32_t const program = m.callExportedFunctionWithName<1>(stackTop, "newProgram", option)[0].i32;
     m.callExportedFunctionWithName<1>(stackTop, "__pin", program);
+    initStat.release();
 
+    support::PerformanceStatisticRange parseStat{support::PerfItemKind::CompilationHIR_Parsing};
+    support::PerformanceStatisticRange parseLibStat{support::PerfItemKind::CompilationHIR_Parsing_BuiltinLib};
     for (auto const &[libName, libSource] : warpo::frontend::embed_library_sources) {
       // in sub-directory: imported on demand
       if (libName.find('/') != std::string::npos)
         continue;
       parseFile(program, libSource, libraryPrefix + libName + extension, IsEntry::NO);
     }
-
     parseFile(program, warpo::frontend::embed_library_sources.at("rt/index-incremental"),
               libraryPrefix + "rt/index-incremental" + extension, IsEntry::NO);
+    parseLibStat.release();
 
     for (std::string const &filePath : entryFilePaths) {
       std::string const relativeFilePath = std::filesystem::relative(filePath).string();
@@ -310,12 +317,16 @@ warpo::frontend::Result FrontendCompiler::compile(std::vector<std::string> const
     }
     if (checkDiag(program, config.useColorfulDiagMessage))
       return {.m = nullptr, .errorMessage = errorMessage_};
+    parseStat.release();
+
+    support::PerformanceStatisticRange compileStat{support::PerfItemKind::CompilationHIR_Compilation};
     m.callExportedFunctionWithName<0>(stackTop, "initializeProgram", program);
     int32_t const compiled = m.callExportedFunctionWithName<1>(stackTop, "compile", program)[0].i32;
     if (checkDiag(program, config.useColorfulDiagMessage))
       return {.m = nullptr, .errorMessage = errorMessage_};
     wasm::Module *binaryen_module = reinterpret_cast<wasm::Module *>(
         m.callExportedFunctionWithName<1>(stackTop, "getBinaryenModuleRef", compiled)[0].i64);
+    compileStat.release();
     return {.m = binaryen_module, .errorMessage = std::nullopt};
   } catch (vb::TrapException const &e) {
     logger << "Error: " << e.what() << vb::endStatement;

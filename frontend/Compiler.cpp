@@ -13,6 +13,7 @@
 #include "warpo/frontend/Compiler.hpp"
 #include "warpo/support/Color.hpp"
 #include "warpo/support/Opt.hpp"
+#include "warpo/support/Statistics.hpp"
 
 namespace warpo::frontend {
 
@@ -92,6 +93,7 @@ static cli::Opt<uint32_t> initialMemoryOption{
 void warpo::frontend::init() { FrontendCompiler::init(); }
 
 warpo::frontend::Result warpo::frontend::compile(std::vector<std::string> const &entryFilePaths, Config const &config) {
+  support::PerformanceStatisticRange const range(support::PerfItemKind::CompilationHIR);
   FrontendCompiler compiler{config};
   return compiler.compile(entryFilePaths, config);
 }
