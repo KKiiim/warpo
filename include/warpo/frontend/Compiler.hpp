@@ -23,9 +23,17 @@ struct Config {
   uint32_t optimizationLevel;
   uint32_t shrinkLevel;
   bool emitDebugLine;
+  bool useColorfulDiagMessage;
 };
 
-BinaryenModuleRef compile();
-BinaryenModuleRef compile(std::vector<std::string> const &entryFilePaths, Config const &config);
+Config getDefaultConfig();
+
+struct Result {
+  BinaryenModuleRef m;
+  std::optional<std::string> errorMessage;
+};
+
+Result compile();
+Result compile(std::vector<std::string> const &entryFilePaths, Config const &config);
 
 } // namespace warpo::frontend

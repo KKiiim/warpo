@@ -11,6 +11,7 @@
 #include "warpo/common/DebugLevel.hpp"
 #include "warpo/common/OptLevel.hpp"
 #include "warpo/frontend/Compiler.hpp"
+#include "warpo/support/Color.hpp"
 #include "warpo/support/Opt.hpp"
 
 namespace warpo::frontend {
@@ -90,12 +91,28 @@ static cli::Opt<uint32_t> initialMemoryOption{
 
 void warpo::frontend::init() { FrontendCompiler::init(); }
 
-BinaryenModuleRef warpo::frontend::compile(std::vector<std::string> const &entryFilePaths, Config const &config) {
+warpo::frontend::Result warpo::frontend::compile(std::vector<std::string> const &entryFilePaths, Config const &config) {
   FrontendCompiler compiler{config};
   return compiler.compile(entryFilePaths, config);
 }
 
-BinaryenModuleRef warpo::frontend::compile() {
+warpo::frontend::Config warpo::frontend::getDefaultConfig() {
+  return Config{
+      .uses = {},
+      .ascWasmPath = std::nullopt,
+      .features = common::Features::all(),
+      .exportStart = std::nullopt,
+      .exportRuntime = false,
+      .exportTable = false,
+      .initialMemory = std::nullopt,
+      .optimizationLevel = 0U,
+      .shrinkLevel = 0U,
+      .emitDebugLine = false,
+      .useColorfulDiagMessage = support::isTTY(),
+  };
+}
+
+warpo::frontend::Result warpo::frontend::compile() {
   Config config{
       .uses = getUses(),
       .ascWasmPath = convertEmptyStringToNullOpt(ascWasmOption.get()),
@@ -110,6 +127,7 @@ BinaryenModuleRef warpo::frontend::compile() {
       .shrinkLevel = common::getShrinkLevel(),
       // currently, AS only support debug line via source map
       .emitDebugLine = common::isEmitDebugLineInfo(),
+      .useColorfulDiagMessage = support::isTTY(),
   };
 
   return compile(entryPaths.get(), config);

@@ -18,22 +18,30 @@ static cli::Opt<std::string> outputPath{
     [](argparse::Argument &arg) -> void { arg.help("output text file").required(); },
 };
 
-} // namespace warpo
-
-int main(int argc, const char *argv[]) {
-  using namespace warpo;
-
+void compilerMain(int argc, const char *argv[]) {
   frontend::init();
-
   argparse::ArgumentParser program("warpo_compiler", "git@" GIT_COMMIT);
   cli::init(cli::Category::Frontend, program, argc, argv);
 
-  BinaryenModuleRef const m = frontend::compile();
-  if (m == nullptr)
-    return -1;
-
-  char *const wasmText = BinaryenModuleAllocateAndWriteText(m);
+  frontend::Result const result = frontend::compile();
+  if (result.m == nullptr) {
+    fmt::println("compilation failed");
+    fmt::println("{}", result.errorMessage.value_or("unknown error"));
+    throw std::runtime_error("compilation failed");
+  }
+  char *const wasmText = BinaryenModuleAllocateAndWriteText(result.m);
   std::ofstream watOf{outputPath.get(), std::ios::out};
   watOf << wasmText;
   std::free(wasmText);
+}
+
+} // namespace warpo
+
+int main(int argc, const char *argv[]) {
+  try {
+    warpo::compilerMain(argc, argv);
+  } catch (std::exception const &e) {
+    fmt::println("ERROR: {}", e.what());
+    return 1;
+  }
 }

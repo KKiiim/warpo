@@ -1,0 +1,97 @@
+(module
+ (type $0 (func))
+ (type $1 (func (param i32) (result i32)))
+ (type $2 (func (result i32)))
+ (type $3 (func (param i32 i32 i32 i32)))
+ (type $4 (func (param i32)))
+ (import "env" "abort" (func $~lib/builtins/abort (param i32 i32 i32 i32)))
+ (import "as-builtin-fn" "~lib/rt/__localtostack" (func $~lib/rt/__localtostack (param i32) (result i32)))
+ (import "as-builtin-fn" "~lib/rt/__tmptostack" (func $~lib/rt/__tmptostack (param i32) (result i32)))
+ (global $getter-setter/Foo._bar (mut i32) (i32.const 0))
+ (global $~lib/memory/__data_end i32 (i32.const 76))
+ (global $~lib/memory/__stack_pointer (mut i32) (i32.const 32844))
+ (global $~lib/memory/__heap_base i32 (i32.const 32844))
+ (memory $0 1)
+ (data $0 (i32.const 12) "<\00\00\00\00\00\00\00\00\00\00\00\02\00\00\00 \00\00\00g\00e\00t\00t\00e\00r\00-\00s\00e\00t\00t\00e\00r\00.\00t\00s\00\00\00\00\00\00\00\00\00\00\00\00\00")
+ (table $0 1 1 funcref)
+ (elem $0 (i32.const 1))
+ (export "memory" (memory $0))
+ (start $~start)
+ (func $getter-setter/Foo.get:bar (result i32)
+  (return
+   (global.get $getter-setter/Foo._bar)
+  )
+ )
+ (func $getter-setter/Foo.set:bar (param $bar i32)
+  (global.set $getter-setter/Foo._bar
+   (local.get $bar)
+  )
+ )
+ (func $start:getter-setter
+  (local $0 i32)
+  (if
+   (i32.eqz
+    (i32.eq
+     (call $getter-setter/Foo.get:bar)
+     (i32.const 0)
+    )
+   )
+   (then
+    (call $~lib/builtins/abort
+     (i32.const 0)
+     (i32.const 32)
+     (i32.const 13)
+     (i32.const 1)
+    )
+    (unreachable)
+   )
+  )
+  (call $getter-setter/Foo.set:bar
+   (i32.const 1)
+  )
+  (if
+   (i32.eqz
+    (i32.eq
+     (call $getter-setter/Foo.get:bar)
+     (i32.const 1)
+    )
+   )
+   (then
+    (call $~lib/builtins/abort
+     (i32.const 0)
+     (i32.const 32)
+     (i32.const 15)
+     (i32.const 1)
+    )
+    (unreachable)
+   )
+  )
+  (if
+   (i32.eqz
+    (i32.eq
+     (block (result i32)
+      (call $getter-setter/Foo.set:bar
+       (local.tee $0
+        (i32.const 2)
+       )
+      )
+      (local.get $0)
+     )
+     (i32.const 2)
+    )
+   )
+   (then
+    (call $~lib/builtins/abort
+     (i32.const 0)
+     (i32.const 32)
+     (i32.const 16)
+     (i32.const 1)
+    )
+    (unreachable)
+   )
+  )
+ )
+ (func $~start
+  (call $start:getter-setter)
+ )
+)

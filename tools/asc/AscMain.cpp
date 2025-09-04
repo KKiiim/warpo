@@ -5,7 +5,6 @@
 #include <exception>
 #include <fmt/base.h>
 #include <fmt/format.h>
-#include <stdexcept>
 #include <string>
 
 #include "warpo/frontend/Compiler.hpp"
@@ -24,16 +23,16 @@ static cli::Opt<std::string> outputPath{
 void ascMain(int argc, const char *argv[]) {
   frontend::init();
   passes::init();
-
   argparse::ArgumentParser program("warpo_asc", "git@" GIT_COMMIT);
-
   cli::init(cli::Category::Frontend | cli::Category::Optimization, program, argc, argv);
 
-  BinaryenModuleRef const m = frontend::compile();
-  if (m == nullptr)
-    throw std::runtime_error{"compilation failed"};
-
-  passes::runAndEmit(m, outputPath.get());
+  frontend::Result const result = frontend::compile();
+  if (result.m == nullptr) {
+    fmt::println("compilation failed");
+    fmt::println("{}", result.errorMessage.value_or("unknown error"));
+    throw std::runtime_error("compilation failed");
+  }
+  passes::runAndEmit(result.m, outputPath.get());
 }
 
 } // namespace warpo

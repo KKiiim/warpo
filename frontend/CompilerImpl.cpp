@@ -1,3 +1,4 @@
+#include <cassert>
 #include <cstdint>
 #include <cstdlib>
 #include <cstring>
@@ -5,16 +6,13 @@
 #include <filesystem>
 #include <fmt/base.h>
 #include <fmt/format.h>
-#include <fstream>
-#include <ios>
-#include <iostream>
 #include <map>
 #include <optional>
 #include <regex>
 #include <sstream>
-#include <stdexcept>
 #include <string>
 #include <string_view>
+#include <utility>
 #include <vector>
 
 #include "ASC/ASC.hpp"
@@ -22,6 +20,7 @@
 #include "LinkedAPI.hpp"
 #include "warpo/frontend/Compiler.hpp"
 #include "warpo/support/Debug.hpp"
+#include "warpo/support/FileSystem.hpp"
 #include "wasm-compiler/src/WasmModule/WasmModule.hpp"
 #include "wasm-compiler/src/core/common/ILogger.hpp"
 #include "wasm-compiler/src/core/common/NativeSymbol.hpp"
@@ -33,28 +32,14 @@
 
 namespace warpo::frontend {
 
-static std::string readTextFile(std::string const &path) {
-  std::ifstream ifs{path, std::ios::in};
-  if (!ifs.is_open()) {
-    throw std::runtime_error{"cannot open file: " + std::string{path}};
-  }
-  std::stringstream buffer;
-  buffer << ifs.rdbuf();
-  return std::move(buffer).str();
-}
-static std::string readBinaryFile(std::string const &path) {
-  std::ifstream ifs{path, std::ios::in | std::ios::binary};
-  if (!ifs.is_open()) {
-    throw std::runtime_error{"cannot open file: " + std::string{path}};
-  }
-  std::stringstream buffer;
-  buffer << ifs.rdbuf();
-  return std::move(buffer).str();
-}
+namespace {
 
 const std::string libraryPrefix = "~lib/";
 const std::string extension = ".ts";
 
+enum WasmFFIBool : uint32_t { WASM_FALSE = 0, WASM_TRUE = 1 };
+
+} // namespace
 int32_t FrontendCompiler::allocString(std::string_view str) {
   // FIXME: convert utf8 to utf16 need library
   int32_t const ptr = m.callExportedFunctionWithName<1>(stackTop, "__new", static_cast<int32_t>(str.size() * 2U),
@@ -91,14 +76,37 @@ std::string FrontendCompiler::getAsString(int32_t ptr) {
   return std::move(ss).str();
 };
 
-std::optional<std::filesystem::path> FrontendCompiler::findPackageRoot(std::filesystem::path const &sourcePath,
+using PackageResolveResult = std::optional<std::pair<std::string, std::optional<std::string>>>;
+
+static PackageResolveResult getPackageName(std::string const &fileInternalPath) {
+  static std::regex const libRegex{R"(^~lib/((?:@[^/]+/)?[^/]+)(?:/(.*?))?$)"};
+  std::smatch match;
+  if (!std::regex_match(fileInternalPath, match, libRegex))
+    return std::nullopt;
+  std::string const packageName = match[1].str();
+  std::optional<std::string> const filePath =
+      (match.size() > 2 && match[2].matched) ? std::optional<std::string>{match[2].str()} : std::nullopt;
+  return std::pair<std::string, std::optional<std::string>>{packageName, filePath};
+}
+
+std::optional<std::filesystem::path> FrontendCompiler::findPackageRoot(std::filesystem::path const &sourceInternalPath,
                                                                        std::string const &packageName) {
   auto const it = packageRootMap_.find(packageName);
   if (it != packageRootMap_.end())
     return it->second;
-  std::filesystem::path current = std::filesystem::absolute(sourcePath);
+  std::filesystem::path current;
+  PackageResolveResult const sourcePackage = getPackageName(sourceInternalPath);
+  if (sourcePackage.has_value()) {
+    std::string const sourcePackageName = (*sourcePackage).first;
+    assert(packageRootMap_.contains(sourcePackageName));
+    std::filesystem::path packagePath = packageRootMap_.at(sourcePackageName);
+    current = packagePath;
+  } else {
+    current = std::filesystem::absolute(sourceInternalPath).parent_path();
+  }
   while (current != current.root_path()) {
     std::filesystem::path const target = current / "node_modules" / packageName;
+    // fmt::println("[module resolve] try to resolving library '{}' in '{}'", packageName, target.c_str());
     if (std::filesystem::exists(target) && std::filesystem::is_directory(target)) {
       packageRootMap_[packageName] = target;
       if (support::isDebug("ModuleResolve"))
@@ -116,12 +124,8 @@ FrontendCompiler::Dependency FrontendCompiler::getDependencyForNodeModules(std::
     fmt::println("[module resolve] get dependency for '{}'", nextFileInternalPath);
   int32_t const dependee = m.callExportedFunctionWithName<1>(stackTop, "getDependee", program, nextFile)[0].i32;
   std::string const dependeePath = getAsString(dependee);
-  std::regex const libRegex{R"(^~lib/((?:@[^/]+/)?[^/]+)(?:/(.*?))?$)"};
-  std::smatch match;
-  if (std::regex_match(nextFileInternalPath, match, libRegex)) {
-    std::string const packageName = match[1].str();
-    std::optional<std::string> const filePath =
-        (match.size() > 2 && match[2].matched) ? std::optional<std::string>{match[2].str()} : std::nullopt;
+  if (PackageResolveResult const package = getPackageName(nextFileInternalPath); package.has_value()) {
+    auto const [packageName, filePath] = *package;
     std::optional<std::filesystem::path> const packageRoot = findPackageRoot(dependeePath, packageName);
     if (!packageRoot) {
       if (support::isDebug("ModuleResolve"))
@@ -197,17 +201,25 @@ std::vector<FrontendCompiler::Dependency> FrontendCompiler::getAllDependencies(i
   return dependencies;
 }
 
-size_t FrontendCompiler::checkDiag(int32_t const program) {
-  size_t count = 0;
+bool FrontendCompiler::checkDiag(int32_t const program, bool useColorfulDiagMessage) {
+  size_t errorCount = 0;
   while (true) {
     int32_t const diag = m.callExportedFunctionWithName<1>(stackTop, "nextDiagnostic", program)[0].i32;
     if (diag == 0)
       break;
-    count++;
-    int32_t const diagStrOffset = m.callExportedFunctionWithName<1>(stackTop, "formatDiagnostic", diag, 1, 1)[0].i32;
-    std::cout << getAsString(diagStrOffset) << "\n";
+    bool const isError = static_cast<bool>(m.callExportedFunctionWithName<1>(stackTop, "isError", diag)[0].i32);
+    if (isError)
+      errorCount++;
+    m.callExportedFunctionWithName<0>(stackTop, "__setArgumentsLength", 3U);
+    int32_t const diagStrOffset =
+        m.callExportedFunctionWithName<1>(stackTop, "formatDiagnostic", diag,
+                                          useColorfulDiagMessage ? WasmFFIBool::WASM_TRUE : WasmFFIBool::WASM_FALSE,
+                                          WasmFFIBool::WASM_TRUE)[0]
+            .i32;
+    errorMessage_ += getAsString(diagStrOffset) + "\n\n";
   }
-  return count;
+  errorCount_ += errorCount;
+  return errorCount > 0;
 }
 
 FrontendCompiler::FrontendCompiler(Config const &config)
@@ -220,13 +232,18 @@ FrontendCompiler::FrontendCompiler(Config const &config)
         vb::Span<const uint8_t>{reinterpret_cast<uint8_t const *>(wasmBytes.data()), wasmBytes.size()},
         vb::Span<vb::NativeSymbol const>{warpo::frontend::linkedAPI.data(), warpo::frontend::linkedAPI.size()});
   } else {
-    m.initFromBytecode(
+    static vb::WasmModule::CompileResult const embedJitCode = m.compile(
         vb::Span<const uint8_t>{embed_asc_wasm.data(), embed_asc_wasm.size()},
         vb::Span<vb::NativeSymbol const>{warpo::frontend::linkedAPI.data(), warpo::frontend::linkedAPI.size()});
+    m.initFromCompiledBinary(
+        vb::Span<uint8_t const>{embedJitCode.getModule().data(), embedJitCode.getModule().size()},
+        vb::Span<vb::NativeSymbol const>{},
+        vb::Span<uint8_t const>{embedJitCode.getDebugSymbol().data(), embedJitCode.getDebugSymbol().size()});
   }
 }
 
-wasm::Module *FrontendCompiler::compile(std::vector<std::string> const &entryFilePaths, Config const &config) {
+warpo::frontend::Result FrontendCompiler::compile(std::vector<std::string> const &entryFilePaths,
+                                                  Config const &config) {
   try {
     m.start(stackTop);
     m.callExportedFunctionWithName<0>(stackTop, "_initialize");
@@ -244,7 +261,6 @@ wasm::Module *FrontendCompiler::compile(std::vector<std::string> const &entryFil
     m.callExportedFunctionWithName<0>(stackTop, "setFeature", option, ~asFeatureFlags, SetFeatureOn::OFF);
     m.callExportedFunctionWithName<0>(stackTop, "setFeature", option, asFeatureFlags, SetFeatureOn::ON);
 
-    enum WasmFFIBool : uint32_t { WASM_FALSE = 0, WASM_TRUE = 1 };
     m.callExportedFunctionWithName<0>(stackTop, "setExportTable", option,
                                       config.exportTable ? WasmFFIBool::WASM_TRUE : WasmFFIBool::WASM_FALSE);
     m.callExportedFunctionWithName<0>(stackTop, "setExportRuntime", option,
@@ -257,10 +273,9 @@ wasm::Module *FrontendCompiler::compile(std::vector<std::string> const &entryFil
     if (config.initialMemory.has_value())
       m.callExportedFunctionWithName<0>(stackTop, "setInitialMemory", option, *config.initialMemory);
 
-    for (auto const &[useName, useValue] : config.uses) {
+    for (auto const &[useName, useValue] : config.uses)
       m.callExportedFunctionWithName<0>(stackTop, "addGlobalAlias", option, allocString(useName),
                                         allocString(useValue));
-    }
     m.callExportedFunctionWithName<0>(stackTop, "setOptimizeLevelHints", option, config.optimizationLevel,
                                       config.shrinkLevel);
 
@@ -293,22 +308,22 @@ wasm::Module *FrontendCompiler::compile(std::vector<std::string> const &entryFil
         parseFile(program, text, path, IsEntry::NO);
       }
     }
-    if (checkDiag(program) > 0)
-      return nullptr;
+    if (checkDiag(program, config.useColorfulDiagMessage))
+      return {.m = nullptr, .errorMessage = errorMessage_};
     m.callExportedFunctionWithName<0>(stackTop, "initializeProgram", program);
     int32_t const compiled = m.callExportedFunctionWithName<1>(stackTop, "compile", program)[0].i32;
-    if (checkDiag(program) > 0)
-      return nullptr;
+    if (checkDiag(program, config.useColorfulDiagMessage))
+      return {.m = nullptr, .errorMessage = errorMessage_};
     wasm::Module *binaryen_module = reinterpret_cast<wasm::Module *>(
         m.callExportedFunctionWithName<1>(stackTop, "getBinaryenModuleRef", compiled)[0].i64);
-    return binaryen_module;
+    return {.m = binaryen_module, .errorMessage = std::nullopt};
   } catch (vb::TrapException const &e) {
     logger << "Error: " << e.what() << vb::endStatement;
     m.printStacktrace(logger);
   } catch (std::exception const &e) {
     logger << "Error: " << e.what() << vb::endStatement;
   }
-  return nullptr;
+  return {.m = nullptr, .errorMessage = "AS wasm execution failed"};
 }
 
 } // namespace warpo::frontend

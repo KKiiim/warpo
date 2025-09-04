@@ -1,5 +1,6 @@
 #pragma once
 
+#include <cstddef>
 #include <cstdint>
 #include <cstdlib>
 #include <cstring>
@@ -15,7 +16,6 @@
 #include "warpo/frontend/Compiler.hpp"
 #include "wasm-compiler/src/WasmModule/WasmModule.hpp"
 #include "wasm-compiler/src/utils/STDCompilerLogger.hpp"
-#include "wasm.h"
 
 namespace warpo::frontend {
 
@@ -25,8 +25,9 @@ class FrontendCompiler {
   vb::STDCompilerLogger logger;
   vb::WasmModule m;
   uint8_t const *stackTop;
-
   std::map<std::string, std::filesystem::path> packageRootMap_{};
+  size_t errorCount_ = 0;
+  std::string errorMessage_;
 
   int32_t allocString(std::string_view str);
 
@@ -48,7 +49,8 @@ class FrontendCompiler {
 
   std::vector<Dependency> getAllDependencies(int32_t const program);
 
-  size_t checkDiag(int32_t const program);
+  /// @return true when has error
+  bool checkDiag(int32_t const program, bool useColorfulDiagMessage);
 
 public:
   static void init() { vb::WasmModule::initEnvironment(&malloc, &realloc, &free); }
@@ -56,7 +58,7 @@ public:
 
   FrontendCompiler(Config const &config);
 
-  wasm::Module *compile(std::vector<std::string> const &entryFilePaths, Config const &config);
+  warpo::frontend::Result compile(std::vector<std::string> const &entryFilePaths, Config const &config);
 };
 
 } // namespace warpo::frontend
