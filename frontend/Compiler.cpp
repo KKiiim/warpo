@@ -14,6 +14,7 @@
 #include "warpo/support/Color.hpp"
 #include "warpo/support/Opt.hpp"
 #include "warpo/support/Statistics.hpp"
+#include "wasm.h"
 
 namespace warpo::frontend {
 
@@ -90,9 +91,11 @@ static cli::Opt<uint32_t> initialMemoryOption{
 
 } // namespace warpo::frontend
 
-void warpo::frontend::init() { FrontendCompiler::init(); }
+namespace warpo {
 
-warpo::frontend::Result warpo::frontend::compile(std::vector<std::string> const &entryFilePaths, Config const &config) {
+void frontend::init() { FrontendCompiler::init(); }
+
+frontend::CompilationResult frontend::compile(std::vector<std::string> const &entryFilePaths, Config const &config) {
   support::PerformanceStatisticRange const range(support::PerfItemKind::CompilationHIR);
   FrontendCompiler compiler{config};
   return compiler.compile(entryFilePaths, config);
@@ -114,7 +117,7 @@ warpo::frontend::Config warpo::frontend::getDefaultConfig() {
   };
 }
 
-warpo::frontend::Result warpo::frontend::compile() {
+frontend::CompilationResult frontend::compile() {
   Config config{
       .uses = getUses(),
       .ascWasmPath = convertEmptyStringToNullOpt(ascWasmOption.get()),
@@ -134,3 +137,5 @@ warpo::frontend::Result warpo::frontend::compile() {
 
   return compile(entryPaths.get(), config);
 }
+
+} // namespace warpo

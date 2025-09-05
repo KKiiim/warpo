@@ -6,7 +6,12 @@
 #include <string>
 #include <vector>
 
+#include "warpo/common/BinaryenRAII.hpp"
 #include "warpo/common/Features.hpp"
+
+namespace wasm {
+class Module;
+};
 
 namespace warpo::frontend {
 
@@ -28,12 +33,12 @@ struct Config {
 
 Config getDefaultConfig();
 
-struct Result {
-  BinaryenModuleRef m;
+struct CompilationResult {
+  BinaryenModule m;
   std::optional<std::string> errorMessage;
 };
 
-Result compile();
-Result compile(std::vector<std::string> const &entryFilePaths, Config const &config);
+CompilationResult compile();
+CompilationResult compile(std::vector<std::string> const &entryFilePaths, Config const &config);
 
 } // namespace warpo::frontend

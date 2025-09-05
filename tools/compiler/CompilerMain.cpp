@@ -23,13 +23,13 @@ void compilerMain(int argc, const char *argv[]) {
   argparse::ArgumentParser program("warpo_compiler", "git@" GIT_COMMIT);
   cli::init(cli::Category::Frontend, program, argc, argv);
 
-  frontend::Result const result = frontend::compile();
+  frontend::CompilationResult const result = frontend::compile();
   if (result.m == nullptr) {
     fmt::println("compilation failed");
     fmt::println("{}", result.errorMessage.value_or("unknown error"));
     throw std::runtime_error("compilation failed");
   }
-  char *const wasmText = BinaryenModuleAllocateAndWriteText(result.m);
+  char *const wasmText = BinaryenModuleAllocateAndWriteText(result.m.get());
   std::ofstream watOf{outputPath.get(), std::ios::out};
   watOf << wasmText;
   std::free(wasmText);

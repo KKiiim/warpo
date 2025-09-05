@@ -60,7 +60,8 @@ public:
   FrontendCompiler(Config const &config);
   ~FrontendCompiler();
 
-  warpo::frontend::Result compile(std::vector<std::string> const &entryFilePaths, Config const &config);
+
+  CompilationResult compile(std::vector<std::string> const &entryFilePaths, Config const &config);
 
   std::set<void *> allocedPtrs_;
 };

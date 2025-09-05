@@ -34,7 +34,7 @@ cli::Opt<bool> updateFlag{
 
 enum class TestResult : uint8_t { Success, Failure, Skip };
 
-frontend::Result compile(nlohmann::json const &configJson, std::filesystem::path const &tsPath) {
+frontend::CompilationResult compile(nlohmann::json const &configJson, std::filesystem::path const &tsPath) {
   std::vector<std::string> const entries{tsPath.string()};
   frontend::Config config = frontend::getDefaultConfig();
   config.useColorfulDiagMessage = false;
@@ -55,13 +55,12 @@ frontend::Result compile(nlohmann::json const &configJson, std::filesystem::path
         static_cast<void>(0); // do nothing, raw binding is default
     }
   }
-  frontend::Result const ret = frontend::compile(entries, config);
-  return ret;
+  return frontend::compile(entries, config);
 }
 
 [[nodiscard]] TestResult runUpdate(nlohmann::json const &configJson, std::filesystem::path const &tsPath,
                                    std::filesystem::path const &expectedOutPath) {
-  frontend::Result const ret = compile(configJson, tsPath);
+  frontend::CompilationResult const ret = compile(configJson, tsPath);
   if (ret.m == nullptr) {
     if (configJson.contains("stderr")) {
       return TestResult::Success;
@@ -72,16 +71,15 @@ frontend::Result compile(nlohmann::json const &configJson, std::filesystem::path
     }
   }
   std::stringstream ss;
-  ss << *ret.m;
+  ss << *ret.m.get();
   std::string const actual = std::move(ss).str();
   writeBinaryFile(expectedOutPath, std::move(actual));
-  BinaryenModuleDispose(ret.m);
   return TestResult::Success;
 }
 
 [[nodiscard]] TestResult runCompilationErrorCase(nlohmann::json const &configJson,
                                                  std::filesystem::path const &tsPath) {
-  frontend::Result const ret = compile(configJson, tsPath);
+  frontend::CompilationResult const ret = compile(configJson, tsPath);
   if (ret.m != nullptr) {
     fmt::println("'{}' success to compile but expect failed", tsPath.c_str());
     return TestResult::Failure;
@@ -122,20 +120,19 @@ frontend::Result compile(nlohmann::json const &configJson, std::filesystem::path
 
 [[nodiscard]] TestResult runSnapshotCase(nlohmann::json const &configJson, std::filesystem::path const &tsPath,
                                          std::filesystem::path const &expectedOutPath) {
-  frontend::Result const ret = compile(configJson, tsPath);
+  frontend::CompilationResult const ret = compile(configJson, tsPath);
   if (ret.m == nullptr) {
     fmt::println("FAILED '{}': expected to compile successfully\nerror message: {}", tsPath.c_str(), *ret.errorMessage);
     return TestResult::Failure;
   }
   std::stringstream ss;
-  ss << *ret.m;
+  ss << *ret.m.get();
   std::string const actual = std::move(ss).str();
   std::string const expected = readTextFile(expectedOutPath);
   if (expected != actual) {
     fmt::println("FAILED '{}': mismatched wat output", tsPath.c_str());
     return TestResult::Failure;
   }
-  BinaryenModuleDispose(ret.m);
   return TestResult::Success;
 }
 

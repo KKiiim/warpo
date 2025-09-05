@@ -253,8 +253,8 @@ FrontendCompiler::FrontendCompiler(Config const &config)
   }
 }
 
-warpo::frontend::Result FrontendCompiler::compile(std::vector<std::string> const &entryFilePaths,
-                                                  Config const &config) {
+warpo::frontend::CompilationResult FrontendCompiler::compile(std::vector<std::string> const &entryFilePaths,
+                                                             Config const &config) {
   try {
     support::PerformanceStatisticRange initStat{support::PerfItemKind::CompilationHIR_Init};
     m.start(stackTop);
@@ -335,7 +335,7 @@ warpo::frontend::Result FrontendCompiler::compile(std::vector<std::string> const
     wasm::Module *binaryen_module = reinterpret_cast<wasm::Module *>(
         m.callExportedFunctionWithName<1>(stackTop, "getBinaryenModuleRef", compiled)[0].i64);
     compileStat.release();
-    return {.m = binaryen_module, .errorMessage = std::nullopt};
+    return {.m = BinaryenModule{binaryen_module}, .errorMessage = std::nullopt};
   } catch (vb::TrapException const &e) {
     logger << "Error: " << e.what() << vb::endStatement;
     m.printStacktrace(logger);

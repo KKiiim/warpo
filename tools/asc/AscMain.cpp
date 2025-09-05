@@ -26,13 +26,13 @@ void ascMain(int argc, const char *argv[]) {
   argparse::ArgumentParser program("warpo_asc", "git@" GIT_COMMIT);
   cli::init(cli::Category::Frontend | cli::Category::Optimization, program, argc, argv);
 
-  frontend::Result const result = frontend::compile();
+  frontend::CompilationResult const result = frontend::compile();
   if (result.m == nullptr) {
     fmt::println("compilation failed");
     fmt::println("{}", result.errorMessage.value_or("unknown error"));
     throw std::runtime_error("compilation failed");
   }
-  passes::runAndEmit(result.m, outputPath.get());
+  passes::runAndEmit(result.m.get(), outputPath.get());
 }
 
 } // namespace warpo
