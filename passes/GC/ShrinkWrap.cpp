@@ -121,17 +121,15 @@ void ShrinkWrapAnalysis::runOnFunction(wasm::Module *m, wasm::Function *func) {
 
   // FIXME: design framework to avoid duplicate calculate CFG
   std::shared_ptr<CFG> const cfg = std::make_shared<CFG>(CFG::fromFunction(func));
-  InsertPositionHint const stackInsertPoint = getShadowStackInsertPoint(
-      func->name.str,
-      [&](wasm::Expression *expr) -> bool {
-        std::optional<Liveness> const liveness = livenessMap.getLiveness(expr);
-        if (!liveness.has_value())
-          return false;
-        if (liveness.value().before().count() + liveness.value().after().count() == 0)
-          return false;
-        return true;
-      },
-      cfg);
+  auto const shouldStackActive = [&](wasm::Expression *expr) -> bool {
+    std::optional<Liveness> const liveness = livenessMap.getLiveness(expr);
+    if (!liveness.has_value())
+      return false;
+    if (liveness.value().before().count() + liveness.value().after().count() == 0)
+      return false;
+    return true;
+  };
+  InsertPositionHint const stackInsertPoint = getShadowStackInsertPoint(func->name.str, shouldStackActive, cfg);
   insertPositionHints_->insert_or_assign(func, stackInsertPoint);
 }
 

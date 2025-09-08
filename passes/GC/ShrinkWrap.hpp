@@ -48,6 +48,9 @@ struct ShrinkWrapAnalysis : public wasm::Pass {
     runner.add(std::unique_ptr<wasm::Pass>(new ShrinkWrapAnalysis(shadowStackPoints, livenessInfo)));
     return shadowStackPoints;
   }
+  static std::shared_ptr<InsertPositionHints> dummy(wasm::PassRunner &runner) {
+    return std::make_shared<InsertPositionHints>(createResults(runner.wasm));
+  }
 };
 
 } // namespace warpo::passes::gc

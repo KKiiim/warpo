@@ -47,6 +47,11 @@ static cli::Opt<bool> NoOptimizedStackPositionAssigner{
       arg.help("Disable optimized stack position assigner during GC lowering").flag().hidden();
     },
 };
+static cli::Opt<bool> NoShrinkWrap{
+    cli::Category::OnlyForTest,
+    "--no-gc-shrink-wrap",
+    [](argparse::Argument &arg) { arg.help("Disable shrink wrap during GC lowering").flag().hidden(); },
+};
 
 static cli::Opt<bool> TestOnlyControlGroup{
     cli::Category::OnlyForTest,
@@ -134,10 +139,11 @@ void OptLower::run(wasm::Module *m) {
   StackAssigner::Mode const stackAssignerMode =
       NoOptimizedStackPositionAssigner.get() ? StackAssigner::Mode::Vanilla : StackAssigner::Mode::GreedyConflictGraph;
   std::shared_ptr<StackPositions> stackPositions = StackAssigner::addToPass(runner, stackAssignerMode, livenessInfo);
-  std::shared_ptr<InsertPositionHints> const stackInsertPositions = ShrinkWrapAnalysis::addToPass(runner, livenessInfo);
-  runner.add(std::unique_ptr<wasm::Pass>(new ToStackReplacer(stackPositions)));
+  std::shared_ptr<InsertPositionHints> const stackInsertPositions =
+      NoShrinkWrap.get() ? ShrinkWrapAnalysis::dummy(runner) : ShrinkWrapAnalysis::addToPass(runner, livenessInfo);
   runner.add(std::unique_ptr<wasm::Pass>(
       new PrologEpilogInserter(stackInsertPositions, MaxShadowStackOffsetsFromStackPositions::create(stackPositions))));
+  runner.add(std::unique_ptr<wasm::Pass>(new ToStackReplacer(stackPositions)));
   runner.add(std::unique_ptr<wasm::Pass>(new PostLower(stackPositions)));
 
   runner.run();

@@ -109,8 +109,14 @@ export async function run(currentFolder) {
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-["advanced_inlining", "gc_fast_lower", "gc_leaf_filter", "gc_lower", "gc_reuse_stack", "gc_ssa_merge"].forEach(
-  (task) => {
-    run(path.join(__dirname, task));
-  }
-);
+[
+  "advanced_inlining",
+  "gc_fast_lower",
+  "gc_leaf_filter",
+  "gc_lower",
+  "gc_reuse_stack",
+  "gc_shrink_wrap",
+  "gc_ssa_merge",
+].forEach((task) => {
+  run(path.join(__dirname, task));
+});

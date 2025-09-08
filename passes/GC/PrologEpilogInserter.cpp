@@ -7,6 +7,7 @@
 
 #include "../helper/ExprInserter.hpp"
 #include "../helper/FindExpr.hpp"
+#include "../helper/ToString.hpp"
 #include "GCInfo.hpp"
 #include "PrologEpilogInserter.hpp"
 #include "ShrinkWrap.hpp"
@@ -140,12 +141,18 @@ bool PrologEpilogInserter::tryInsertPrologueAndEpilogue(wasm::Module *m, wasm::F
   bool const isInsertedPrologue = inserter.canInsertBefore(prologue);
   bool const isInsertedEpilogue = inserter.canInsertAfter(epilogue);
   if (isInsertedPrologue && isInsertedEpilogue) {
+    wasm::Expression **const prologuePtr = findExprPointer(prologue, func);
+    wasm::Expression **const epiloguePtr = findExprPointer(epilogue, func);
+    assert(prologuePtr != nullptr);
+    assert(epiloguePtr != nullptr);
+    if (support::isDebug(PASS_NAME, func->name.str))
+      fmt::println("[" PASS_NAME "] fn '{}' insert prologue in {}", func->name.str, toString(prologue));
+    if (support::isDebug(PASS_NAME, func->name.str))
+      fmt::println("[" PASS_NAME "] fn '{}' insert epilogue in {}", func->name.str, toString(epilogue));
     inserter.insertBefore(
-        b, b.makeCall(FnDecreaseSP, {b.makeConst(wasm::Literal(maxShadowStackOffset))}, wasm::Type::none),
-        findExprPointer(prologue, func));
-    inserter.insertAfter(b,
-                         b.makeCall(FnIncreaseSP, {b.makeConst(wasm::Literal(maxShadowStackOffset))}, wasm::Type::none),
-                         findExprPointer(epilogue, func));
+        b, b.makeCall(FnDecreaseSP, {b.makeConst(wasm::Literal(maxShadowStackOffset))}, wasm::Type::none), prologuePtr);
+    inserter.insertAfter(
+        b, b.makeCall(FnIncreaseSP, {b.makeConst(wasm::Literal(maxShadowStackOffset))}, wasm::Type::none), epiloguePtr);
   }
   return isInsertedPrologue && isInsertedEpilogue;
 }
@@ -158,9 +165,12 @@ bool PrologEpilogInserter::tryInsertPrologue(wasm::Module *m, wasm::Function *fu
   bool const isInsertedPrologue = inserter.canInsertBefore(prologue);
   wasm::Builder b{*m};
   if (isInsertedPrologue) {
+    wasm::Expression **const prologuePtr = findExprPointer(prologue, func);
+    assert(prologuePtr != nullptr);
+    if (support::isDebug(PASS_NAME, func->name.str))
+      fmt::println("[" PASS_NAME "] fn '{}' insert prologue in {}", func->name.str, toString(prologue));
     inserter.insertBefore(
-        b, b.makeCall(FnDecreaseSP, {b.makeConst(wasm::Literal(maxShadowStackOffset))}, wasm::Type::none),
-        findExprPointer(prologue, func));
+        b, b.makeCall(FnDecreaseSP, {b.makeConst(wasm::Literal(maxShadowStackOffset))}, wasm::Type::none), prologuePtr);
   }
   return isInsertedPrologue;
 }
