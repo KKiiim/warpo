@@ -116,6 +116,7 @@ const __dirname = path.dirname(__filename);
   "gc_lower",
   "gc_reuse_stack",
   "gc_shrink_wrap",
+  "gc_shrink_wrap_leaf_filter",
   "gc_ssa_merge",
 ].forEach((task) => {
   run(path.join(__dirname, task));

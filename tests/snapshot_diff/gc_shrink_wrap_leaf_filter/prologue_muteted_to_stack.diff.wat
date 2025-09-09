@@ -1,5 +1,5 @@
 ;; ====================
-(func $tests/snapshot_diff/gc_shrink_wrap/prologue_muteted_to_stack/_start (type $func.0 (func (result i32)))
+(func $tests/snapshot_diff/gc_shrink_wrap_leaf_filter/prologue_muteted_to_stack/_start (type $func.0 (func (result i32)))
   (local i32)
   (local i32)
 ;; =========add========
@@ -15,9 +15,9 @@
           block ;;i32
 ;; ====================
               if ;;i32
-                global.get $tests/snapshot_diff/gc_shrink_wrap/prologue_muteted_to_stack/a
-                global.get $tests/snapshot_diff/gc_shrink_wrap/prologue_muteted_to_stack/v0
-                global.get $tests/snapshot_diff/gc_shrink_wrap/prologue_muteted_to_stack/v1
+                global.get $tests/snapshot_diff/gc_shrink_wrap_leaf_filter/prologue_muteted_to_stack/a
+                global.get $tests/snapshot_diff/gc_shrink_wrap_leaf_filter/prologue_muteted_to_stack/v0
+                global.get $tests/snapshot_diff/gc_shrink_wrap_leaf_filter/prologue_muteted_to_stack/v1
               end
 ;; =========add========
             local.set $2
@@ -26,7 +26,7 @@
             local.get $2
           end
 ;; ====================
-        call $tests/snapshot_diff/gc_shrink_wrap/prologue_muteted_to_stack/foo
+        call $tests/snapshot_diff/gc_shrink_wrap_leaf_filter/prologue_muteted_to_stack/foo
               i32.const 0
             call $tests/snapshot_diff/common_lib/normal/Normal#constructor
           call $~lib/rt/__tostack<0>

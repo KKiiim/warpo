@@ -41,4 +41,13 @@ SSAMap SSAMap::create(wasm::Function *func) {
   return ssaMap;
 }
 
+DynBitset SSAMap::getCallerManagedObject() const {
+  DynBitset ret{this->size()};
+  for (auto const &[value, index] : *this) {
+    if (value.kind_ == SSAValue::Kind::Arg)
+      ret.set(index, true);
+  }
+  return ret;
+}
+
 } // namespace warpo::passes::gc

@@ -2,6 +2,7 @@
 
 #include <map>
 
+#include "warpo/support/DynBitSet.hpp"
 #include "warpo/support/IncMap.hpp"
 #include "wasm.h"
 
@@ -73,6 +74,7 @@ struct SSAMap : public IncBiMap<SSAValue> {
     }
     return std::nullopt;
   }
+  DynBitset getCallerManagedObject() const;
 };
 
 struct ModuleLevelSSAMap : public std::map<wasm::Function *, SSAMap> {

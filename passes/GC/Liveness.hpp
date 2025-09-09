@@ -28,9 +28,10 @@ public:
 };
 
 struct LivenessMap {
-  LivenessMap() : storage_(0U), map_{}, dimension_(0), invalid_(0) {}
+  LivenessMap() : storage_(0U), map_{}, dimension_(0), invalid_(0), callerManagedObject_(0) {}
   explicit LivenessMap(SSAMap const &ssaMap)
-      : storage_(0U), map_{}, dimension_(ssaMap.size()), invalid_(ssaMap.size()) {}
+      : storage_(0U), map_{}, dimension_(ssaMap.size()), invalid_(ssaMap.size()),
+        callerManagedObject_{ssaMap.getCallerManagedObject()} {}
   enum class Pos { Before, After };
   void set(size_t base, Pos pos, size_t index, bool isLive) {
     storage_.set((2 * base + (pos == Pos::Before ? 0 : 1)) * dimension_ + index, isLive);
@@ -56,7 +57,7 @@ struct LivenessMap {
   std::optional<Liveness> getLiveness(wasm::Expression *expr) const;
   Liveness getLiveness(size_t exprIndex) const;
 
-  void setInvalid(DynBitset invalid) { invalid_ |= invalid; }
+  void setInvalid(DynBitset const &invalid) { invalid_ |= invalid; }
 
   void dump(wasm::Function *func) const;
 
@@ -69,10 +70,13 @@ struct LivenessMap {
 
   size_t getValidDimension() const { return dimension_ - invalid_.count(); }
 
+  DynBitset const &getCallerManagedObject() const { return callerManagedObject_; }
+
 private:
   IncMap<wasm::Expression *> map_;
   size_t dimension_;
   DynBitset invalid_;
+  DynBitset callerManagedObject_;
 };
 
 /// @brief colored vector for SSA values

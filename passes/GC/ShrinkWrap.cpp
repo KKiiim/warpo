@@ -1,12 +1,9 @@
-#include <array>
 #include <cassert>
 #include <cstddef>
 #include <cstdlib>
 #include <fmt/base.h>
 #include <functional>
-#include <map>
 #include <memory>
-#include <set>
 
 #include "../helper/CFG.hpp"
 #include "../helper/DomTree.hpp"
@@ -125,7 +122,9 @@ void ShrinkWrapAnalysis::runOnFunction(wasm::Module *m, wasm::Function *func) {
     std::optional<Liveness> const liveness = livenessMap.getLiveness(expr);
     if (!liveness.has_value())
       return false;
-    if (liveness.value().before().count() + liveness.value().after().count() == 0)
+    // ignore parameters (caller managed object), they are stored by caller site. So shadow stack does not need to be
+    // active at this time.
+    if (((liveness.value().before() | liveness.value().after()) & ~livenessMap.getCallerManagedObject()).count() == 0)
       return false;
     return true;
   };
