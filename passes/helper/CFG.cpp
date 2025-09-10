@@ -3,6 +3,7 @@
 #include <algorithm>
 #include <cassert>
 #include <iterator>
+#include <map>
 #include <optional>
 #include <string>
 #include <utility>
@@ -185,20 +186,24 @@ DynBitset CFG::getBlockInsideLoop() const {
     DynBitset visited_;
     std::vector<BasicBlock const *> stack_;
     DynBitset insideLoop_;
+    std::map<BasicBlock const *, BasicBlock const *> insideLoopMappedLoopEntry_;
 
     explicit BasicBlockDeepFirstVisitor(size_t size) : active_{size}, visited_{size}, insideLoop_{size} {}
     void visit(BasicBlock const *bb) {
+      // in wasm, only natural loop supportted
       uint32_t const index = bb->getIndex();
       // if the BB is already in loop, skip it
-      if (insideLoop_.get(index))
+      if (insideLoop_.get(index)) {
+        markLoop(insideLoopMappedLoopEntry_.at(bb));
         return;
+      }
+      if (visited_.get(index))
+        return;
+
       active_.set(index, true);
       stack_.push_back(bb);
       for (BasicBlock const *succ : bb->succs()) {
         size_t const succIndex = succ->getIndex();
-        // in wasm, only natural loop supportted
-        if (visited_.get(succIndex))
-          continue;
         // back edge means loop, back edge targeted bb is loop entry
         if (active_.get(succIndex)) {
           markLoop(succ);
@@ -216,8 +221,11 @@ DynBitset CFG::getBlockInsideLoop() const {
       auto const loopEntryIt = std::find(stack_.rbegin(), stack_.rend(), loopEntry);
       assert(loopEntryIt != stack_.rend());
       insideLoop_.set(loopEntry->getIndex(), true);
-      for (auto it = stack_.rbegin(); it != loopEntryIt; ++it)
+      insideLoopMappedLoopEntry_.insert_or_assign(loopEntry, loopEntry);
+      for (auto it = stack_.rbegin(); it != loopEntryIt; ++it) {
         insideLoop_.set((*it)->getIndex(), true);
+        insideLoopMappedLoopEntry_.insert_or_assign(*it, loopEntry);
+      }
     }
   };
   BasicBlockDeepFirstVisitor visitor{size()};
@@ -299,6 +307,45 @@ TEST(CFGTestGetBlockInsideLoop, Branch) {
   EXPECT_FALSE(insideLoop.get(c));
   EXPECT_FALSE(insideLoop.get(d));
   EXPECT_FALSE(insideLoop.get(e));
+}
+
+TEST(CFGTestGetBlockInsideLoop, BranchInLoop) {
+  CFGTestWrapper cfg{};
+  /*
+        entry
+          |
+          a<-----
+         /  \   |
+        b   c   |
+         \ /    |
+          d------
+          |
+          exit
+  */
+  size_t a = cfg.addBB();
+  size_t b = cfg.addBB();
+  size_t c = cfg.addBB();
+  size_t d = cfg.addBB();
+  size_t exit = cfg.addExitBB();
+
+  cfg.linkBBs(cfg.entry_, a);
+  cfg.linkBBs(a, b);
+  cfg.linkBBs(a, c);
+  cfg.linkBBs(b, d);
+  cfg.linkBBs(c, d);
+  cfg.linkBBs(d, a);
+  cfg.linkBBs(d, exit);
+
+  DynBitset const insideLoop = cfg.raw_.getBlockInsideLoop();
+  ASSERT_EQ(insideLoop.size(), cfg.size());
+
+  EXPECT_TRUE(insideLoop.get(a));
+  EXPECT_TRUE(insideLoop.get(b));
+  EXPECT_TRUE(insideLoop.get(c));
+  EXPECT_TRUE(insideLoop.get(d));
+
+  EXPECT_FALSE(insideLoop.get(cfg.entry_));
+  EXPECT_FALSE(insideLoop.get(exit));
 }
 
 } // namespace warpo::passes::ut
