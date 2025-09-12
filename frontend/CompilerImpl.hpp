@@ -31,6 +31,8 @@ class FrontendCompiler {
   std::string errorMessage_;
 
   int32_t allocString(std::string_view str);
+  std::u16string utf8ToUtf16(std::string const &utf8Str);
+  std::string utf16ToUtf8(std::u16string const &utf16Str);
 
   void parseFile(int32_t const program, std::optional<std::string> const &code, std::string_view path, IsEntry isEntry);
 
@@ -59,7 +61,6 @@ public:
 
   FrontendCompiler(Config const &config);
   ~FrontendCompiler();
-
 
   CompilationResult compile(std::vector<std::string> const &entryFilePaths, Config const &config);
 
