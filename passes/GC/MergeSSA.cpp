@@ -1,6 +1,7 @@
 #include <cassert>
 #include <cstddef>
 #include <map>
+#include <optional>
 
 #include "MergeSSA.hpp"
 #include "SSAObj.hpp"
@@ -53,7 +54,13 @@ void MergeSSA::runOnFunction(wasm::Module *m, wasm::Function *func) {
     if (auto *const getExpr = callExpr->operands[0]->dynCast<wasm::LocalGet>()) {
       // this tmp ssa is reference of local
       wasm::Index const localIndex = getExpr->index;
-      Liveness const localgetLiveness = livenessMap.getLiveness(getExpr).value();
+      std::optional<Liveness> const liveness = livenessMap.getLiveness(getExpr);
+      if (liveness == std::nullopt)
+        // this expr are unreachable, so CFG will not contain it.
+        // we just skip this node and let other optimization handle it.
+        // FIXME: maybe we should do pre-opt to remove the dead code?
+        continue;
+      Liveness const localgetLiveness = liveness.value();
 
       DynBitset const localMappedSSA = localIndexToSSA.get(localIndex);
       DynBitset const livenessBeforeLocalGet = localgetLiveness.before() & localMappedSSA;
