@@ -27,9 +27,9 @@ void ascMain(int argc, const char *argv[]) {
   cli::init(cli::Category::Frontend | cli::Category::Optimization, program, argc, argv);
 
   frontend::CompilationResult const result = frontend::compile();
-  if (result.m == nullptr) {
+  if (result.m.invalid()) {
     fmt::println("compilation failed");
-    fmt::println("{}", result.errorMessage.value_or("unknown error"));
+    fmt::println("{}", result.errorMessage);
     throw std::runtime_error("compilation failed");
   }
   passes::runAndEmit(result.m.get(), outputPath.get());

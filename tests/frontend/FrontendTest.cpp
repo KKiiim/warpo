@@ -61,12 +61,12 @@ frontend::CompilationResult compile(nlohmann::json const &configJson, std::files
 [[nodiscard]] TestResult runUpdate(nlohmann::json const &configJson, std::filesystem::path const &tsPath,
                                    std::filesystem::path const &expectedOutPath) {
   frontend::CompilationResult const ret = compile(configJson, tsPath);
-  if (ret.m == nullptr) {
+  if (ret.m.invalid()) {
     if (configJson.contains("stderr")) {
       return TestResult::Success;
     } else {
       fmt::println("FAILED '{}': expected to compile successfully\nerror message: {}", tsPath.c_str(),
-                   *ret.errorMessage);
+                   ret.errorMessage);
       return TestResult::Failure;
     }
   }
@@ -80,7 +80,7 @@ frontend::CompilationResult compile(nlohmann::json const &configJson, std::files
 [[nodiscard]] TestResult runCompilationErrorCase(nlohmann::json const &configJson,
                                                  std::filesystem::path const &tsPath) {
   frontend::CompilationResult const ret = compile(configJson, tsPath);
-  if (ret.m != nullptr) {
+  if (ret.m.valid()) {
     fmt::println("'{}' success to compile but expect failed", tsPath.c_str());
     return TestResult::Failure;
   }
@@ -94,12 +94,11 @@ frontend::CompilationResult compile(nlohmann::json const &configJson, std::files
     }
   }
 
-  std::string const &actualStderr = *ret.errorMessage;
   size_t lastIndex = 0;
   bool failed = false;
   for (auto const &expectedErrorMessageLineJson : configJson["stderr"].get<nlohmann::json::array_t>()) {
     std::string const expectedErrorMessageLine = expectedErrorMessageLineJson.get<std::string>();
-    size_t index = actualStderr.find(expectedErrorMessageLine, lastIndex);
+    size_t index = ret.errorMessage.find(expectedErrorMessageLine, lastIndex);
     if (index == std::string::npos) {
       fmt::println("\tmissing pattern '{}' in stderr.", expectedErrorMessageLine);
       failed = true;
@@ -111,7 +110,7 @@ frontend::CompilationResult compile(nlohmann::json const &configJson, std::files
     fmt::println("\t========== actual error message==========\n"
                  "{}"
                  "\t========== actual error message==========",
-                 actualStderr);
+                 ret.errorMessage);
     fmt::println("FAILED '{}': stderr mismatch", tsPath.c_str());
     return TestResult::Failure;
   }
@@ -121,8 +120,8 @@ frontend::CompilationResult compile(nlohmann::json const &configJson, std::files
 [[nodiscard]] TestResult runSnapshotCase(nlohmann::json const &configJson, std::filesystem::path const &tsPath,
                                          std::filesystem::path const &expectedOutPath) {
   frontend::CompilationResult const ret = compile(configJson, tsPath);
-  if (ret.m == nullptr) {
-    fmt::println("FAILED '{}': expected to compile successfully\nerror message: {}", tsPath.c_str(), *ret.errorMessage);
+  if (ret.m.invalid()) {
+    fmt::println("FAILED '{}': expected to compile successfully\nerror message: {}", tsPath.c_str(), ret.errorMessage);
     return TestResult::Failure;
   }
   std::stringstream ss;

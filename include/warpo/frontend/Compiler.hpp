@@ -6,7 +6,7 @@
 #include <string>
 #include <vector>
 
-#include "warpo/common/BinaryenRAII.hpp"
+#include "warpo/common/AsModule.hpp"
 #include "warpo/common/Features.hpp"
 
 namespace wasm {
@@ -34,8 +34,8 @@ struct Config {
 Config getDefaultConfig();
 
 struct CompilationResult {
-  BinaryenModule m;
-  std::optional<std::string> errorMessage;
+  AsModule m;
+  std::string errorMessage;
 };
 
 CompilationResult compile();

@@ -357,25 +357,25 @@ warpo::frontend::CompilationResult FrontendCompiler::compile(std::vector<std::st
       }
     }
     if (checkDiag(program, config.useColorfulDiagMessage))
-      return {.m = nullptr, .errorMessage = errorMessage_};
+      return {.m = {}, .errorMessage = errorMessage_};
     parseStat.release();
 
     support::PerfRAII compileStat{support::PerfItemKind::CompilationHIR_Compilation};
     m.callExportedFunctionWithName<0>(stackTop, "initializeProgram", program);
     int32_t const compiled = m.callExportedFunctionWithName<1>(stackTop, "compile", program)[0].i32;
     if (checkDiag(program, config.useColorfulDiagMessage))
-      return {.m = nullptr, .errorMessage = errorMessage_};
+      return {.m = {}, .errorMessage = errorMessage_};
     wasm::Module *binaryen_module = reinterpret_cast<wasm::Module *>(
         m.callExportedFunctionWithName<1>(stackTop, "getBinaryenModuleRef", compiled)[0].i64);
     compileStat.release();
-    return {.m = BinaryenModule{binaryen_module}, .errorMessage = std::nullopt};
+    return {.m = AsModule{binaryen_module}, .errorMessage = errorMessage_};
   } catch (vb::TrapException const &e) {
     logger << "Error: " << e.what() << vb::endStatement;
     m.printStacktrace(logger);
   } catch (std::exception const &e) {
     logger << "Error: " << e.what() << vb::endStatement;
   }
-  return {.m = nullptr, .errorMessage = "AS wasm execution failed"};
+  return {.m = {}, .errorMessage = "AS wasm execution failed"};
 }
 
 } // namespace warpo::frontend

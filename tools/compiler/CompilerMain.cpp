@@ -24,9 +24,9 @@ void compilerMain(int argc, const char *argv[]) {
   cli::init(cli::Category::Frontend, program, argc, argv);
 
   frontend::CompilationResult const result = frontend::compile();
-  if (result.m == nullptr) {
+  if (result.m.invalid()) {
     fmt::println("compilation failed");
-    fmt::println("{}", result.errorMessage.value_or("unknown error"));
+    fmt::println("{}", result.errorMessage);
     throw std::runtime_error("compilation failed");
   }
   char *const wasmText = BinaryenModuleAllocateAndWriteText(result.m.get());
