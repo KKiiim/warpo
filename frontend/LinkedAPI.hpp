@@ -6,6 +6,10 @@
 
 namespace warpo::frontend {
 
-extern const std::vector<vb::NativeSymbol> linkedAPI;
+std::vector<vb::NativeSymbol> createAssemblyscriptAPI();
+std::vector<vb::NativeSymbol> createCppWrapperAPI();
+std::vector<vb::NativeSymbol> createBinaryenLinkedAPI();
 
-}
+std::vector<vb::NativeSymbol> const &getLinkedAPI();
+
+} // namespace warpo::frontend

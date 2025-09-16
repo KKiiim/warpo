@@ -271,14 +271,16 @@ FrontendCompiler::FrontendCompiler(Config const &config)
   if (config.ascWasmPath) [[unlikely]] {
     support::PerfRAII const r{support::PerfItemKind::CompilationHIR_PrepareWASMModule};
     std::string const wasmBytes = readBinaryFile(*config.ascWasmPath);
-    m.initFromBytecode(
-        vb::Span<const uint8_t>{reinterpret_cast<uint8_t const *>(wasmBytes.data()), wasmBytes.size()},
-        vb::Span<vb::NativeSymbol const>{warpo::frontend::linkedAPI.data(), warpo::frontend::linkedAPI.size()});
+    m.initFromBytecode(vb::Span<const uint8_t>{reinterpret_cast<uint8_t const *>(wasmBytes.data()), wasmBytes.size()},
+                       vb::Span<vb::NativeSymbol const>{warpo::frontend::getLinkedAPI().data(),
+                                                        warpo::frontend::getLinkedAPI().size()},
+                       true);
   } else {
     support::PerfRAII const r{support::PerfItemKind::CompilationHIR_PrepareWASMModule};
-    static vb::WasmModule::CompileResult const embedJitCode = m.compile(
-        vb::Span<const uint8_t>{embed_asc_wasm.data(), embed_asc_wasm.size()},
-        vb::Span<vb::NativeSymbol const>{warpo::frontend::linkedAPI.data(), warpo::frontend::linkedAPI.size()});
+    static vb::WasmModule::CompileResult const embedJitCode =
+        m.compile(vb::Span<const uint8_t>{embed_asc_wasm.data(), embed_asc_wasm.size()},
+                  vb::Span<vb::NativeSymbol const>{warpo::frontend::getLinkedAPI().data(),
+                                                   warpo::frontend::getLinkedAPI().size()});
     m.initFromCompiledBinary(
         vb::Span<uint8_t const>{embedJitCode.getModule().data(), embedJitCode.getModule().size()},
         vb::Span<vb::NativeSymbol const>{},
@@ -365,10 +367,10 @@ warpo::frontend::CompilationResult FrontendCompiler::compile(std::vector<std::st
     int32_t const compiled = m.callExportedFunctionWithName<1>(stackTop, "compile", program)[0].i32;
     if (checkDiag(program, config.useColorfulDiagMessage))
       return {.m = {}, .errorMessage = errorMessage_};
-    wasm::Module *binaryen_module = reinterpret_cast<wasm::Module *>(
-        m.callExportedFunctionWithName<1>(stackTop, "getBinaryenModuleRef", compiled)[0].i64);
+    asModule_.set(BinaryenModule{reinterpret_cast<wasm::Module *>(
+        m.callExportedFunctionWithName<1>(stackTop, "getBinaryenModuleRef", compiled)[0].i64)});
     compileStat.release();
-    return {.m = AsModule{binaryen_module}, .errorMessage = errorMessage_};
+    return {.m = std::move(asModule_), .errorMessage = errorMessage_};
   } catch (vb::TrapException const &e) {
     logger << "Error: " << e.what() << vb::endStatement;
     m.printStacktrace(logger);

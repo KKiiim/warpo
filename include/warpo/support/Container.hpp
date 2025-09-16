@@ -8,6 +8,10 @@
 
 namespace warpo {
 
+template <class T> void append(std::vector<T> &vec, std::vector<T> const &values) {
+  vec.insert(vec.end(), values.begin(), values.end());
+}
+
 template <class T, class E> bool contains(T const &t, E const &e) {
   return std::find(t.begin(), t.end(), e) != t.end();
 }

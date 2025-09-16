@@ -17,7 +17,9 @@
 #pragma once
 
 #include <binaryen/src/binaryen-c.h>
+#include <compare>
 #include <cstddef>
+#include <set>
 #include <utility>
 
 namespace warpo {
@@ -33,16 +35,18 @@ public:
   }
   BinaryenModule &operator=(BinaryenModule const &) = delete;
   BinaryenModule &operator=(BinaryenModule &&o) noexcept {
+    if (&o == this)
+      return *this;
     BinaryenModuleRef tmp = ref_;
     ref_ = o.ref_;
-    o.ref_ = ref_;
+    o.ref_ = tmp;
     return *this;
   }
 
   BinaryenModule() noexcept : BinaryenModule(nullptr) {}
   BinaryenModule(BinaryenModuleRef ref) noexcept : ref_(ref) {}
   ~BinaryenModule() noexcept {
-    if (ref_)
+    if (ref_ != nullptr)
       BinaryenModuleDispose(ref_);
   }
 
@@ -51,13 +55,34 @@ public:
   bool operator==(std::nullptr_t) const { return ref_ == nullptr; }
 };
 
+/// range of data elements
+class DataElementRange {
+public:
+  uint32_t begin_;
+  uint32_t end_;
+
+  DataElementRange(uint32_t begin, uint32_t end) : begin_(begin), end_(end) {}
+
+  std::partial_ordering operator<=>(DataElementRange const &other) const {
+    if (begin_ == other.begin_ && end_ == other.end_)
+      return std::partial_ordering::equivalent;
+    if (begin_ < other.begin_ && end_ < other.begin_)
+      return std::partial_ordering::less;
+    if (begin_ > other.end_ && end_ > other.end_)
+      return std::partial_ordering::greater;
+    return std::partial_ordering::unordered;
+  }
+};
+
 class AsModule {
   BinaryenModule raw_;
-  // TODO: more information fields
 
 public:
+  std::set<DataElementRange> immutableRanges_;
+  // TODO: more information fields
+
   AsModule() = default;
-  explicit AsModule(BinaryenModule raw) : raw_(std::move(raw)) {}
+  void set(BinaryenModule raw) { raw_ = std::move(raw); }
   BinaryenModuleRef get() const { return raw_.get(); }
   bool valid() const { return raw_ != nullptr; }
   bool invalid() const { return !valid(); }

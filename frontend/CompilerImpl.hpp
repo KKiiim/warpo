@@ -14,6 +14,7 @@
 #include <string_view>
 #include <vector>
 
+#include "warpo/common/AsModule.hpp"
 #include "warpo/frontend/Compiler.hpp"
 #include "wasm-compiler/src/WasmModule/WasmModule.hpp"
 #include "wasm-compiler/src/utils/STDCompilerLogger.hpp"
@@ -29,6 +30,7 @@ class FrontendCompiler {
   std::map<std::string, std::filesystem::path> packageRootMap_{};
   size_t errorCount_ = 0;
   std::string errorMessage_;
+  AsModule asModule_;
 
   int32_t allocString(std::string_view str);
   std::u16string utf8ToUtf16(std::string const &utf8Str);
