@@ -17,6 +17,7 @@
 // copy and modified from third_party/binaryen/src/passes/Inlining.cpp
 
 #include <atomic>
+#include <cassert>
 #include <cstdint>
 #include <memory>
 
@@ -37,6 +38,7 @@
 #include "pass.h"
 #include "passes/pass-utils.h"
 #include "support/name.h"
+#include "warpo/common/OptLevel.hpp"
 #include "warpo/support/Debug.hpp"
 #include "warpo/support/Opt.hpp"
 #include "wasm-builder.h"
@@ -101,7 +103,14 @@ struct FunctionInfo {
       budget += functionCost;
     }
     // calculate delta for each call
-    float delta = inlinedCost - getOpcodeCost(Opcode::CALL);
+    float const sizeCostDelta = inlinedCost - getOpcodeSizeCost(Opcode::CALL);
+    float const performanceCostDelta = 0.0f - getOpcodePerformanceCost(Opcode::CALL) - getFunctionPerformanceCost();
+
+    float const optimizationLevel = static_cast<float>(common::getOptimizationLevel()) + 0.0001;
+    float const shrinkLevel = static_cast<float>(common::getShrinkLevel()) + 0.0001;
+    float const optRatio = optimizationLevel / (optimizationLevel + shrinkLevel);
+    float const shrinkRatio = shrinkLevel / (optimizationLevel + shrinkLevel);
+    float const delta = performanceCostDelta * optRatio + sizeCostDelta * shrinkRatio;
 
     budget -= refs * delta;
 
@@ -110,8 +119,8 @@ struct FunctionInfo {
 
     bool const shouldInline = budget >= 0.0f;
     if (support::isDebug(PASS_NAME, funcName.str)) {
-      fmt::println("[" PASS_NAME "] {} '{}', func_cost={}, refs={}, budget={}", shouldInline ? "inline" : "not inline",
-                   funcName.str, functionCost, refs.load(), budget);
+      fmt::println("[" PASS_NAME "] {} '{}', func_cost={}, delta={}, refs={}, budget={}",
+                   shouldInline ? "inline" : "not inline", funcName.str, functionCost, delta, refs.load(), budget);
     }
     return shouldInline;
   }
@@ -157,8 +166,8 @@ struct FunctionInfoScanner : public WalkerPass<PostWalker<FunctionInfoScanner>> 
       info.inliningMode = InliningMode::Uninlineble;
     }
 
-    float const bodyCost = measureCost(curr->body);
-    info.functionCost = bodyCost + getFunctionCost();
+    float const bodyCost = measureSizeCost(curr->body);
+    info.functionCost = bodyCost + getFunctionSizeCost();
     info.inlinedCost = bodyCost;
   }
 

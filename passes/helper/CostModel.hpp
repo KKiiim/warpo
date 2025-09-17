@@ -254,11 +254,14 @@ enum class Opcode : uint32_t {
   I64_TRUNC_SAT_F64_U = SCALAR_EXTEND_OP_CODE_PREFIX | 7U,
 };
 
-float getFunctionCost();
+float getFunctionSizeCost();
 
-float getOpcodeCost(wasm::Expression *expr);
-float getOpcodeCost(Opcode opcode);
+float getOpcodeSizeCost(wasm::Expression *expr);
+float getOpcodeSizeCost(Opcode opcode);
 
-float measureCost(wasm::Expression *expr);
+float measureSizeCost(wasm::Expression *expr);
+
+float getFunctionPerformanceCost();
+float getOpcodePerformanceCost(Opcode opcode);
 
 } // namespace warpo::passes
