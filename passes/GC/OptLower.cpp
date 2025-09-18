@@ -1,4 +1,3 @@
-#include <algorithm>
 #include <cassert>
 #include <cstddef>
 #include <functional>
@@ -22,8 +21,6 @@
 #include "passes/passes.h"
 #include "support/name.h"
 #include "warpo/support/Opt.hpp"
-#include "wasm-builder.h"
-#include "wasm-type.h"
 #include "wasm.h"
 
 #define PASS_NAME "GCOptLower"
@@ -57,43 +54,6 @@ static cli::Opt<bool> TestOnlyControlGroup{
     cli::Category::OnlyForTest,
     "--gc-test-only-control-group",
     [](argparse::Argument &arg) { arg.flag().hidden(); },
-};
-
-struct PostLower : public wasm::Pass {
-  std::shared_ptr<StackPositions const> stackPosition_;
-  explicit PostLower(std::shared_ptr<StackPositions const> stackPosition) : stackPosition_(stackPosition) {
-    name = "PostLower";
-  }
-  void run(wasm::Module *m) override {
-    wasm::Builder b{*m};
-    wasm::Name const memoryName = m->memories.front()->name;
-    wasm::Type const i32 = wasm::Type::i32;
-
-    addStackStackOperationFunction(m);
-    uint32_t const maxShadowStackOffset = getMaxShadowStackOffset();
-    for (size_t offset = 0U; offset <= maxShadowStackOffset; offset += 4U) {
-      m->addFunction(b.makeFunction(
-          ToStackReplacer::getToStackFunctionName(offset), wasm::Signature(i32, i32), {},
-          b.makeBlock({
-              b.makeStore(4, offset, 1, b.makeGlobalGet(VarStackPointer, i32), b.makeLocalGet(0, i32), i32, memoryName),
-              b.makeLocalGet(0, i32),
-          })));
-    }
-
-    m->removeFunction(FnLocalToStack);
-    m->removeFunction(FnTmpToStack);
-  }
-
-private:
-  uint32_t getMaxShadowStackOffset() const {
-    uint32_t maxOffset = 0;
-    for (auto const &[_, offsets] : *stackPosition_) {
-      for (auto const &offset : offsets) {
-        maxOffset = std::max(maxOffset, offset.second);
-      }
-    }
-    return maxOffset;
-  }
 };
 
 void OptLower::preprocess(wasm::PassRunner &runner) {
@@ -140,9 +100,12 @@ void OptLower::run(wasm::Module *m) {
   runner.add(std::unique_ptr<wasm::Pass>(
       new PrologEpilogInserter(stackInsertPositions, MaxShadowStackOffsetsFromStackPositions::create(stackPositions))));
   runner.add(std::unique_ptr<wasm::Pass>(new ToStackReplacer(stackPositions)));
-  runner.add(std::unique_ptr<wasm::Pass>(new PostLower(stackPositions)));
 
   runner.run();
+
+  m->removeFunction(FnLocalToStack);
+  m->removeFunction(FnTmpToStack);
+  addStackStackOperationFunction(m);
 }
 
 } // namespace warpo::passes::gc

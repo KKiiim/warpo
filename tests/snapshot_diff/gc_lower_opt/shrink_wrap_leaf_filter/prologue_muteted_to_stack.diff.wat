@@ -2,6 +2,7 @@
 (func $tests/snapshot_diff/gc_lower_opt/shrink_wrap_leaf_filter/prologue_muteted_to_stack/_start (type $func.0 (func (result i32)))
   (local i32)
   (local i32)
+  (local i32)
 ;; =========add========
   (local i32)
 ;; ====================
@@ -27,9 +28,27 @@
           end
 ;; ====================
         call $tests/snapshot_diff/gc_lower_opt/shrink_wrap_leaf_filter/prologue_muteted_to_stack/foo
-              i32.const 0
-            call $tests/snapshot_diff/common_lib/normal/Normal#constructor
-          call $~lib/rt/__tostack<0>
+          block ;;i32
+                i32.const 0
+              call $tests/snapshot_diff/common_lib/normal/Normal#constructor
+;; ======remove=======
+;;          local.set $2
+;; =========add========
+            local.set $3
+;; ====================
+              global.get $~lib/memory/__stack_pointer
+;; ======remove=======
+;;            local.get $2
+;; =========add========
+              local.get $3
+;; ====================
+            i32.store $0 align=1
+;; ======remove=======
+;;          local.get $2
+;; =========add========
+            local.get $3
+;; ====================
+          end
         local.set $0
             i32.const 0
           call $tests/snapshot_diff/common_lib/normal/Normal#constructor

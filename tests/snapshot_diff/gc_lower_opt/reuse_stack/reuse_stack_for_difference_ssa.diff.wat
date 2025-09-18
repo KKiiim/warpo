@@ -2,6 +2,7 @@
 (func $tests/snapshot_diff/gc_lower_opt/reuse_stack/reuse_stack_for_difference_ssa/_start (type $func.0 (func))
   (local i32)
   (local i32)
+  (local i32)
   block ;;none
 ;; ======remove=======
 ;;    i32.const 16
@@ -10,31 +11,55 @@
 ;; ====================
     call $~lib/rt/__decrease_sp
     block ;;none
-            i32.const 0
-          call $tests/snapshot_diff/common_lib/normal/Normal#constructor
-        call $~lib/rt/__tostack<0>
+        block ;;i32
+              i32.const 0
+            call $tests/snapshot_diff/common_lib/normal/Normal#constructor
+          local.set $2
+            global.get $~lib/memory/__stack_pointer
+            local.get $2
+          i32.store $0 align=1
+          local.get $2
+        end
       local.set $0
-          local.get $0
+        block ;;i32
+            local.get $0
+          local.set $2
+            global.get $~lib/memory/__stack_pointer
+            local.get $2
 ;; ======remove=======
-;;      call $~lib/rt/__tostack<4>
+;;        i32.store $0 offset=4 align=1
 ;; =========add========
-        call $~lib/rt/__tostack<0>
+          i32.store $0 align=1
 ;; ====================
+          local.get $2
+        end
       call $tests/snapshot_diff/gc_lower_opt/reuse_stack/reuse_stack_for_difference_ssa/foo
-            i32.const 0
-          call $tests/snapshot_diff/common_lib/normal/Normal#constructor
+        block ;;i32
+              i32.const 0
+            call $tests/snapshot_diff/common_lib/normal/Normal#constructor
+          local.set $2
+            global.get $~lib/memory/__stack_pointer
+            local.get $2
 ;; ======remove=======
-;;      call $~lib/rt/__tostack<8>
+;;        i32.store $0 offset=8 align=1
 ;; =========add========
-        call $~lib/rt/__tostack<0>
+          i32.store $0 align=1
 ;; ====================
+          local.get $2
+        end
       local.set $1
-          local.get $1
+        block ;;i32
+            local.get $1
+          local.set $2
+            global.get $~lib/memory/__stack_pointer
+            local.get $2
 ;; ======remove=======
-;;      call $~lib/rt/__tostack<12>
+;;        i32.store $0 offset=12 align=1
 ;; =========add========
-        call $~lib/rt/__tostack<0>
+          i32.store $0 align=1
 ;; ====================
+          local.get $2
+        end
       call $tests/snapshot_diff/gc_lower_opt/reuse_stack/reuse_stack_for_difference_ssa/foo
     end
 ;; ======remove=======

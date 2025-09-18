@@ -2,13 +2,20 @@
 (func $tests/snapshot_diff/gc_lower_opt/leaf_filter/lifetime_with_condition_collect/foo_true (type $func.0 (func (result i32)))
   (local i32)
   (local i32)
+  (local i32)
   block ;;i32
       i32.const 4
     call $~lib/rt/__decrease_sp
       block ;;unreachable
-              i32.const 0
-            call $tests/snapshot_diff/common_lib/normal/Normal#constructor
-          call $~lib/rt/__tostack<0>
+          block ;;i32
+                i32.const 0
+              call $tests/snapshot_diff/common_lib/normal/Normal#constructor
+            local.set $2
+              global.get $~lib/memory/__stack_pointer
+              local.get $2
+            i32.store $0 align=1
+            local.get $2
+          end
         local.set $0
         if ;;none
           global.get $tests/snapshot_diff/gc_lower_opt/leaf_filter/lifetime_with_condition_collect/v
@@ -32,13 +39,20 @@
 (func $tests/snapshot_diff/gc_lower_opt/leaf_filter/lifetime_with_condition_collect/foo_false (type $func.0 (func (result i32)))
   (local i32)
   (local i32)
+  (local i32)
   block ;;i32
       i32.const 4
     call $~lib/rt/__decrease_sp
       block ;;unreachable
-              i32.const 0
-            call $tests/snapshot_diff/common_lib/normal/Normal#constructor
-          call $~lib/rt/__tostack<0>
+          block ;;i32
+                i32.const 0
+              call $tests/snapshot_diff/common_lib/normal/Normal#constructor
+            local.set $2
+              global.get $~lib/memory/__stack_pointer
+              local.get $2
+            i32.store $0 align=1
+            local.get $2
+          end
         local.set $0
         if ;;none
             global.get $tests/snapshot_diff/gc_lower_opt/leaf_filter/lifetime_with_condition_collect/v
@@ -64,15 +78,24 @@
   (local i32)
 ;; ======remove=======
 ;;(local i32)
+;;(local i32)
 ;;block ;;i32
 ;;    i32.const 4
 ;;  call $~lib/rt/__decrease_sp
 ;; ====================
   block ;;unreachable
+;; ======remove=======
+;;        block ;;i32
+;; ====================
         i32.const 0
       call $tests/snapshot_diff/common_lib/normal/Normal#constructor
 ;; ======remove=======
-;;        call $~lib/rt/__tostack<0>
+;;          local.set $2
+;;            global.get $~lib/memory/__stack_pointer
+;;            local.get $2
+;;          i32.store $0 align=1
+;;          local.get $2
+;;        end
 ;; ====================
     local.set $0
     if ;;none

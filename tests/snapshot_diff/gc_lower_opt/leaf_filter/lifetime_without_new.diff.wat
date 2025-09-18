@@ -3,15 +3,24 @@
   (local i32)
 ;; ======remove=======
 ;;(local i32)
+;;(local i32)
 ;;block ;;i32
 ;;    i32.const 4
 ;;  call $~lib/rt/__decrease_sp
 ;; ====================
   block ;;unreachable
+;; ======remove=======
+;;        block ;;i32
+;; ====================
         i32.const 0
       call $tests/snapshot_diff/common_lib/normal/Normal#constructor
 ;; ======remove=======
-;;        call $~lib/rt/__tostack<0>
+;;          local.set $2
+;;            global.get $~lib/memory/__stack_pointer
+;;            local.get $2
+;;          i32.store $0 align=1
+;;          local.get $2
+;;        end
 ;; ====================
     local.set $0
 ;; ======remove=======

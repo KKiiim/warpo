@@ -22,10 +22,6 @@ struct ToStackReplacer : public wasm::Pass {
   bool modifiesBinaryenIR() override { return true; }
   void runOnFunction(wasm::Module *m, wasm::Function *func) override;
 
-  static wasm::Name getToStackFunctionName(uint32_t offset) {
-    return wasm::Name{fmt::format("~lib/rt/__tostack<{}>", offset)};
-  }
-
 private:
   void replaceToStackCallExpr(wasm::Module *m, wasm::Function *func, StackPosition const &stackPosition);
 };

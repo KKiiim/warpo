@@ -1,6 +1,7 @@
 ;; ====================
 (func $tests/snapshot_diff/gc_lower_opt/ssa_merge/ssa_merge_for_cond/_start (type $func.0 (func))
   (local i32)
+  (local i32)
   block ;;none
 ;; ======remove=======
 ;;    i32.const 12
@@ -9,19 +10,39 @@
 ;; ====================
     call $~lib/rt/__decrease_sp
     block ;;none
-          i32.const 0
-        call $~lib/rt/__tostack<0>
+        block ;;i32
+            i32.const 0
+          local.set $1
+            global.get $~lib/memory/__stack_pointer
+            local.get $1
+          i32.store $0 align=1
+          local.get $1
+        end
       local.set $0
       if ;;none
         global.get $tests/snapshot_diff/gc_lower_opt/ssa_merge/ssa_merge_for_cond/g
-              i32.const 0
-            call $tests/snapshot_diff/common_lib/normal/Normal#constructor
-          call $~lib/rt/__tostack<4>
+          block ;;i32
+                i32.const 0
+              call $tests/snapshot_diff/common_lib/normal/Normal#constructor
+            local.set $1
+              global.get $~lib/memory/__stack_pointer
+              local.get $1
+            i32.store $0 offset=4 align=1
+            local.get $1
+          end
         local.set $0
       end
+;; ======remove=======
+;;      block ;;i32
+;; ====================
         local.get $0
 ;; ======remove=======
-;;      call $~lib/rt/__tostack<8>
+;;        local.set $1
+;;          global.get $~lib/memory/__stack_pointer
+;;          local.get $1
+;;        i32.store $0 offset=8 align=1
+;;        local.get $1
+;;      end
 ;; ====================
       call $tests/snapshot_diff/gc_lower_opt/ssa_merge/ssa_merge_for_cond/foo
     end

@@ -1,6 +1,7 @@
 ;; ====================
 (func $tests/snapshot_diff/gc_lower_opt/shrink_wrap/prologue_parameter/_start (type $func.0 (func (param i32) (result i32)))
   (local i32)
+  (local i32)
 ;; ======remove=======
 ;;block ;;i32
 ;;    i32.const 4
@@ -27,17 +28,36 @@
     end
 ;; ======remove=======
 ;;      end
-;; =========add========
-          block ;;i32
-              i32.const 4
-            call $~lib/rt/__decrease_sp
 ;; ====================
-            i32.const 0
+      block ;;i32
 ;; =========add========
-          end
+            block ;;i32
+                i32.const 4
+              call $~lib/rt/__decrease_sp
 ;; ====================
-        call $tests/snapshot_diff/common_lib/normal/Normal#constructor
-      call $~lib/rt/__tostack<0>
+              i32.const 0
+;; =========add========
+            end
+;; ====================
+          call $tests/snapshot_diff/common_lib/normal/Normal#constructor
+;; ======remove=======
+;;          local.set $2
+;; =========add========
+        local.set $3
+;; ====================
+          global.get $~lib/memory/__stack_pointer
+;; ======remove=======
+;;            local.get $2
+;; =========add========
+          local.get $3
+;; ====================
+        i32.store $0 align=1
+;; ======remove=======
+;;          local.get $2
+;; =========add========
+        local.get $3
+;; ====================
+      end
     local.set $0
 ;; ======remove=======
 ;;      block ;;unreachable

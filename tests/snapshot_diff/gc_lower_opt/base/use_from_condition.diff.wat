@@ -3,6 +3,7 @@
   (local i32)
 ;; =========add========
   (local i32)
+  (local i32)
 ;; ====================
   block ;;i32
 ;; =========add========
@@ -12,20 +13,36 @@
 ;; ====================
         if ;;none
           global.get $tests/snapshot_diff/gc_lower_opt/base/use_from_condition/v
-                i32.const 0
-              call $tests/snapshot_diff/common_lib/normal/Normal#constructor
+;; =========add========
+            block ;;i32
+;; ====================
+                  i32.const 0
+                call $tests/snapshot_diff/common_lib/normal/Normal#constructor
 ;; ======remove=======
 ;;      call $~lib/rt/__localtostack
 ;; =========add========
-            call $~lib/rt/__tostack<0>
+              local.set $2
+                global.get $~lib/memory/__stack_pointer
+                local.get $2
+              i32.store $0 align=1
+              local.get $2
+            end
 ;; ====================
           local.set $0
-                i32.const 0
-              call $tests/snapshot_diff/common_lib/normal/Normal#constructor
+;; =========add========
+            block ;;i32
+;; ====================
+                  i32.const 0
+                call $tests/snapshot_diff/common_lib/normal/Normal#constructor
 ;; ======remove=======
 ;;      call $~lib/rt/__localtostack
 ;; =========add========
-            call $~lib/rt/__tostack<4>
+              local.set $2
+                global.get $~lib/memory/__stack_pointer
+                local.get $2
+              i32.store $0 offset=4 align=1
+              local.get $2
+            end
 ;; ====================
           local.set $0
         end
