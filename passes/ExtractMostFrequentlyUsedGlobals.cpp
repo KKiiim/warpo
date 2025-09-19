@@ -107,6 +107,8 @@ static void extractGlobal(wasm::Module &m, wasm::Name const name) {
 struct ExtractMostFrequentlyUsedGlobalsAnalyzer : public wasm::Pass {
   void run(wasm::Module *m) override {
     Counter counter = createCounter(m->globals);
+    if (counter.empty())
+      return;
     Scanner scanner{counter};
     scanner.run(getPassRunner(), m);
     scanner.runOnModuleCode(getPassRunner(), m);
@@ -266,6 +268,16 @@ TEST(ExtractMostFrequentlyUsedGlobalsTest, ExtractWithImportGlobal) {
   EXPECT_TRUE(wasm::WasmValidator{}.validate(*m));
 }
 
+TEST(ExtractMostFrequentlyUsedGlobalsTest, PassNoGlobal) {
+  auto m = loadWat(R"(
+    (module
+    )
+  )");
+  wasm::PassRunner runner{m.get()};
+  runner.add(std::unique_ptr<wasm::Pass>(createExtractMostFrequentlyUsedGlobalsPass()));
+  EXPECT_NO_THROW(runner.run());
+  EXPECT_TRUE(wasm::WasmValidator{}.validate(*m));
+}
 TEST(ExtractMostFrequentlyUsedGlobalsTest, Pass) {
   auto m = loadWat(R"(
     (module
