@@ -3889,9 +3889,7 @@
        (i32.const 1)
       )
      )
-     (call $~lib/rt/__tmptostack
-      (i32.const 464)
-     )
+     (i32.const 464)
     )
    )
    (then
@@ -3915,9 +3913,7 @@
        (i32.const 1)
       )
      )
-     (call $~lib/rt/__tmptostack
-      (i32.const 464)
-     )
+     (i32.const 464)
     )
    )
    (then
@@ -3941,9 +3937,7 @@
        (f64.const 1.1)
       )
      )
-     (call $~lib/rt/__tmptostack
-      (i32.const 464)
-     )
+     (i32.const 464)
     )
    )
    (then
@@ -3969,14 +3963,10 @@
        (call $~lib/rt/__tmptostack
         (global.get $class-overloading-cast/c)
        )
-       (call $~lib/rt/__tmptostack
-        (i32.const 576)
-       )
+       (i32.const 576)
       )
      )
-     (call $~lib/rt/__tmptostack
-      (i32.const 432)
-     )
+     (i32.const 432)
     )
    )
    (then
@@ -3997,14 +3987,10 @@
        (call $~lib/rt/__tmptostack
         (global.get $class-overloading-cast/c)
        )
-       (call $~lib/rt/__tmptostack
-        (i32.const 576)
-       )
+       (i32.const 576)
       )
      )
-     (call $~lib/rt/__tmptostack
-      (i32.const 432)
-     )
+     (i32.const 432)
     )
    )
    (then
@@ -4030,9 +4016,7 @@
        (f32.const 2.5)
       )
      )
-     (call $~lib/rt/__tmptostack
-      (i32.const 608)
-     )
+     (i32.const 608)
     )
    )
    (then

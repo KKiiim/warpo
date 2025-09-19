@@ -5240,9 +5240,7 @@
        (call $~lib/rt/__tmptostack
         (local.get $21)
        )
-       (call $~lib/rt/__tmptostack
-        (i32.const 624)
-       )
+       (i32.const 624)
       )
       (i32.store
        (local.get $21)
@@ -5283,9 +5281,7 @@
         )
        )
       )
-      (call $~lib/rt/__tmptostack
-       (i32.const 624)
-      )
+      (i32.const 624)
      )
     )
     (then
@@ -5318,9 +5314,7 @@
        (call $~lib/rt/__tmptostack
         (local.get $23)
        )
-       (call $~lib/rt/__tmptostack
-        (i32.const 656)
-       )
+       (i32.const 656)
       )
       (local.get $23)
      )
@@ -5357,9 +5351,7 @@
         )
        )
       )
-      (call $~lib/rt/__tmptostack
-       (i32.const 656)
-      )
+      (i32.const 656)
      )
     )
     (then
@@ -5388,9 +5380,7 @@
        (call $~lib/rt/__tmptostack
         (local.get $25)
        )
-       (call $~lib/rt/__tmptostack
-        (i32.const 688)
-       )
+       (i32.const 688)
       )
       (i32.store
        (local.get $25)
@@ -5458,9 +5448,7 @@
         )
        )
       )
-      (call $~lib/rt/__tmptostack
-       (i32.const 688)
-      )
+      (i32.const 688)
      )
     )
     (then
@@ -5493,17 +5481,13 @@
        (call $~lib/rt/__tmptostack
         (local.get $27)
        )
-       (call $~lib/rt/__tmptostack
-        (i32.const 720)
-       )
+       (i32.const 720)
       )
       (call $field-initialization/SomeOtherObject#set:c
        (call $~lib/rt/__tmptostack
         (local.get $27)
        )
-       (call $~lib/rt/__tmptostack
-        (i32.const 752)
-       )
+       (i32.const 752)
       )
       (local.get $27)
      )
@@ -5540,9 +5524,7 @@
         )
        )
       )
-      (call $~lib/rt/__tmptostack
-       (i32.const 720)
-      )
+      (i32.const 720)
      )
     )
     (then
@@ -5565,9 +5547,7 @@
         )
        )
       )
-      (call $~lib/rt/__tmptostack
-       (i32.const 752)
-      )
+      (i32.const 752)
      )
     )
     (then

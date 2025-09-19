@@ -3666,9 +3666,7 @@
      (call $~lib/rt/__tmptostack
       (global.get $class-overloading/which)
      )
-     (call $~lib/rt/__tmptostack
-      (i32.const 496)
-     )
+     (i32.const 496)
     )
    )
    (then
@@ -3949,9 +3947,7 @@
      (call $~lib/rt/__tmptostack
       (global.get $class-overloading/which)
      )
-     (call $~lib/rt/__tmptostack
-      (i32.const 496)
-     )
+     (i32.const 496)
     )
    )
    (then
@@ -3979,9 +3975,7 @@
      (call $~lib/rt/__tmptostack
       (global.get $class-overloading/which)
      )
-     (call $~lib/rt/__tmptostack
-      (i32.const 496)
-     )
+     (i32.const 496)
     )
    )
    (then
@@ -4010,9 +4004,7 @@
      (call $~lib/rt/__tmptostack
       (global.get $class-overloading/which)
      )
-     (call $~lib/rt/__tmptostack
-      (i32.const 496)
-     )
+     (i32.const 496)
     )
    )
    (then
@@ -4040,9 +4032,7 @@
      (call $~lib/rt/__tmptostack
       (global.get $class-overloading/which)
      )
-     (call $~lib/rt/__tmptostack
-      (i32.const 496)
-     )
+     (i32.const 496)
     )
    )
    (then
@@ -4075,9 +4065,7 @@
      (call $~lib/rt/__tmptostack
       (global.get $class-overloading/which)
      )
-     (call $~lib/rt/__tmptostack
-      (i32.const 592)
-     )
+     (i32.const 592)
     )
    )
    (then
@@ -4105,9 +4093,7 @@
      (call $~lib/rt/__tmptostack
       (global.get $class-overloading/which)
      )
-     (call $~lib/rt/__tmptostack
-      (i32.const 592)
-     )
+     (i32.const 592)
     )
    )
    (then
@@ -4136,9 +4122,7 @@
      (call $~lib/rt/__tmptostack
       (global.get $class-overloading/which)
      )
-     (call $~lib/rt/__tmptostack
-      (i32.const 592)
-     )
+     (i32.const 592)
     )
    )
    (then
@@ -4163,9 +4147,7 @@
      (call $~lib/rt/__tmptostack
       (global.get $class-overloading/which)
      )
-     (call $~lib/rt/__tmptostack
-      (i32.const 592)
-     )
+     (i32.const 592)
     )
    )
    (then
@@ -4198,9 +4180,7 @@
      (call $~lib/rt/__tmptostack
       (global.get $class-overloading/which)
      )
-     (call $~lib/rt/__tmptostack
-      (i32.const 496)
-     )
+     (i32.const 496)
     )
    )
    (then
@@ -4228,9 +4208,7 @@
      (call $~lib/rt/__tmptostack
       (global.get $class-overloading/which)
      )
-     (call $~lib/rt/__tmptostack
-      (i32.const 496)
-     )
+     (i32.const 496)
     )
    )
    (then
@@ -4259,9 +4237,7 @@
      (call $~lib/rt/__tmptostack
       (global.get $class-overloading/which)
      )
-     (call $~lib/rt/__tmptostack
-      (i32.const 496)
-     )
+     (i32.const 496)
     )
    )
    (then
@@ -4286,9 +4262,7 @@
      (call $~lib/rt/__tmptostack
       (global.get $class-overloading/which)
      )
-     (call $~lib/rt/__tmptostack
-      (i32.const 496)
-     )
+     (i32.const 496)
     )
    )
    (then
@@ -4321,9 +4295,7 @@
      (call $~lib/rt/__tmptostack
       (global.get $class-overloading/which)
      )
-     (call $~lib/rt/__tmptostack
-      (i32.const 496)
-     )
+     (i32.const 496)
     )
    )
    (then
@@ -4351,9 +4323,7 @@
      (call $~lib/rt/__tmptostack
       (global.get $class-overloading/which)
      )
-     (call $~lib/rt/__tmptostack
-      (i32.const 496)
-     )
+     (i32.const 496)
     )
    )
    (then
@@ -4382,9 +4352,7 @@
      (call $~lib/rt/__tmptostack
       (global.get $class-overloading/which)
      )
-     (call $~lib/rt/__tmptostack
-      (i32.const 496)
-     )
+     (i32.const 496)
     )
    )
    (then
@@ -4409,9 +4377,7 @@
      (call $~lib/rt/__tmptostack
       (global.get $class-overloading/which)
      )
-     (call $~lib/rt/__tmptostack
-      (i32.const 496)
-     )
+     (i32.const 496)
     )
    )
    (then
@@ -4444,9 +4410,7 @@
      (call $~lib/rt/__tmptostack
       (global.get $class-overloading/which)
      )
-     (call $~lib/rt/__tmptostack
-      (i32.const 624)
-     )
+     (i32.const 624)
     )
    )
    (then
@@ -4474,9 +4438,7 @@
      (call $~lib/rt/__tmptostack
       (global.get $class-overloading/which)
      )
-     (call $~lib/rt/__tmptostack
-      (i32.const 624)
-     )
+     (i32.const 624)
     )
    )
    (then
@@ -4505,9 +4467,7 @@
      (call $~lib/rt/__tmptostack
       (global.get $class-overloading/which)
      )
-     (call $~lib/rt/__tmptostack
-      (i32.const 624)
-     )
+     (i32.const 624)
     )
    )
    (then
@@ -4535,9 +4495,7 @@
      (call $~lib/rt/__tmptostack
       (global.get $class-overloading/which)
      )
-     (call $~lib/rt/__tmptostack
-      (i32.const 624)
-     )
+     (i32.const 624)
     )
    )
    (then
@@ -4569,9 +4527,7 @@
      (call $~lib/rt/__tmptostack
       (global.get $class-overloading/which)
      )
-     (call $~lib/rt/__tmptostack
-      (i32.const 656)
-     )
+     (i32.const 656)
     )
    )
    (then
@@ -4603,9 +4559,7 @@
      (call $~lib/rt/__tmptostack
       (global.get $class-overloading/which)
      )
-     (call $~lib/rt/__tmptostack
-      (i32.const 688)
-     )
+     (i32.const 688)
     )
    )
    (then

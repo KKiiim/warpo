@@ -24,9 +24,7 @@
  (export "_start" (func $~start))
  (func $start:std/trace
   (call $~lib/builtins/trace
-   (call $~lib/rt/__tmptostack
-    (i32.const 32)
-   )
+   (i32.const 32)
    (i32.const 0)
    (f64.const 0)
    (f64.const 0)
@@ -35,9 +33,7 @@
    (f64.const 0)
   )
   (call $~lib/builtins/trace
-   (call $~lib/rt/__tmptostack
-    (i32.const 80)
-   )
+   (i32.const 80)
    (i32.const 0)
    (f64.const 0)
    (f64.const 0)
@@ -46,9 +42,7 @@
    (f64.const 0)
   )
   (call $~lib/builtins/trace
-   (call $~lib/rt/__tmptostack
-    (i32.const 128)
-   )
+   (i32.const 128)
    (i32.const 1)
    (f64.const 1)
    (f64.const 0)
@@ -57,9 +51,7 @@
    (f64.const 0)
   )
   (call $~lib/builtins/trace
-   (call $~lib/rt/__tmptostack
-    (i32.const 176)
-   )
+   (i32.const 176)
    (i32.const 2)
    (f64.const 1)
    (f64.const 2)
@@ -68,9 +60,7 @@
    (f64.const 0)
   )
   (call $~lib/builtins/trace
-   (call $~lib/rt/__tmptostack
-    (i32.const 224)
-   )
+   (i32.const 224)
    (i32.const 3)
    (f64.const 1)
    (f64.const 2)
@@ -79,9 +69,7 @@
    (f64.const 0)
   )
   (call $~lib/builtins/trace
-   (call $~lib/rt/__tmptostack
-    (i32.const 272)
-   )
+   (i32.const 272)
    (i32.const 4)
    (f64.const 1)
    (f64.const 2)
@@ -90,9 +78,7 @@
    (f64.const 0)
   )
   (call $~lib/builtins/trace
-   (call $~lib/rt/__tmptostack
-    (i32.const 320)
-   )
+   (i32.const 320)
    (i32.const 5)
    (f64.const 1)
    (f64.const 2)
@@ -101,9 +87,7 @@
    (f64.const 5)
   )
   (call $~lib/builtins/trace
-   (call $~lib/rt/__tmptostack
-    (i32.const 368)
-   )
+   (i32.const 368)
    (i32.const 5)
    (f64.const 1.1)
    (f64.const 2.2)

@@ -6102,17 +6102,13 @@
    (call $~lib/string/String.__concat
     (call $~lib/rt/__tmptostack
      (call $~lib/string/String.__concat
-      (call $~lib/rt/__tmptostack
-       (i32.const 1392)
-      )
+      (i32.const 1392)
       (call $~lib/rt/__tmptostack
        (local.get $str)
       )
      )
     )
-    (call $~lib/rt/__tmptostack
-     (i32.const 1440)
-    )
+    (i32.const 1440)
    )
   )
  )
@@ -6121,16 +6117,12 @@
   (local $1 i32)
   (global.set $std/symbol/sym1
    (call $~lib/symbol/Symbol
-    (call $~lib/rt/__tmptostack
-     (i32.const 32)
-    )
+    (i32.const 32)
    )
   )
   (global.set $std/symbol/sym2
    (call $~lib/symbol/Symbol
-    (call $~lib/rt/__tmptostack
-     (i32.const 32)
-    )
+    (i32.const 32)
    )
   )
   (if
@@ -6189,16 +6181,12 @@
   )
   (global.set $std/symbol/sym3
    (call $~lib/symbol/_Symbol.for
-    (call $~lib/rt/__tmptostack
-     (i32.const 32)
-    )
+    (i32.const 32)
    )
   )
   (global.set $std/symbol/sym4
    (call $~lib/symbol/_Symbol.for
-    (call $~lib/rt/__tmptostack
-     (i32.const 32)
-    )
+    (i32.const 32)
    )
   )
   (if
@@ -6318,9 +6306,7 @@
      (call $~lib/rt/__tmptostack
       (global.get $std/symbol/key3)
      )
-     (call $~lib/rt/__tmptostack
-      (i32.const 32)
-     )
+     (i32.const 32)
     )
    )
    (then
@@ -6364,9 +6350,7 @@
        )
       )
      )
-     (call $~lib/rt/__tmptostack
-      (i32.const 1472)
-     )
+     (i32.const 1472)
     )
    )
    (then
@@ -6387,9 +6371,7 @@
        (global.get $std/symbol/sym3)
       )
      )
-     (call $~lib/rt/__tmptostack
-      (i32.const 1520)
-     )
+     (i32.const 1520)
     )
    )
    (then
@@ -6416,9 +6398,7 @@
        (global.get $std/symbol/hasInstance)
       )
      )
-     (call $~lib/rt/__tmptostack
-      (i32.const 1568)
-     )
+     (i32.const 1568)
     )
    )
    (then
@@ -6439,9 +6419,7 @@
        (global.get $std/symbol/isConcatSpreadable)
       )
      )
-     (call $~lib/rt/__tmptostack
-      (i32.const 1632)
-     )
+     (i32.const 1632)
     )
    )
    (then

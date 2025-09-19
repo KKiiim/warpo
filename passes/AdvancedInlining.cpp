@@ -288,7 +288,7 @@ struct Inlining : public Pass {
     }
     for (auto &ex : module->exports) {
       if (ex->kind == ExternalKind::Function) {
-        infos[ex->value].usedGlobally = true;
+        infos[ex->name].usedGlobally = true;
       }
     }
     if (module->start.is()) {

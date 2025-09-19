@@ -5856,9 +5856,7 @@
     (call $~lib/rt/__tmptostack
      (local.get $this)
     )
-    (call $~lib/rt/__tmptostack
-     (i32.const 1936)
-    )
+    (i32.const 1936)
    )
   )
  )
@@ -9892,9 +9890,7 @@
         (i32.const 0)
        )
       )
-      (call $~lib/rt/__tmptostack
-       (i32.const 1120)
-      )
+      (i32.const 1120)
      )
     )
     (then
@@ -9918,9 +9914,7 @@
         (i32.const 1)
        )
       )
-      (call $~lib/rt/__tmptostack
-       (i32.const 1152)
-      )
+      (i32.const 1152)
      )
     )
     (then
@@ -10098,9 +10092,7 @@
         (i32.const 0)
        )
       )
-      (call $~lib/rt/__tmptostack
-       (i32.const 1216)
-      )
+      (i32.const 1216)
      )
     )
     (then
@@ -10188,9 +10180,7 @@
         (i32.const 0)
        )
       )
-      (call $~lib/rt/__tmptostack
-       (i32.const 1152)
-      )
+      (i32.const 1152)
      )
     )
     (then
@@ -10325,9 +10315,7 @@
        (call $~lib/rt/__tmptostack
         (local.get $source|29)
        )
-       (call $~lib/rt/__tmptostack
-        (i32.const 1120)
-       )
+       (i32.const 1120)
        (i32.const 0)
       )
       (i32.const 1)
@@ -10350,9 +10338,7 @@
        (call $~lib/rt/__tmptostack
         (local.get $source|29)
        )
-       (call $~lib/rt/__tmptostack
-        (i32.const 1520)
-       )
+       (i32.const 1520)
        (i32.const 0)
       )
       (i32.const 0)
@@ -10375,9 +10361,7 @@
        (call $~lib/rt/__tmptostack
         (local.get $source|29)
        )
-       (call $~lib/rt/__tmptostack
-        (i32.const 1216)
-       )
+       (i32.const 1216)
        (i32.const 5)
       )
       (i32.const 0)
@@ -10400,9 +10384,7 @@
        (call $~lib/rt/__tmptostack
         (local.get $source|29)
        )
-       (call $~lib/rt/__tmptostack
-        (i32.const 1216)
-       )
+       (i32.const 1216)
        (i32.const -1)
       )
       (i32.const 1)
@@ -10776,14 +10758,10 @@
         (call $~lib/rt/__tmptostack
          (local.get $elements)
         )
-        (call $~lib/rt/__tmptostack
-         (i32.const 1936)
-        )
+        (i32.const 1936)
        )
       )
-      (call $~lib/rt/__tmptostack
-       (i32.const 1968)
-      )
+      (i32.const 1968)
      )
     )
     (then
@@ -10804,14 +10782,10 @@
         (call $~lib/rt/__tmptostack
          (local.get $elements)
         )
-        (call $~lib/rt/__tmptostack
-         (i32.const 1904)
-        )
+        (i32.const 1904)
        )
       )
-      (call $~lib/rt/__tmptostack
-       (i32.const 2016)
-      )
+      (i32.const 2016)
      )
     )
     (then
@@ -10832,14 +10806,10 @@
         (call $~lib/rt/__tmptostack
          (local.get $elements)
         )
-        (call $~lib/rt/__tmptostack
-         (i32.const 2064)
-        )
+        (i32.const 2064)
        )
       )
-      (call $~lib/rt/__tmptostack
-       (i32.const 2096)
-      )
+      (i32.const 2096)
      )
     )
     (then
@@ -10860,14 +10830,10 @@
         (call $~lib/rt/__tmptostack
          (local.get $elements)
         )
-        (call $~lib/rt/__tmptostack
-         (i32.const 2144)
-        )
+        (i32.const 2144)
        )
       )
-      (call $~lib/rt/__tmptostack
-       (i32.const 2176)
-      )
+      (i32.const 2176)
      )
     )
     (then
@@ -10888,9 +10854,7 @@
         (call $~lib/rt/__tmptostack
          (local.get $elements)
         )
-        (call $~lib/rt/__tmptostack
-         (i32.const 1936)
-        )
+        (i32.const 1936)
        )
       )
       (call $~lib/rt/__tmptostack

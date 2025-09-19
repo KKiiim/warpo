@@ -338,12 +338,8 @@
   (if
    (i32.eqz
     (call $~lib/string/String.__eq
-     (call $~lib/rt/__tmptostack
-      (i32.const 32)
-     )
-     (call $~lib/rt/__tmptostack
-      (i32.const 32)
-     )
+     (i32.const 32)
+     (i32.const 32)
     )
    )
    (then
@@ -359,12 +355,8 @@
   (if
    (i32.eqz
     (call $~lib/string/String.__eq
-     (call $~lib/rt/__tmptostack
-      (i32.const 112)
-     )
-     (call $~lib/rt/__tmptostack
-      (i32.const 112)
-     )
+     (i32.const 112)
+     (i32.const 112)
     )
    )
    (then
@@ -380,12 +372,8 @@
   (if
    (i32.eqz
     (call $~lib/string/String.__eq
-     (call $~lib/rt/__tmptostack
-      (i32.const 144)
-     )
-     (call $~lib/rt/__tmptostack
-      (i32.const 144)
-     )
+     (i32.const 144)
+     (i32.const 144)
     )
    )
    (then

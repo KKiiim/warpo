@@ -4884,9 +4884,7 @@
     (call $~lib/rt/__tmptostack
      (local.get $key)
     )
-    (call $~lib/rt/__tmptostack
-     (i32.const 512)
-    )
+    (i32.const 512)
    )
    (then
     (call $std/operator-overloading/TesterElementAccess#set:x
@@ -4923,9 +4921,7 @@
      (call $~lib/rt/__tmptostack
       (local.get $key)
      )
-     (call $~lib/rt/__tmptostack
-      (i32.const 512)
-     )
+     (i32.const 512)
     )
     (then
      (call $std/operator-overloading/TesterElementAccess#get:x
@@ -6763,18 +6759,14 @@
    (call $~lib/rt/__tmptostack
     (global.get $std/operator-overloading/tea)
    )
-   (call $~lib/rt/__tmptostack
-    (i32.const 512)
-   )
+   (i32.const 512)
    (i32.const -1)
   )
   (call $std/operator-overloading/TesterElementAccess#__set
    (call $~lib/rt/__tmptostack
     (global.get $std/operator-overloading/tea)
    )
-   (call $~lib/rt/__tmptostack
-    (i32.const 544)
-   )
+   (i32.const 544)
    (i32.const -2)
   )
   (if
@@ -6805,9 +6797,7 @@
       (call $~lib/rt/__tmptostack
        (global.get $std/operator-overloading/tea)
       )
-      (call $~lib/rt/__tmptostack
-       (i32.const 512)
-      )
+      (i32.const 512)
      )
      (i32.const -1)
     )
@@ -6850,9 +6840,7 @@
       (call $~lib/rt/__tmptostack
        (global.get $std/operator-overloading/tea)
       )
-      (call $~lib/rt/__tmptostack
-       (i32.const 544)
-      )
+      (i32.const 544)
      )
      (i32.const -2)
     )
@@ -6871,17 +6859,13 @@
    (call $~lib/rt/__tmptostack
     (global.get $std/operator-overloading/tea)
    )
-   (call $~lib/rt/__tmptostack
-    (i32.const 512)
-   )
+   (i32.const 512)
    (i32.add
     (call $std/operator-overloading/TesterElementAccess#__get
      (call $~lib/rt/__tmptostack
       (global.get $std/operator-overloading/tea)
      )
-     (call $~lib/rt/__tmptostack
-      (i32.const 512)
-     )
+     (i32.const 512)
     )
     (i32.const 1)
    )
@@ -6890,17 +6874,13 @@
    (call $~lib/rt/__tmptostack
     (global.get $std/operator-overloading/tea)
    )
-   (call $~lib/rt/__tmptostack
-    (i32.const 544)
-   )
+   (i32.const 544)
    (i32.sub
     (call $std/operator-overloading/TesterElementAccess#__get
      (call $~lib/rt/__tmptostack
       (global.get $std/operator-overloading/tea)
      )
-     (call $~lib/rt/__tmptostack
-      (i32.const 544)
-     )
+     (i32.const 544)
     )
     (i32.const 1)
    )
@@ -6912,9 +6892,7 @@
       (call $~lib/rt/__tmptostack
        (global.get $std/operator-overloading/tea)
       )
-      (call $~lib/rt/__tmptostack
-       (i32.const 512)
-      )
+      (i32.const 512)
      )
      (i32.const 0)
     )
@@ -6936,9 +6914,7 @@
       (call $~lib/rt/__tmptostack
        (global.get $std/operator-overloading/tea)
       )
-      (call $~lib/rt/__tmptostack
-       (i32.const 544)
-      )
+      (i32.const 544)
      )
      (i32.const -3)
     )

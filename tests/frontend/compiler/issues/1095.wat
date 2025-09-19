@@ -3424,9 +3424,7 @@
    (call $~lib/rt/__tmptostack
     (local.get $this)
    )
-   (call $~lib/rt/__tmptostack
-    (i32.const 432)
-   )
+   (i32.const 432)
   )
   (local.get $this)
  )

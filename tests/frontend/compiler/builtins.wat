@@ -3638,9 +3638,7 @@
        )
       )
      )
-     (call $~lib/rt/__tmptostack
-      (i32.const 32)
-     )
+     (i32.const 32)
     )
    )
    (then
@@ -3705,9 +3703,7 @@
        )
       )
      )
-     (call $~lib/rt/__tmptostack
-      (i32.const 176)
-     )
+     (i32.const 176)
     )
    )
    (then
@@ -4684,9 +4680,7 @@
     (i32.const 52)
    )
    (call $~lib/builtins/trace
-    (call $~lib/rt/__tmptostack
-     (i32.const 256)
-    )
+    (i32.const 256)
     (i32.const 5)
     (f64.convert_i32_u
      (local.get $a)
@@ -4777,12 +4771,8 @@
    (if
     (i32.eqz
      (call $~lib/string/String.__eq
-      (call $~lib/rt/__tmptostack
-       (i32.const 352)
-      )
-      (call $~lib/rt/__tmptostack
-       (i32.const 352)
-      )
+      (i32.const 352)
+      (i32.const 352)
      )
     )
     (then
@@ -4798,12 +4788,8 @@
    (if
     (i32.eqz
      (call $~lib/string/String.__eq
-      (call $~lib/rt/__tmptostack
-       (i32.const 352)
-      )
-      (call $~lib/rt/__tmptostack
-       (i32.const 352)
-      )
+      (i32.const 352)
+      (i32.const 352)
      )
     )
     (then
@@ -4819,12 +4805,8 @@
    (if
     (i32.eqz
      (call $~lib/string/String.__eq
-      (call $~lib/rt/__tmptostack
-       (i32.const 400)
-      )
-      (call $~lib/rt/__tmptostack
-       (i32.const 400)
-      )
+      (i32.const 400)
+      (i32.const 400)
      )
     )
     (then
@@ -4840,12 +4822,8 @@
    (if
     (i32.eqz
      (call $~lib/string/String.__eq
-      (call $~lib/rt/__tmptostack
-       (i32.const 432)
-      )
-      (call $~lib/rt/__tmptostack
-       (i32.const 432)
-      )
+      (i32.const 432)
+      (i32.const 432)
      )
     )
     (then
@@ -4861,12 +4839,8 @@
    (if
     (i32.eqz
      (call $~lib/string/String.__eq
-      (call $~lib/rt/__tmptostack
-       (i32.const 464)
-      )
-      (call $~lib/rt/__tmptostack
-       (i32.const 464)
-      )
+      (i32.const 464)
+      (i32.const 464)
      )
     )
     (then
@@ -4882,12 +4856,8 @@
    (if
     (i32.eqz
      (call $~lib/string/String.__eq
-      (call $~lib/rt/__tmptostack
-       (i32.const 496)
-      )
-      (call $~lib/rt/__tmptostack
-       (i32.const 496)
-      )
+      (i32.const 496)
+      (i32.const 496)
      )
     )
     (then
@@ -4903,12 +4873,8 @@
    (if
     (i32.eqz
      (call $~lib/string/String.__eq
-      (call $~lib/rt/__tmptostack
-       (i32.const 528)
-      )
-      (call $~lib/rt/__tmptostack
-       (i32.const 528)
-      )
+      (i32.const 528)
+      (i32.const 528)
      )
     )
     (then
@@ -4924,12 +4890,8 @@
    (if
     (i32.eqz
      (call $~lib/string/String.__eq
-      (call $~lib/rt/__tmptostack
-       (i32.const 560)
-      )
-      (call $~lib/rt/__tmptostack
-       (i32.const 560)
-      )
+      (i32.const 560)
+      (i32.const 560)
      )
     )
     (then
@@ -4945,12 +4907,8 @@
    (if
     (i32.eqz
      (call $~lib/string/String.__eq
-      (call $~lib/rt/__tmptostack
-       (i32.const 592)
-      )
-      (call $~lib/rt/__tmptostack
-       (i32.const 592)
-      )
+      (i32.const 592)
+      (i32.const 592)
      )
     )
     (then
@@ -4966,12 +4924,8 @@
    (if
     (i32.eqz
      (call $~lib/string/String.__eq
-      (call $~lib/rt/__tmptostack
-       (i32.const 624)
-      )
-      (call $~lib/rt/__tmptostack
-       (i32.const 624)
-      )
+      (i32.const 624)
+      (i32.const 624)
      )
     )
     (then
@@ -4987,12 +4941,8 @@
    (if
     (i32.eqz
      (call $~lib/string/String.__eq
-      (call $~lib/rt/__tmptostack
-       (i32.const 656)
-      )
-      (call $~lib/rt/__tmptostack
-       (i32.const 656)
-      )
+      (i32.const 656)
+      (i32.const 656)
      )
     )
     (then
@@ -5008,12 +4958,8 @@
    (if
     (i32.eqz
      (call $~lib/string/String.__eq
-      (call $~lib/rt/__tmptostack
-       (i32.const 688)
-      )
-      (call $~lib/rt/__tmptostack
-       (i32.const 688)
-      )
+      (i32.const 688)
+      (i32.const 688)
      )
     )
     (then
@@ -5029,12 +4975,8 @@
    (if
     (i32.eqz
      (call $~lib/string/String.__eq
-      (call $~lib/rt/__tmptostack
-       (i32.const 720)
-      )
-      (call $~lib/rt/__tmptostack
-       (i32.const 720)
-      )
+      (i32.const 720)
+      (i32.const 720)
      )
     )
     (then
@@ -5050,12 +4992,8 @@
    (if
     (i32.eqz
      (call $~lib/string/String.__eq
-      (call $~lib/rt/__tmptostack
-       (i32.const 752)
-      )
-      (call $~lib/rt/__tmptostack
-       (i32.const 752)
-      )
+      (i32.const 752)
+      (i32.const 752)
      )
     )
     (then
@@ -5071,12 +5009,8 @@
    (if
     (i32.eqz
      (call $~lib/string/String.__eq
-      (call $~lib/rt/__tmptostack
-       (i32.const 784)
-      )
-      (call $~lib/rt/__tmptostack
-       (i32.const 784)
-      )
+      (i32.const 784)
+      (i32.const 784)
      )
     )
     (then
@@ -5092,12 +5026,8 @@
    (if
     (i32.eqz
      (call $~lib/string/String.__eq
-      (call $~lib/rt/__tmptostack
-       (i32.const 816)
-      )
-      (call $~lib/rt/__tmptostack
-       (i32.const 816)
-      )
+      (i32.const 816)
+      (i32.const 816)
      )
     )
     (then
@@ -5113,12 +5043,8 @@
    (if
     (i32.eqz
      (call $~lib/string/String.__eq
-      (call $~lib/rt/__tmptostack
-       (i32.const 848)
-      )
-      (call $~lib/rt/__tmptostack
-       (i32.const 848)
-      )
+      (i32.const 848)
+      (i32.const 848)
      )
     )
     (then
@@ -5134,12 +5060,8 @@
    (if
     (i32.eqz
      (call $~lib/string/String.__eq
-      (call $~lib/rt/__tmptostack
-       (i32.const 880)
-      )
-      (call $~lib/rt/__tmptostack
-       (i32.const 880)
-      )
+      (i32.const 880)
+      (i32.const 880)
      )
     )
     (then
@@ -5155,12 +5077,8 @@
    (if
     (i32.eqz
      (call $~lib/string/String.__eq
-      (call $~lib/rt/__tmptostack
-       (i32.const 432)
-      )
-      (call $~lib/rt/__tmptostack
-       (i32.const 432)
-      )
+      (i32.const 432)
+      (i32.const 432)
      )
     )
     (then
@@ -5176,12 +5094,8 @@
    (if
     (i32.eqz
      (call $~lib/string/String.__eq
-      (call $~lib/rt/__tmptostack
-       (i32.const 352)
-      )
-      (call $~lib/rt/__tmptostack
-       (i32.const 352)
-      )
+      (i32.const 352)
+      (i32.const 352)
      )
     )
     (then

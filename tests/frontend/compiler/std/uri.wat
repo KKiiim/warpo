@@ -5110,14 +5110,10 @@
     (call $~lib/string/String.__eq
      (call $~lib/rt/__tmptostack
       (call $~lib/uri/encodeURIComponent
-       (call $~lib/rt/__tmptostack
-        (i32.const 32)
-       )
+       (i32.const 32)
       )
      )
-     (call $~lib/rt/__tmptostack
-      (i32.const 32)
-     )
+     (i32.const 32)
     )
    )
    (then
@@ -5135,14 +5131,10 @@
     (call $~lib/string/String.__eq
      (call $~lib/rt/__tmptostack
       (call $~lib/uri/encodeURIComponent
-       (call $~lib/rt/__tmptostack
-        (i32.const 736)
-       )
+       (i32.const 736)
       )
      )
-     (call $~lib/rt/__tmptostack
-      (i32.const 736)
-     )
+     (i32.const 736)
     )
    )
    (then
@@ -5160,14 +5152,10 @@
     (call $~lib/string/String.__eq
      (call $~lib/rt/__tmptostack
       (call $~lib/uri/encodeURIComponent
-       (call $~lib/rt/__tmptostack
-        (i32.const 768)
-       )
+       (i32.const 768)
       )
      )
-     (call $~lib/rt/__tmptostack
-      (i32.const 768)
-     )
+     (i32.const 768)
     )
    )
    (then
@@ -5185,14 +5173,10 @@
     (call $~lib/string/String.__eq
      (call $~lib/rt/__tmptostack
       (call $~lib/uri/encodeURIComponent
-       (call $~lib/rt/__tmptostack
-        (i32.const 800)
-       )
+       (i32.const 800)
       )
      )
-     (call $~lib/rt/__tmptostack
-      (i32.const 800)
-     )
+     (i32.const 800)
     )
    )
    (then
@@ -5210,14 +5194,10 @@
     (call $~lib/string/String.__eq
      (call $~lib/rt/__tmptostack
       (call $~lib/uri/encodeURIComponent
-       (call $~lib/rt/__tmptostack
-        (i32.const 832)
-       )
+       (i32.const 832)
       )
      )
-     (call $~lib/rt/__tmptostack
-      (i32.const 832)
-     )
+     (i32.const 832)
     )
    )
    (then
@@ -5235,14 +5215,10 @@
     (call $~lib/string/String.__eq
      (call $~lib/rt/__tmptostack
       (call $~lib/uri/encodeURIComponent
-       (call $~lib/rt/__tmptostack
-        (i32.const 928)
-       )
+       (i32.const 928)
       )
      )
-     (call $~lib/rt/__tmptostack
-      (i32.const 960)
-     )
+     (i32.const 960)
     )
    )
    (then
@@ -5260,14 +5236,10 @@
     (call $~lib/string/String.__eq
      (call $~lib/rt/__tmptostack
       (call $~lib/uri/encodeURIComponent
-       (call $~lib/rt/__tmptostack
-        (i32.const 992)
-       )
+       (i32.const 992)
       )
      )
-     (call $~lib/rt/__tmptostack
-      (i32.const 1024)
-     )
+     (i32.const 1024)
     )
    )
    (then
@@ -5285,14 +5257,10 @@
     (call $~lib/string/String.__eq
      (call $~lib/rt/__tmptostack
       (call $~lib/uri/encodeURIComponent
-       (call $~lib/rt/__tmptostack
-        (i32.const 1056)
-       )
+       (i32.const 1056)
       )
      )
-     (call $~lib/rt/__tmptostack
-      (i32.const 1088)
-     )
+     (i32.const 1088)
     )
    )
    (then
@@ -5310,14 +5278,10 @@
     (call $~lib/string/String.__eq
      (call $~lib/rt/__tmptostack
       (call $~lib/uri/encodeURIComponent
-       (call $~lib/rt/__tmptostack
-        (i32.const 1136)
-       )
+       (i32.const 1136)
       )
      )
-     (call $~lib/rt/__tmptostack
-      (i32.const 1168)
-     )
+     (i32.const 1168)
     )
    )
    (then
@@ -5335,14 +5299,10 @@
     (call $~lib/string/String.__eq
      (call $~lib/rt/__tmptostack
       (call $~lib/uri/encodeURIComponent
-       (call $~lib/rt/__tmptostack
-        (i32.const 1216)
-       )
+       (i32.const 1216)
       )
      )
-     (call $~lib/rt/__tmptostack
-      (i32.const 1248)
-     )
+     (i32.const 1248)
     )
    )
    (then
@@ -5360,14 +5320,10 @@
     (call $~lib/string/String.__eq
      (call $~lib/rt/__tmptostack
       (call $~lib/uri/encodeURIComponent
-       (call $~lib/rt/__tmptostack
-        (i32.const 1280)
-       )
+       (i32.const 1280)
       )
      )
-     (call $~lib/rt/__tmptostack
-      (i32.const 1312)
-     )
+     (i32.const 1312)
     )
    )
    (then
@@ -5385,14 +5341,10 @@
     (call $~lib/string/String.__eq
      (call $~lib/rt/__tmptostack
       (call $~lib/uri/encodeURIComponent
-       (call $~lib/rt/__tmptostack
-        (i32.const 1360)
-       )
+       (i32.const 1360)
       )
      )
-     (call $~lib/rt/__tmptostack
-      (i32.const 1392)
-     )
+     (i32.const 1392)
     )
    )
    (then
@@ -5410,14 +5362,10 @@
     (call $~lib/string/String.__eq
      (call $~lib/rt/__tmptostack
       (call $~lib/uri/encodeURIComponent
-       (call $~lib/rt/__tmptostack
-        (i32.const 1488)
-       )
+       (i32.const 1488)
       )
      )
-     (call $~lib/rt/__tmptostack
-      (i32.const 1520)
-     )
+     (i32.const 1520)
     )
    )
    (then
@@ -5435,14 +5383,10 @@
     (call $~lib/string/String.__eq
      (call $~lib/rt/__tmptostack
       (call $~lib/uri/encodeURIComponent
-       (call $~lib/rt/__tmptostack
-        (i32.const 1632)
-       )
+       (i32.const 1632)
       )
      )
-     (call $~lib/rt/__tmptostack
-      (i32.const 1664)
-     )
+     (i32.const 1664)
     )
    )
    (then
@@ -5460,14 +5404,10 @@
     (call $~lib/string/String.__eq
      (call $~lib/rt/__tmptostack
       (call $~lib/uri/encodeURIComponent
-       (call $~lib/rt/__tmptostack
-        (i32.const 1712)
-       )
+       (i32.const 1712)
       )
      )
-     (call $~lib/rt/__tmptostack
-      (i32.const 1744)
-     )
+     (i32.const 1744)
     )
    )
    (then
@@ -5485,14 +5425,10 @@
     (call $~lib/string/String.__eq
      (call $~lib/rt/__tmptostack
       (call $~lib/uri/encodeURIComponent
-       (call $~lib/rt/__tmptostack
-        (i32.const 1792)
-       )
+       (i32.const 1792)
       )
      )
-     (call $~lib/rt/__tmptostack
-      (i32.const 1824)
-     )
+     (i32.const 1824)
     )
    )
    (then
@@ -5510,14 +5446,10 @@
     (call $~lib/string/String.__eq
      (call $~lib/rt/__tmptostack
       (call $~lib/uri/encodeURIComponent
-       (call $~lib/rt/__tmptostack
-        (i32.const 1904)
-       )
+       (i32.const 1904)
       )
      )
-     (call $~lib/rt/__tmptostack
-      (i32.const 1936)
-     )
+     (i32.const 1936)
     )
    )
    (then
@@ -5535,14 +5467,10 @@
     (call $~lib/string/String.__eq
      (call $~lib/rt/__tmptostack
       (call $~lib/uri/encodeURIComponent
-       (call $~lib/rt/__tmptostack
-        (i32.const 2000)
-       )
+       (i32.const 2000)
       )
      )
-     (call $~lib/rt/__tmptostack
-      (i32.const 2048)
-     )
+     (i32.const 2048)
     )
    )
    (then
@@ -5560,14 +5488,10 @@
     (call $~lib/string/String.__eq
      (call $~lib/rt/__tmptostack
       (call $~lib/uri/encodeURIComponent
-       (call $~lib/rt/__tmptostack
-        (i32.const 2128)
-       )
+       (i32.const 2128)
       )
      )
-     (call $~lib/rt/__tmptostack
-      (i32.const 2240)
-     )
+     (i32.const 2240)
     )
    )
    (then
@@ -5585,14 +5509,10 @@
     (call $~lib/string/String.__eq
      (call $~lib/rt/__tmptostack
       (call $~lib/uri/encodeURI
-       (call $~lib/rt/__tmptostack
-        (i32.const 32)
-       )
+       (i32.const 32)
       )
      )
-     (call $~lib/rt/__tmptostack
-      (i32.const 32)
-     )
+     (i32.const 32)
     )
    )
    (then
@@ -5610,14 +5530,10 @@
     (call $~lib/string/String.__eq
      (call $~lib/rt/__tmptostack
       (call $~lib/uri/encodeURI
-       (call $~lib/rt/__tmptostack
-        (i32.const 736)
-       )
+       (i32.const 736)
       )
      )
-     (call $~lib/rt/__tmptostack
-      (i32.const 736)
-     )
+     (i32.const 736)
     )
    )
    (then
@@ -5635,14 +5551,10 @@
     (call $~lib/string/String.__eq
      (call $~lib/rt/__tmptostack
       (call $~lib/uri/encodeURI
-       (call $~lib/rt/__tmptostack
-        (i32.const 2480)
-       )
+       (i32.const 2480)
       )
      )
-     (call $~lib/rt/__tmptostack
-      (i32.const 2480)
-     )
+     (i32.const 2480)
     )
    )
    (then
@@ -5660,14 +5572,10 @@
     (call $~lib/string/String.__eq
      (call $~lib/rt/__tmptostack
       (call $~lib/uri/encodeURI
-       (call $~lib/rt/__tmptostack
-        (i32.const 832)
-       )
+       (i32.const 832)
       )
      )
-     (call $~lib/rt/__tmptostack
-      (i32.const 832)
-     )
+     (i32.const 832)
     )
    )
    (then
@@ -5685,14 +5593,10 @@
     (call $~lib/string/String.__eq
      (call $~lib/rt/__tmptostack
       (call $~lib/uri/encodeURI
-       (call $~lib/rt/__tmptostack
-        (i32.const 2528)
-       )
+       (i32.const 2528)
       )
      )
-     (call $~lib/rt/__tmptostack
-      (i32.const 2560)
-     )
+     (i32.const 2560)
     )
    )
    (then
@@ -5710,14 +5614,10 @@
     (call $~lib/string/String.__eq
      (call $~lib/rt/__tmptostack
       (call $~lib/uri/encodeURI
-       (call $~lib/rt/__tmptostack
-        (i32.const 1632)
-       )
+       (i32.const 1632)
       )
      )
-     (call $~lib/rt/__tmptostack
-      (i32.const 1664)
-     )
+     (i32.const 1664)
     )
    )
    (then
@@ -5735,14 +5635,10 @@
     (call $~lib/string/String.__eq
      (call $~lib/rt/__tmptostack
       (call $~lib/uri/encodeURI
-       (call $~lib/rt/__tmptostack
-        (i32.const 1712)
-       )
+       (i32.const 1712)
       )
      )
-     (call $~lib/rt/__tmptostack
-      (i32.const 1744)
-     )
+     (i32.const 1744)
     )
    )
    (then
@@ -5760,14 +5656,10 @@
     (call $~lib/string/String.__eq
      (call $~lib/rt/__tmptostack
       (call $~lib/uri/encodeURI
-       (call $~lib/rt/__tmptostack
-        (i32.const 1904)
-       )
+       (i32.const 1904)
       )
      )
-     (call $~lib/rt/__tmptostack
-      (i32.const 1936)
-     )
+     (i32.const 1936)
     )
    )
    (then
@@ -5785,14 +5677,10 @@
     (call $~lib/string/String.__eq
      (call $~lib/rt/__tmptostack
       (call $~lib/uri/encodeURI
-       (call $~lib/rt/__tmptostack
-        (i32.const 2128)
-       )
+       (i32.const 2128)
       )
      )
-     (call $~lib/rt/__tmptostack
-      (i32.const 2128)
-     )
+     (i32.const 2128)
     )
    )
    (then
@@ -5810,14 +5698,10 @@
     (call $~lib/string/String.__eq
      (call $~lib/rt/__tmptostack
       (call $~lib/uri/decodeURIComponent
-       (call $~lib/rt/__tmptostack
-        (i32.const 32)
-       )
+       (i32.const 32)
       )
      )
-     (call $~lib/rt/__tmptostack
-      (i32.const 32)
-     )
+     (i32.const 32)
     )
    )
    (then
@@ -5835,14 +5719,10 @@
     (call $~lib/string/String.__eq
      (call $~lib/rt/__tmptostack
       (call $~lib/uri/decodeURIComponent
-       (call $~lib/rt/__tmptostack
-        (i32.const 736)
-       )
+       (i32.const 736)
       )
      )
-     (call $~lib/rt/__tmptostack
-      (i32.const 736)
-     )
+     (i32.const 736)
     )
    )
    (then
@@ -5860,14 +5740,10 @@
     (call $~lib/string/String.__eq
      (call $~lib/rt/__tmptostack
       (call $~lib/uri/decodeURIComponent
-       (call $~lib/rt/__tmptostack
-        (i32.const 2624)
-       )
+       (i32.const 2624)
       )
      )
-     (call $~lib/rt/__tmptostack
-      (i32.const 2656)
-     )
+     (i32.const 2656)
     )
    )
    (then
@@ -5885,14 +5761,10 @@
     (call $~lib/string/String.__eq
      (call $~lib/rt/__tmptostack
       (call $~lib/uri/decodeURIComponent
-       (call $~lib/rt/__tmptostack
-        (i32.const 2688)
-       )
+       (i32.const 2688)
       )
      )
-     (call $~lib/rt/__tmptostack
-      (i32.const 2720)
-     )
+     (i32.const 2720)
     )
    )
    (then
@@ -5910,14 +5782,10 @@
     (call $~lib/string/String.__eq
      (call $~lib/rt/__tmptostack
       (call $~lib/uri/decodeURIComponent
-       (call $~lib/rt/__tmptostack
-        (i32.const 2752)
-       )
+       (i32.const 2752)
       )
      )
-     (call $~lib/rt/__tmptostack
-      (i32.const 2752)
-     )
+     (i32.const 2752)
     )
    )
    (then
@@ -5935,14 +5803,10 @@
     (call $~lib/string/String.__eq
      (call $~lib/rt/__tmptostack
       (call $~lib/uri/decodeURIComponent
-       (call $~lib/rt/__tmptostack
-        (i32.const 1712)
-       )
+       (i32.const 1712)
       )
      )
-     (call $~lib/rt/__tmptostack
-      (i32.const 1712)
-     )
+     (i32.const 1712)
     )
    )
    (then
@@ -5960,14 +5824,10 @@
     (call $~lib/string/String.__eq
      (call $~lib/rt/__tmptostack
       (call $~lib/uri/decodeURIComponent
-       (call $~lib/rt/__tmptostack
-        (i32.const 2784)
-       )
+       (i32.const 2784)
       )
      )
-     (call $~lib/rt/__tmptostack
-      (i32.const 2864)
-     )
+     (i32.const 2864)
     )
    )
    (then
@@ -5985,14 +5845,10 @@
     (call $~lib/string/String.__eq
      (call $~lib/rt/__tmptostack
       (call $~lib/uri/decodeURIComponent
-       (call $~lib/rt/__tmptostack
-        (i32.const 2912)
-       )
+       (i32.const 2912)
       )
      )
-     (call $~lib/rt/__tmptostack
-      (i32.const 2864)
-     )
+     (i32.const 2864)
     )
    )
    (then
@@ -6010,14 +5866,10 @@
     (call $~lib/string/String.__eq
      (call $~lib/rt/__tmptostack
       (call $~lib/uri/decodeURIComponent
-       (call $~lib/rt/__tmptostack
-        (i32.const 2992)
-       )
+       (i32.const 2992)
       )
      )
-     (call $~lib/rt/__tmptostack
-      (i32.const 2128)
-     )
+     (i32.const 2128)
     )
    )
    (then
@@ -6035,14 +5887,10 @@
     (call $~lib/string/String.__eq
      (call $~lib/rt/__tmptostack
       (call $~lib/uri/decodeURIComponent
-       (call $~lib/rt/__tmptostack
-        (i32.const 1392)
-       )
+       (i32.const 1392)
       )
      )
-     (call $~lib/rt/__tmptostack
-      (i32.const 1360)
-     )
+     (i32.const 1360)
     )
    )
    (then
@@ -6060,14 +5908,10 @@
     (call $~lib/string/String.__eq
      (call $~lib/rt/__tmptostack
       (call $~lib/uri/decodeURI
-       (call $~lib/rt/__tmptostack
-        (i32.const 32)
-       )
+       (i32.const 32)
       )
      )
-     (call $~lib/rt/__tmptostack
-      (i32.const 32)
-     )
+     (i32.const 32)
     )
    )
    (then
@@ -6085,14 +5929,10 @@
     (call $~lib/string/String.__eq
      (call $~lib/rt/__tmptostack
       (call $~lib/uri/decodeURI
-       (call $~lib/rt/__tmptostack
-        (i32.const 736)
-       )
+       (i32.const 736)
       )
      )
-     (call $~lib/rt/__tmptostack
-      (i32.const 736)
-     )
+     (i32.const 736)
     )
    )
    (then
@@ -6110,14 +5950,10 @@
     (call $~lib/string/String.__eq
      (call $~lib/rt/__tmptostack
       (call $~lib/uri/decodeURI
-       (call $~lib/rt/__tmptostack
-        (i32.const 2624)
-       )
+       (i32.const 2624)
       )
      )
-     (call $~lib/rt/__tmptostack
-      (i32.const 2624)
-     )
+     (i32.const 2624)
     )
    )
    (then
@@ -6135,14 +5971,10 @@
     (call $~lib/string/String.__eq
      (call $~lib/rt/__tmptostack
       (call $~lib/uri/decodeURI
-       (call $~lib/rt/__tmptostack
-        (i32.const 3120)
-       )
+       (i32.const 3120)
       )
      )
-     (call $~lib/rt/__tmptostack
-      (i32.const 3152)
-     )
+     (i32.const 3152)
     )
    )
    (then
@@ -6160,14 +5992,10 @@
     (call $~lib/string/String.__eq
      (call $~lib/rt/__tmptostack
       (call $~lib/uri/decodeURI
-       (call $~lib/rt/__tmptostack
-        (i32.const 3184)
-       )
+       (i32.const 3184)
       )
      )
-     (call $~lib/rt/__tmptostack
-      (i32.const 3216)
-     )
+     (i32.const 3216)
     )
    )
    (then
@@ -6185,14 +6013,10 @@
     (call $~lib/string/String.__eq
      (call $~lib/rt/__tmptostack
       (call $~lib/uri/decodeURI
-       (call $~lib/rt/__tmptostack
-        (i32.const 2752)
-       )
+       (i32.const 2752)
       )
      )
-     (call $~lib/rt/__tmptostack
-      (i32.const 2752)
-     )
+     (i32.const 2752)
     )
    )
    (then
@@ -6210,14 +6034,10 @@
     (call $~lib/string/String.__eq
      (call $~lib/rt/__tmptostack
       (call $~lib/uri/decodeURI
-       (call $~lib/rt/__tmptostack
-        (i32.const 1712)
-       )
+       (i32.const 1712)
       )
      )
-     (call $~lib/rt/__tmptostack
-      (i32.const 1712)
-     )
+     (i32.const 1712)
     )
    )
    (then
@@ -6235,14 +6055,10 @@
     (call $~lib/string/String.__eq
      (call $~lib/rt/__tmptostack
       (call $~lib/uri/decodeURI
-       (call $~lib/rt/__tmptostack
-        (i32.const 2784)
-       )
+       (i32.const 2784)
       )
      )
-     (call $~lib/rt/__tmptostack
-      (i32.const 2784)
-     )
+     (i32.const 2784)
     )
    )
    (then
@@ -6260,14 +6076,10 @@
     (call $~lib/string/String.__eq
      (call $~lib/rt/__tmptostack
       (call $~lib/uri/decodeURI
-       (call $~lib/rt/__tmptostack
-        (i32.const 1392)
-       )
+       (i32.const 1392)
       )
      )
-     (call $~lib/rt/__tmptostack
-      (i32.const 1360)
-     )
+     (i32.const 1360)
     )
    )
    (then
@@ -6285,14 +6097,10 @@
     (call $~lib/string/String.__eq
      (call $~lib/rt/__tmptostack
       (call $~lib/uri/decodeURI
-       (call $~lib/rt/__tmptostack
-        (i32.const 3248)
-       )
+       (i32.const 3248)
       )
      )
-     (call $~lib/rt/__tmptostack
-      (i32.const 3248)
-     )
+     (i32.const 3248)
     )
    )
    (then
@@ -6310,14 +6118,10 @@
     (call $~lib/string/String.__eq
      (call $~lib/rt/__tmptostack
       (call $~lib/uri/decodeURI
-       (call $~lib/rt/__tmptostack
-        (i32.const 3296)
-       )
+       (i32.const 3296)
       )
      )
-     (call $~lib/rt/__tmptostack
-      (i32.const 3296)
-     )
+     (i32.const 3296)
     )
    )
    (then
@@ -6335,14 +6139,10 @@
     (call $~lib/string/String.__eq
      (call $~lib/rt/__tmptostack
       (call $~lib/uri/decodeURI
-       (call $~lib/rt/__tmptostack
-        (i32.const 2992)
-       )
+       (i32.const 2992)
       )
      )
-     (call $~lib/rt/__tmptostack
-      (i32.const 2992)
-     )
+     (i32.const 2992)
     )
    )
    (then

@@ -7027,14 +7027,10 @@
     (call $~lib/string/String.__eq
      (call $~lib/rt/__tmptostack
       (call $~lib/string/String#toUpperCase
-       (call $~lib/rt/__tmptostack
-        (i32.const 32)
-       )
+       (i32.const 32)
       )
      )
-     (call $~lib/rt/__tmptostack
-      (i32.const 32)
-     )
+     (i32.const 32)
     )
    )
    (then
@@ -7052,14 +7048,10 @@
     (call $~lib/string/String.__eq
      (call $~lib/rt/__tmptostack
       (call $~lib/string/String#toLowerCase
-       (call $~lib/rt/__tmptostack
-        (i32.const 32)
-       )
+       (i32.const 32)
       )
      )
-     (call $~lib/rt/__tmptostack
-      (i32.const 32)
-     )
+     (i32.const 32)
     )
    )
    (then
@@ -7077,14 +7069,10 @@
     (call $~lib/string/String.__eq
      (call $~lib/rt/__tmptostack
       (call $~lib/string/String#toUpperCase
-       (call $~lib/rt/__tmptostack
-        (i32.const 10784)
-       )
+       (i32.const 10784)
       )
      )
-     (call $~lib/rt/__tmptostack
-      (i32.const 10832)
-     )
+     (i32.const 10832)
     )
    )
    (then
@@ -7102,14 +7090,10 @@
     (call $~lib/string/String.__eq
      (call $~lib/rt/__tmptostack
       (call $~lib/string/String#toLowerCase
-       (call $~lib/rt/__tmptostack
-        (i32.const 10880)
-       )
+       (i32.const 10880)
       )
      )
-     (call $~lib/rt/__tmptostack
-      (i32.const 10928)
-     )
+     (i32.const 10928)
     )
    )
    (then
@@ -7127,14 +7111,10 @@
     (call $~lib/string/String.__eq
      (call $~lib/rt/__tmptostack
       (call $~lib/string/String#toUpperCase
-       (call $~lib/rt/__tmptostack
-        (i32.const 10976)
-       )
+       (i32.const 10976)
       )
      )
-     (call $~lib/rt/__tmptostack
-      (i32.const 11072)
-     )
+     (i32.const 11072)
     )
    )
    (then
@@ -7152,14 +7132,10 @@
     (call $~lib/string/String.__eq
      (call $~lib/rt/__tmptostack
       (call $~lib/string/String#toLowerCase
-       (call $~lib/rt/__tmptostack
-        (i32.const 11072)
-       )
+       (i32.const 11072)
       )
      )
-     (call $~lib/rt/__tmptostack
-      (i32.const 11168)
-     )
+     (i32.const 11168)
     )
    )
    (then
@@ -7177,14 +7153,10 @@
     (call $~lib/string/String.__eq
      (call $~lib/rt/__tmptostack
       (call $~lib/string/String#toUpperCase
-       (call $~lib/rt/__tmptostack
-        (i32.const 11264)
-       )
+       (i32.const 11264)
       )
      )
-     (call $~lib/rt/__tmptostack
-      (i32.const 11328)
-     )
+     (i32.const 11328)
     )
    )
    (then
@@ -7202,14 +7174,10 @@
     (call $~lib/string/String.__eq
      (call $~lib/rt/__tmptostack
       (call $~lib/string/String#toLowerCase
-       (call $~lib/rt/__tmptostack
-        (i32.const 11328)
-       )
+       (i32.const 11328)
       )
      )
-     (call $~lib/rt/__tmptostack
-      (i32.const 11392)
-     )
+     (i32.const 11392)
     )
    )
    (then
@@ -7227,14 +7195,10 @@
     (call $~lib/string/String.__eq
      (call $~lib/rt/__tmptostack
       (call $~lib/string/String#toUpperCase
-       (call $~lib/rt/__tmptostack
-        (i32.const 11456)
-       )
+       (i32.const 11456)
       )
      )
-     (call $~lib/rt/__tmptostack
-      (i32.const 11552)
-     )
+     (i32.const 11552)
     )
    )
    (then
@@ -7252,14 +7216,10 @@
     (call $~lib/string/String.__eq
      (call $~lib/rt/__tmptostack
       (call $~lib/string/String#toLowerCase
-       (call $~lib/rt/__tmptostack
-        (i32.const 11552)
-       )
+       (i32.const 11552)
       )
      )
-     (call $~lib/rt/__tmptostack
-      (i32.const 11648)
-     )
+     (i32.const 11648)
     )
    )
    (then
@@ -7277,14 +7237,10 @@
     (call $~lib/string/String.__eq
      (call $~lib/rt/__tmptostack
       (call $~lib/string/String#toUpperCase
-       (call $~lib/rt/__tmptostack
-        (i32.const 11744)
-       )
+       (i32.const 11744)
       )
      )
-     (call $~lib/rt/__tmptostack
-      (i32.const 11840)
-     )
+     (i32.const 11840)
     )
    )
    (then
@@ -7302,14 +7258,10 @@
     (call $~lib/string/String.__eq
      (call $~lib/rt/__tmptostack
       (call $~lib/string/String#toLowerCase
-       (call $~lib/rt/__tmptostack
-        (i32.const 11840)
-       )
+       (i32.const 11840)
       )
      )
-     (call $~lib/rt/__tmptostack
-      (i32.const 11936)
-     )
+     (i32.const 11936)
     )
    )
    (then
@@ -7327,14 +7279,10 @@
     (call $~lib/string/String.__eq
      (call $~lib/rt/__tmptostack
       (call $~lib/string/String#toUpperCase
-       (call $~lib/rt/__tmptostack
-        (i32.const 12032)
-       )
+       (i32.const 12032)
       )
      )
-     (call $~lib/rt/__tmptostack
-      (i32.const 12112)
-     )
+     (i32.const 12112)
     )
    )
    (then
@@ -7352,14 +7300,10 @@
     (call $~lib/string/String.__eq
      (call $~lib/rt/__tmptostack
       (call $~lib/string/String#toUpperCase
-       (call $~lib/rt/__tmptostack
-        (i32.const 12192)
-       )
+       (i32.const 12192)
       )
      )
-     (call $~lib/rt/__tmptostack
-      (i32.const 12272)
-     )
+     (i32.const 12272)
     )
    )
    (then
@@ -7377,14 +7321,10 @@
     (call $~lib/string/String.__eq
      (call $~lib/rt/__tmptostack
       (call $~lib/string/String#toUpperCase
-       (call $~lib/rt/__tmptostack
-        (i32.const 12352)
-       )
+       (i32.const 12352)
       )
      )
-     (call $~lib/rt/__tmptostack
-      (i32.const 12416)
-     )
+     (i32.const 12416)
     )
    )
    (then
@@ -7402,14 +7342,10 @@
     (call $~lib/string/String.__eq
      (call $~lib/rt/__tmptostack
       (call $~lib/string/String#toUpperCase
-       (call $~lib/rt/__tmptostack
-        (i32.const 12480)
-       )
+       (i32.const 12480)
       )
      )
-     (call $~lib/rt/__tmptostack
-      (i32.const 12560)
-     )
+     (i32.const 12560)
     )
    )
    (then
@@ -7427,14 +7363,10 @@
     (call $~lib/string/String.__eq
      (call $~lib/rt/__tmptostack
       (call $~lib/string/String#toUpperCase
-       (call $~lib/rt/__tmptostack
-        (i32.const 12640)
-       )
+       (i32.const 12640)
       )
      )
-     (call $~lib/rt/__tmptostack
-      (i32.const 12720)
-     )
+     (i32.const 12720)
     )
    )
    (then
@@ -7452,14 +7384,10 @@
     (call $~lib/string/String.__eq
      (call $~lib/rt/__tmptostack
       (call $~lib/string/String#toUpperCase
-       (call $~lib/rt/__tmptostack
-        (i32.const 12800)
-       )
+       (i32.const 12800)
       )
      )
-     (call $~lib/rt/__tmptostack
-      (i32.const 12864)
-     )
+     (i32.const 12864)
     )
    )
    (then
@@ -7477,14 +7405,10 @@
     (call $~lib/string/String.__eq
      (call $~lib/rt/__tmptostack
       (call $~lib/string/String#toUpperCase
-       (call $~lib/rt/__tmptostack
-        (i32.const 12928)
-       )
+       (i32.const 12928)
       )
      )
-     (call $~lib/rt/__tmptostack
-      (i32.const 13008)
-     )
+     (i32.const 13008)
     )
    )
    (then
@@ -7502,14 +7426,10 @@
     (call $~lib/string/String.__eq
      (call $~lib/rt/__tmptostack
       (call $~lib/string/String#toUpperCase
-       (call $~lib/rt/__tmptostack
-        (i32.const 13088)
-       )
+       (i32.const 13088)
       )
      )
-     (call $~lib/rt/__tmptostack
-      (i32.const 13168)
-     )
+     (i32.const 13168)
     )
    )
    (then
@@ -7527,14 +7447,10 @@
     (call $~lib/string/String.__eq
      (call $~lib/rt/__tmptostack
       (call $~lib/string/String#toUpperCase
-       (call $~lib/rt/__tmptostack
-        (i32.const 13248)
-       )
+       (i32.const 13248)
       )
      )
-     (call $~lib/rt/__tmptostack
-      (i32.const 13408)
-     )
+     (i32.const 13408)
     )
    )
    (then
@@ -7552,14 +7468,10 @@
     (call $~lib/string/String.__eq
      (call $~lib/rt/__tmptostack
       (call $~lib/string/String#toLowerCase
-       (call $~lib/rt/__tmptostack
-        (i32.const 13248)
-       )
+       (i32.const 13248)
       )
      )
-     (call $~lib/rt/__tmptostack
-      (i32.const 13568)
-     )
+     (i32.const 13568)
     )
    )
    (then
@@ -7577,14 +7489,10 @@
     (call $~lib/string/String.__eq
      (call $~lib/rt/__tmptostack
       (call $~lib/string/String#toUpperCase
-       (call $~lib/rt/__tmptostack
-        (i32.const 13728)
-       )
+       (i32.const 13728)
       )
      )
-     (call $~lib/rt/__tmptostack
-      (i32.const 13760)
-     )
+     (i32.const 13760)
     )
    )
    (then
@@ -7602,14 +7510,10 @@
     (call $~lib/string/String.__eq
      (call $~lib/rt/__tmptostack
       (call $~lib/string/String#toLowerCase
-       (call $~lib/rt/__tmptostack
-        (i32.const 13792)
-       )
+       (i32.const 13792)
       )
      )
-     (call $~lib/rt/__tmptostack
-      (i32.const 13824)
-     )
+     (i32.const 13824)
     )
    )
    (then
@@ -7627,14 +7531,10 @@
     (call $~lib/string/String.__eq
      (call $~lib/rt/__tmptostack
       (call $~lib/string/String#toUpperCase
-       (call $~lib/rt/__tmptostack
-        (i32.const 13856)
-       )
+       (i32.const 13856)
       )
      )
-     (call $~lib/rt/__tmptostack
-      (i32.const 14064)
-     )
+     (i32.const 14064)
     )
    )
    (then
@@ -7654,16 +7554,12 @@
       (call $~lib/string/String#toLowerCase
        (call $~lib/rt/__tmptostack
         (call $~lib/string/String#toUpperCase
-         (call $~lib/rt/__tmptostack
-          (i32.const 13728)
-         )
+         (i32.const 13728)
         )
        )
       )
      )
-     (call $~lib/rt/__tmptostack
-      (i32.const 14272)
-     )
+     (i32.const 14272)
     )
    )
    (then
@@ -7683,16 +7579,12 @@
       (call $~lib/string/String#toLowerCase
        (call $~lib/rt/__tmptostack
         (call $~lib/string/String#toUpperCase
-         (call $~lib/rt/__tmptostack
-          (i32.const 14304)
-         )
+         (i32.const 14304)
         )
        )
       )
      )
-     (call $~lib/rt/__tmptostack
-      (i32.const 14336)
-     )
+     (i32.const 14336)
     )
    )
    (then
@@ -7712,16 +7604,12 @@
       (call $~lib/string/String#toLowerCase
        (call $~lib/rt/__tmptostack
         (call $~lib/string/String#toUpperCase
-         (call $~lib/rt/__tmptostack
-          (i32.const 14368)
-         )
+         (i32.const 14368)
         )
        )
       )
      )
-     (call $~lib/rt/__tmptostack
-      (i32.const 14368)
-     )
+     (i32.const 14368)
     )
    )
    (then
@@ -7746,9 +7634,7 @@
        )
       )
      )
-     (call $~lib/rt/__tmptostack
-      (i32.const 14624)
-     )
+     (i32.const 14624)
     )
    )
    (then
@@ -7773,9 +7659,7 @@
        )
       )
      )
-     (call $~lib/rt/__tmptostack
-      (i32.const 14624)
-     )
+     (i32.const 14624)
     )
    )
    (then
@@ -7793,14 +7677,10 @@
     (call $~lib/string/String.__eq
      (call $~lib/rt/__tmptostack
       (call $~lib/string/String#toLowerCase
-       (call $~lib/rt/__tmptostack
-        (i32.const 14656)
-       )
+       (i32.const 14656)
       )
      )
-     (call $~lib/rt/__tmptostack
-      (i32.const 14688)
-     )
+     (i32.const 14688)
     )
    )
    (then
@@ -7818,14 +7698,10 @@
     (call $~lib/string/String.__eq
      (call $~lib/rt/__tmptostack
       (call $~lib/string/String#toLowerCase
-       (call $~lib/rt/__tmptostack
-        (i32.const 14720)
-       )
+       (i32.const 14720)
       )
      )
-     (call $~lib/rt/__tmptostack
-      (i32.const 14752)
-     )
+     (i32.const 14752)
     )
    )
    (then
@@ -7843,14 +7719,10 @@
     (call $~lib/string/String.__eq
      (call $~lib/rt/__tmptostack
       (call $~lib/string/String#toLowerCase
-       (call $~lib/rt/__tmptostack
-        (i32.const 14784)
-       )
+       (i32.const 14784)
       )
      )
-     (call $~lib/rt/__tmptostack
-      (i32.const 14816)
-     )
+     (i32.const 14816)
     )
    )
    (then
@@ -7868,14 +7740,10 @@
     (call $~lib/string/String.__eq
      (call $~lib/rt/__tmptostack
       (call $~lib/string/String#toLowerCase
-       (call $~lib/rt/__tmptostack
-        (i32.const 14848)
-       )
+       (i32.const 14848)
       )
      )
-     (call $~lib/rt/__tmptostack
-      (i32.const 14880)
-     )
+     (i32.const 14880)
     )
    )
    (then
@@ -7893,14 +7761,10 @@
     (call $~lib/string/String.__eq
      (call $~lib/rt/__tmptostack
       (call $~lib/string/String#toLowerCase
-       (call $~lib/rt/__tmptostack
-        (i32.const 14912)
-       )
+       (i32.const 14912)
       )
      )
-     (call $~lib/rt/__tmptostack
-      (i32.const 14944)
-     )
+     (i32.const 14944)
     )
    )
    (then
@@ -7918,14 +7782,10 @@
     (call $~lib/string/String.__eq
      (call $~lib/rt/__tmptostack
       (call $~lib/string/String#toLowerCase
-       (call $~lib/rt/__tmptostack
-        (i32.const 14976)
-       )
+       (i32.const 14976)
       )
      )
-     (call $~lib/rt/__tmptostack
-      (i32.const 15008)
-     )
+     (i32.const 15008)
     )
    )
    (then
@@ -7943,14 +7803,10 @@
     (call $~lib/string/String.__eq
      (call $~lib/rt/__tmptostack
       (call $~lib/string/String#toLowerCase
-       (call $~lib/rt/__tmptostack
-        (i32.const 15040)
-       )
+       (i32.const 15040)
       )
      )
-     (call $~lib/rt/__tmptostack
-      (i32.const 15072)
-     )
+     (i32.const 15072)
     )
    )
    (then
@@ -7968,14 +7824,10 @@
     (call $~lib/string/String.__eq
      (call $~lib/rt/__tmptostack
       (call $~lib/string/String#toLowerCase
-       (call $~lib/rt/__tmptostack
-        (i32.const 15104)
-       )
+       (i32.const 15104)
       )
      )
-     (call $~lib/rt/__tmptostack
-      (i32.const 15136)
-     )
+     (i32.const 15136)
     )
    )
    (then
@@ -7993,14 +7845,10 @@
     (call $~lib/string/String.__eq
      (call $~lib/rt/__tmptostack
       (call $~lib/string/String#toLowerCase
-       (call $~lib/rt/__tmptostack
-        (i32.const 15168)
-       )
+       (i32.const 15168)
       )
      )
-     (call $~lib/rt/__tmptostack
-      (i32.const 15200)
-     )
+     (i32.const 15200)
     )
    )
    (then
@@ -8018,14 +7866,10 @@
     (call $~lib/string/String.__eq
      (call $~lib/rt/__tmptostack
       (call $~lib/string/String#toLowerCase
-       (call $~lib/rt/__tmptostack
-        (i32.const 15232)
-       )
+       (i32.const 15232)
       )
      )
-     (call $~lib/rt/__tmptostack
-      (i32.const 15264)
-     )
+     (i32.const 15264)
     )
    )
    (then
@@ -8043,14 +7887,10 @@
     (call $~lib/string/String.__eq
      (call $~lib/rt/__tmptostack
       (call $~lib/string/String#toLowerCase
-       (call $~lib/rt/__tmptostack
-        (i32.const 15296)
-       )
+       (i32.const 15296)
       )
      )
-     (call $~lib/rt/__tmptostack
-      (i32.const 15328)
-     )
+     (i32.const 15328)
     )
    )
    (then
@@ -8068,14 +7908,10 @@
     (call $~lib/string/String.__eq
      (call $~lib/rt/__tmptostack
       (call $~lib/string/String#toLowerCase
-       (call $~lib/rt/__tmptostack
-        (i32.const 15360)
-       )
+       (i32.const 15360)
       )
      )
-     (call $~lib/rt/__tmptostack
-      (i32.const 15392)
-     )
+     (i32.const 15392)
     )
    )
    (then
@@ -8093,14 +7929,10 @@
     (call $~lib/string/String.__eq
      (call $~lib/rt/__tmptostack
       (call $~lib/string/String#toLowerCase
-       (call $~lib/rt/__tmptostack
-        (i32.const 15424)
-       )
+       (i32.const 15424)
       )
      )
-     (call $~lib/rt/__tmptostack
-      (i32.const 15456)
-     )
+     (i32.const 15456)
     )
    )
    (then
@@ -8118,14 +7950,10 @@
     (call $~lib/string/String.__eq
      (call $~lib/rt/__tmptostack
       (call $~lib/string/String#toLowerCase
-       (call $~lib/rt/__tmptostack
-        (i32.const 15488)
-       )
+       (i32.const 15488)
       )
      )
-     (call $~lib/rt/__tmptostack
-      (i32.const 15520)
-     )
+     (i32.const 15520)
     )
    )
    (then
@@ -8143,14 +7971,10 @@
     (call $~lib/string/String.__eq
      (call $~lib/rt/__tmptostack
       (call $~lib/string/String#toLowerCase
-       (call $~lib/rt/__tmptostack
-        (i32.const 15552)
-       )
+       (i32.const 15552)
       )
      )
-     (call $~lib/rt/__tmptostack
-      (i32.const 15584)
-     )
+     (i32.const 15584)
     )
    )
    (then
@@ -8168,14 +7992,10 @@
     (call $~lib/string/String.__eq
      (call $~lib/rt/__tmptostack
       (call $~lib/string/String#toLowerCase
-       (call $~lib/rt/__tmptostack
-        (i32.const 15616)
-       )
+       (i32.const 15616)
       )
      )
-     (call $~lib/rt/__tmptostack
-      (i32.const 15648)
-     )
+     (i32.const 15648)
     )
    )
    (then
@@ -8193,14 +8013,10 @@
     (call $~lib/string/String.__eq
      (call $~lib/rt/__tmptostack
       (call $~lib/string/String#toLowerCase
-       (call $~lib/rt/__tmptostack
-        (i32.const 15680)
-       )
+       (i32.const 15680)
       )
      )
-     (call $~lib/rt/__tmptostack
-      (i32.const 15712)
-     )
+     (i32.const 15712)
     )
    )
    (then
@@ -8218,14 +8034,10 @@
     (call $~lib/string/String.__eq
      (call $~lib/rt/__tmptostack
       (call $~lib/string/String#toLowerCase
-       (call $~lib/rt/__tmptostack
-        (i32.const 15744)
-       )
+       (i32.const 15744)
       )
      )
-     (call $~lib/rt/__tmptostack
-      (i32.const 15776)
-     )
+     (i32.const 15776)
     )
    )
    (then
@@ -8243,14 +8055,10 @@
     (call $~lib/string/String.__eq
      (call $~lib/rt/__tmptostack
       (call $~lib/string/String#toLowerCase
-       (call $~lib/rt/__tmptostack
-        (i32.const 15808)
-       )
+       (i32.const 15808)
       )
      )
-     (call $~lib/rt/__tmptostack
-      (i32.const 15840)
-     )
+     (i32.const 15840)
     )
    )
    (then
@@ -8268,14 +8076,10 @@
     (call $~lib/string/String.__eq
      (call $~lib/rt/__tmptostack
       (call $~lib/string/String#toLowerCase
-       (call $~lib/rt/__tmptostack
-        (i32.const 15872)
-       )
+       (i32.const 15872)
       )
      )
-     (call $~lib/rt/__tmptostack
-      (i32.const 15904)
-     )
+     (i32.const 15904)
     )
    )
    (then
@@ -8293,14 +8097,10 @@
     (call $~lib/string/String.__eq
      (call $~lib/rt/__tmptostack
       (call $~lib/string/String#toLowerCase
-       (call $~lib/rt/__tmptostack
-        (i32.const 15936)
-       )
+       (i32.const 15936)
       )
      )
-     (call $~lib/rt/__tmptostack
-      (i32.const 15968)
-     )
+     (i32.const 15968)
     )
    )
    (then
@@ -8318,14 +8118,10 @@
     (call $~lib/string/String.__eq
      (call $~lib/rt/__tmptostack
       (call $~lib/string/String#toLowerCase
-       (call $~lib/rt/__tmptostack
-        (i32.const 16000)
-       )
+       (i32.const 16000)
       )
      )
-     (call $~lib/rt/__tmptostack
-      (i32.const 16032)
-     )
+     (i32.const 16032)
     )
    )
    (then
@@ -8343,14 +8139,10 @@
     (call $~lib/string/String.__eq
      (call $~lib/rt/__tmptostack
       (call $~lib/string/String#toLowerCase
-       (call $~lib/rt/__tmptostack
-        (i32.const 16064)
-       )
+       (i32.const 16064)
       )
      )
-     (call $~lib/rt/__tmptostack
-      (i32.const 16096)
-     )
+     (i32.const 16096)
     )
    )
    (then
@@ -8368,14 +8160,10 @@
     (call $~lib/string/String.__eq
      (call $~lib/rt/__tmptostack
       (call $~lib/string/String#toLowerCase
-       (call $~lib/rt/__tmptostack
-        (i32.const 16128)
-       )
+       (i32.const 16128)
       )
      )
-     (call $~lib/rt/__tmptostack
-      (i32.const 16160)
-     )
+     (i32.const 16160)
     )
    )
    (then
@@ -8393,14 +8181,10 @@
     (call $~lib/string/String.__eq
      (call $~lib/rt/__tmptostack
       (call $~lib/string/String#toLowerCase
-       (call $~lib/rt/__tmptostack
-        (i32.const 16192)
-       )
+       (i32.const 16192)
       )
      )
-     (call $~lib/rt/__tmptostack
-      (i32.const 16224)
-     )
+     (i32.const 16224)
     )
    )
    (then
@@ -8418,14 +8202,10 @@
     (call $~lib/string/String.__eq
      (call $~lib/rt/__tmptostack
       (call $~lib/string/String#toLowerCase
-       (call $~lib/rt/__tmptostack
-        (i32.const 16256)
-       )
+       (i32.const 16256)
       )
      )
-     (call $~lib/rt/__tmptostack
-      (i32.const 15328)
-     )
+     (i32.const 15328)
     )
    )
    (then
@@ -8443,14 +8223,10 @@
     (call $~lib/string/String.__eq
      (call $~lib/rt/__tmptostack
       (call $~lib/string/String#toLowerCase
-       (call $~lib/rt/__tmptostack
-        (i32.const 16288)
-       )
+       (i32.const 16288)
       )
      )
-     (call $~lib/rt/__tmptostack
-      (i32.const 16320)
-     )
+     (i32.const 16320)
     )
    )
    (then
@@ -8468,14 +8244,10 @@
     (call $~lib/string/String.__eq
      (call $~lib/rt/__tmptostack
       (call $~lib/string/String#toLowerCase
-       (call $~lib/rt/__tmptostack
-        (i32.const 16352)
-       )
+       (i32.const 16352)
       )
      )
-     (call $~lib/rt/__tmptostack
-      (i32.const 16384)
-     )
+     (i32.const 16384)
     )
    )
    (then
@@ -8493,14 +8265,10 @@
     (call $~lib/string/String.__eq
      (call $~lib/rt/__tmptostack
       (call $~lib/string/String#toLowerCase
-       (call $~lib/rt/__tmptostack
-        (i32.const 16416)
-       )
+       (i32.const 16416)
       )
      )
-     (call $~lib/rt/__tmptostack
-      (i32.const 16448)
-     )
+     (i32.const 16448)
     )
    )
    (then
@@ -8518,14 +8286,10 @@
     (call $~lib/string/String.__eq
      (call $~lib/rt/__tmptostack
       (call $~lib/string/String#toLowerCase
-       (call $~lib/rt/__tmptostack
-        (i32.const 16480)
-       )
+       (i32.const 16480)
       )
      )
-     (call $~lib/rt/__tmptostack
-      (i32.const 16512)
-     )
+     (i32.const 16512)
     )
    )
    (then
@@ -8543,14 +8307,10 @@
     (call $~lib/string/String.__eq
      (call $~lib/rt/__tmptostack
       (call $~lib/string/String#toLowerCase
-       (call $~lib/rt/__tmptostack
-        (i32.const 16544)
-       )
+       (i32.const 16544)
       )
      )
-     (call $~lib/rt/__tmptostack
-      (i32.const 16576)
-     )
+     (i32.const 16576)
     )
    )
    (then
@@ -8568,14 +8328,10 @@
     (call $~lib/string/String.__eq
      (call $~lib/rt/__tmptostack
       (call $~lib/string/String#toLowerCase
-       (call $~lib/rt/__tmptostack
-        (i32.const 16608)
-       )
+       (i32.const 16608)
       )
      )
-     (call $~lib/rt/__tmptostack
-      (i32.const 16640)
-     )
+     (i32.const 16640)
     )
    )
    (then
@@ -8593,14 +8349,10 @@
     (call $~lib/string/String.__eq
      (call $~lib/rt/__tmptostack
       (call $~lib/string/String#toLowerCase
-       (call $~lib/rt/__tmptostack
-        (i32.const 16672)
-       )
+       (i32.const 16672)
       )
      )
-     (call $~lib/rt/__tmptostack
-      (i32.const 16704)
-     )
+     (i32.const 16704)
     )
    )
    (then
@@ -8618,14 +8370,10 @@
     (call $~lib/string/String.__eq
      (call $~lib/rt/__tmptostack
       (call $~lib/string/String#toLowerCase
-       (call $~lib/rt/__tmptostack
-        (i32.const 16736)
-       )
+       (i32.const 16736)
       )
      )
-     (call $~lib/rt/__tmptostack
-      (i32.const 16768)
-     )
+     (i32.const 16768)
     )
    )
    (then
@@ -8643,14 +8391,10 @@
     (call $~lib/string/String.__eq
      (call $~lib/rt/__tmptostack
       (call $~lib/string/String#toLowerCase
-       (call $~lib/rt/__tmptostack
-        (i32.const 16800)
-       )
+       (i32.const 16800)
       )
      )
-     (call $~lib/rt/__tmptostack
-      (i32.const 16832)
-     )
+     (i32.const 16832)
     )
    )
    (then
@@ -8668,14 +8412,10 @@
     (call $~lib/string/String.__eq
      (call $~lib/rt/__tmptostack
       (call $~lib/string/String#toLowerCase
-       (call $~lib/rt/__tmptostack
-        (i32.const 16864)
-       )
+       (i32.const 16864)
       )
      )
-     (call $~lib/rt/__tmptostack
-      (i32.const 16896)
-     )
+     (i32.const 16896)
     )
    )
    (then
@@ -8693,14 +8433,10 @@
     (call $~lib/string/String.__eq
      (call $~lib/rt/__tmptostack
       (call $~lib/string/String#toLowerCase
-       (call $~lib/rt/__tmptostack
-        (i32.const 16928)
-       )
+       (i32.const 16928)
       )
      )
-     (call $~lib/rt/__tmptostack
-      (i32.const 16960)
-     )
+     (i32.const 16960)
     )
    )
    (then
@@ -8718,14 +8454,10 @@
     (call $~lib/string/String.__eq
      (call $~lib/rt/__tmptostack
       (call $~lib/string/String#toLowerCase
-       (call $~lib/rt/__tmptostack
-        (i32.const 16992)
-       )
+       (i32.const 16992)
       )
      )
-     (call $~lib/rt/__tmptostack
-      (i32.const 17024)
-     )
+     (i32.const 17024)
     )
    )
    (then
@@ -8743,14 +8475,10 @@
     (call $~lib/string/String.__eq
      (call $~lib/rt/__tmptostack
       (call $~lib/string/String#toUpperCase
-       (call $~lib/rt/__tmptostack
-        (i32.const 17056)
-       )
+       (i32.const 17056)
       )
      )
-     (call $~lib/rt/__tmptostack
-      (i32.const 17088)
-     )
+     (i32.const 17088)
     )
    )
    (then
@@ -8768,14 +8496,10 @@
     (call $~lib/string/String.__eq
      (call $~lib/rt/__tmptostack
       (call $~lib/string/String#toUpperCase
-       (call $~lib/rt/__tmptostack
-        (i32.const 14304)
-       )
+       (i32.const 14304)
       )
      )
-     (call $~lib/rt/__tmptostack
-      (i32.const 17120)
-     )
+     (i32.const 17120)
     )
    )
    (then
@@ -8793,14 +8517,10 @@
     (call $~lib/string/String.__eq
      (call $~lib/rt/__tmptostack
       (call $~lib/string/String#toUpperCase
-       (call $~lib/rt/__tmptostack
-        (i32.const 17152)
-       )
+       (i32.const 17152)
       )
      )
-     (call $~lib/rt/__tmptostack
-      (i32.const 17184)
-     )
+     (i32.const 17184)
     )
    )
    (then
@@ -8818,14 +8538,10 @@
     (call $~lib/string/String.__eq
      (call $~lib/rt/__tmptostack
       (call $~lib/string/String#toUpperCase
-       (call $~lib/rt/__tmptostack
-        (i32.const 17216)
-       )
+       (i32.const 17216)
       )
      )
-     (call $~lib/rt/__tmptostack
-      (i32.const 17248)
-     )
+     (i32.const 17248)
     )
    )
    (then
@@ -8843,14 +8559,10 @@
     (call $~lib/string/String.__eq
      (call $~lib/rt/__tmptostack
       (call $~lib/string/String#toUpperCase
-       (call $~lib/rt/__tmptostack
-        (i32.const 17280)
-       )
+       (i32.const 17280)
       )
      )
-     (call $~lib/rt/__tmptostack
-      (i32.const 17312)
-     )
+     (i32.const 17312)
     )
    )
    (then
@@ -8868,14 +8580,10 @@
     (call $~lib/string/String.__eq
      (call $~lib/rt/__tmptostack
       (call $~lib/string/String#toUpperCase
-       (call $~lib/rt/__tmptostack
-        (i32.const 17344)
-       )
+       (i32.const 17344)
       )
      )
-     (call $~lib/rt/__tmptostack
-      (i32.const 17376)
-     )
+     (i32.const 17376)
     )
    )
    (then
@@ -8893,14 +8601,10 @@
     (call $~lib/string/String.__eq
      (call $~lib/rt/__tmptostack
       (call $~lib/string/String#toUpperCase
-       (call $~lib/rt/__tmptostack
-        (i32.const 17408)
-       )
+       (i32.const 17408)
       )
      )
-     (call $~lib/rt/__tmptostack
-      (i32.const 17376)
-     )
+     (i32.const 17376)
     )
    )
    (then
@@ -8918,14 +8622,10 @@
     (call $~lib/string/String.__eq
      (call $~lib/rt/__tmptostack
       (call $~lib/string/String#toUpperCase
-       (call $~lib/rt/__tmptostack
-        (i32.const 17440)
-       )
+       (i32.const 17440)
       )
      )
-     (call $~lib/rt/__tmptostack
-      (i32.const 17472)
-     )
+     (i32.const 17472)
     )
    )
    (then
@@ -8943,14 +8643,10 @@
     (call $~lib/string/String.__eq
      (call $~lib/rt/__tmptostack
       (call $~lib/string/String#toUpperCase
-       (call $~lib/rt/__tmptostack
-        (i32.const 17504)
-       )
+       (i32.const 17504)
       )
      )
-     (call $~lib/rt/__tmptostack
-      (i32.const 17536)
-     )
+     (i32.const 17536)
     )
    )
    (then
@@ -8968,14 +8664,10 @@
     (call $~lib/string/String.__eq
      (call $~lib/rt/__tmptostack
       (call $~lib/string/String#toUpperCase
-       (call $~lib/rt/__tmptostack
-        (i32.const 17568)
-       )
+       (i32.const 17568)
       )
      )
-     (call $~lib/rt/__tmptostack
-      (i32.const 17600)
-     )
+     (i32.const 17600)
     )
    )
    (then
@@ -8993,14 +8685,10 @@
     (call $~lib/string/String.__eq
      (call $~lib/rt/__tmptostack
       (call $~lib/string/String#toUpperCase
-       (call $~lib/rt/__tmptostack
-        (i32.const 17632)
-       )
+       (i32.const 17632)
       )
      )
-     (call $~lib/rt/__tmptostack
-      (i32.const 17664)
-     )
+     (i32.const 17664)
     )
    )
    (then
@@ -9018,14 +8706,10 @@
     (call $~lib/string/String.__eq
      (call $~lib/rt/__tmptostack
       (call $~lib/string/String#toUpperCase
-       (call $~lib/rt/__tmptostack
-        (i32.const 17696)
-       )
+       (i32.const 17696)
       )
      )
-     (call $~lib/rt/__tmptostack
-      (i32.const 17728)
-     )
+     (i32.const 17728)
     )
    )
    (then
@@ -9043,14 +8727,10 @@
     (call $~lib/string/String.__eq
      (call $~lib/rt/__tmptostack
       (call $~lib/string/String#toUpperCase
-       (call $~lib/rt/__tmptostack
-        (i32.const 17760)
-       )
+       (i32.const 17760)
       )
      )
-     (call $~lib/rt/__tmptostack
-      (i32.const 17792)
-     )
+     (i32.const 17792)
     )
    )
    (then
@@ -9342,9 +9022,7 @@
        )
        (then
         (call $~lib/builtins/trace
-         (call $~lib/rt/__tmptostack
-          (i32.const 17824)
-         )
+         (i32.const 17824)
          (i32.const 1)
          (f64.convert_i32_s
           (local.get $i)
@@ -9357,9 +9035,7 @@
         (call $~lib/builtins/trace
          (call $~lib/rt/__tmptostack
           (call $~lib/string/String.__concat
-           (call $~lib/rt/__tmptostack
-            (i32.const 17920)
-           )
+           (i32.const 17920)
            (call $~lib/rt/__tmptostack
             (call $~lib/number/I64#toString
              (local.get $origLowerCode)
@@ -9378,9 +9054,7 @@
         (call $~lib/builtins/trace
          (call $~lib/rt/__tmptostack
           (call $~lib/string/String.__concat
-           (call $~lib/rt/__tmptostack
-            (i32.const 19760)
-           )
+           (i32.const 19760)
            (call $~lib/rt/__tmptostack
             (call $~lib/number/I64#toString
              (local.get $expectLowerCode)
@@ -9405,9 +9079,7 @@
        )
        (then
         (call $~lib/builtins/trace
-         (call $~lib/rt/__tmptostack
-          (i32.const 19824)
-         )
+         (i32.const 19824)
          (i32.const 1)
          (f64.convert_i32_s
           (local.get $i)
@@ -9420,9 +9092,7 @@
         (call $~lib/builtins/trace
          (call $~lib/rt/__tmptostack
           (call $~lib/string/String.__concat
-           (call $~lib/rt/__tmptostack
-            (i32.const 19920)
-           )
+           (i32.const 19920)
            (call $~lib/rt/__tmptostack
             (call $~lib/number/I64#toString
              (local.get $origUpperCode)
@@ -9441,9 +9111,7 @@
         (call $~lib/builtins/trace
          (call $~lib/rt/__tmptostack
           (call $~lib/string/String.__concat
-           (call $~lib/rt/__tmptostack
-            (i32.const 19984)
-           )
+           (i32.const 19984)
            (call $~lib/rt/__tmptostack
             (call $~lib/number/I64#toString
              (local.get $expectUpperCode)

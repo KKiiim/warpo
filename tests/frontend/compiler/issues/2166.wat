@@ -3564,12 +3564,8 @@
   (if
    (i32.eqz
     (call $~lib/string/String.__eq
-     (call $~lib/rt/__tmptostack
-      (i32.const 464)
-     )
-     (call $~lib/rt/__tmptostack
-      (i32.const 464)
-     )
+     (i32.const 464)
+     (i32.const 464)
     )
    )
    (then
@@ -3585,12 +3581,8 @@
   (if
    (i32.eqz
     (call $~lib/string/String.__eq
-     (call $~lib/rt/__tmptostack
-      (i32.const 544)
-     )
-     (call $~lib/rt/__tmptostack
-      (i32.const 544)
-     )
+     (i32.const 544)
+     (i32.const 544)
     )
    )
    (then
@@ -3617,9 +3609,7 @@
    (call $~lib/rt/__tmptostack
     (local.get $a)
    )
-   (call $~lib/rt/__tmptostack
-    (i32.const 432)
-   )
+   (i32.const 432)
    (i32.const 1)
   )
  )
@@ -3642,12 +3632,8 @@
   (if
    (i32.eqz
     (call $~lib/string/String.__eq
-     (call $~lib/rt/__tmptostack
-      (i32.const 544)
-     )
-     (call $~lib/rt/__tmptostack
-      (i32.const 544)
-     )
+     (i32.const 544)
+     (i32.const 544)
     )
    )
    (then
@@ -3666,12 +3652,8 @@
   (if
    (i32.eqz
     (call $~lib/string/String.__eq
-     (call $~lib/rt/__tmptostack
-      (i32.const 464)
-     )
-     (call $~lib/rt/__tmptostack
-      (i32.const 464)
-     )
+     (i32.const 464)
+     (i32.const 464)
     )
    )
    (then
@@ -3720,9 +3702,7 @@
      (i32.const 0)
     )
    )
-   (call $~lib/rt/__tmptostack
-    (i32.const 576)
-   )
+   (i32.const 576)
   )
  )
  (func $~lib/rt/__visit_globals (param $0 i32)

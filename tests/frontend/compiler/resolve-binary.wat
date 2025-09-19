@@ -8657,9 +8657,7 @@
        (i32.const 0)
       )
      )
-     (call $~lib/rt/__tmptostack
-      (i32.const 32)
-     )
+     (i32.const 32)
     )
    )
    (then
@@ -8684,9 +8682,7 @@
        (i32.const 0)
       )
      )
-     (call $~lib/rt/__tmptostack
-      (i32.const 64)
-     )
+     (i32.const 64)
     )
    )
    (then
@@ -8711,9 +8707,7 @@
        (i32.const 0)
       )
      )
-     (call $~lib/rt/__tmptostack
-      (i32.const 32)
-     )
+     (i32.const 32)
     )
    )
    (then
@@ -8738,9 +8732,7 @@
        (i32.const 0)
       )
      )
-     (call $~lib/rt/__tmptostack
-      (i32.const 64)
-     )
+     (i32.const 64)
     )
    )
    (then
@@ -8765,9 +8757,7 @@
        (i32.const 0)
       )
      )
-     (call $~lib/rt/__tmptostack
-      (i32.const 64)
-     )
+     (i32.const 64)
     )
    )
    (then
@@ -8792,9 +8782,7 @@
        (i32.const 0)
       )
      )
-     (call $~lib/rt/__tmptostack
-      (i32.const 32)
-     )
+     (i32.const 32)
     )
    )
    (then
@@ -8848,9 +8836,7 @@
        (i32.const 10)
       )
      )
-     (call $~lib/rt/__tmptostack
-      (i32.const 2336)
-     )
+     (i32.const 2336)
     )
    )
    (then
@@ -8880,9 +8866,7 @@
        (i32.const 10)
       )
      )
-     (call $~lib/rt/__tmptostack
-      (i32.const 2368)
-     )
+     (i32.const 2368)
     )
    )
    (then
@@ -8912,9 +8896,7 @@
        (i32.const 10)
       )
      )
-     (call $~lib/rt/__tmptostack
-      (i32.const 2336)
-     )
+     (i32.const 2336)
     )
    )
    (then
@@ -8944,9 +8926,7 @@
        (i32.const 10)
       )
      )
-     (call $~lib/rt/__tmptostack
-      (i32.const 2368)
-     )
+     (i32.const 2368)
     )
    )
    (then
@@ -8979,9 +8959,7 @@
        (i32.const 0)
       )
      )
-     (call $~lib/rt/__tmptostack
-      (i32.const 9696)
-     )
+     (i32.const 9696)
     )
    )
    (then
@@ -9014,9 +8992,7 @@
        (i32.const 10)
       )
      )
-     (call $~lib/rt/__tmptostack
-      (i32.const 2368)
-     )
+     (i32.const 2368)
     )
    )
    (then
@@ -9046,9 +9022,7 @@
        (i32.const 10)
       )
      )
-     (call $~lib/rt/__tmptostack
-      (i32.const 2368)
-     )
+     (i32.const 2368)
     )
    )
    (then
@@ -9078,9 +9052,7 @@
        (i32.const 10)
       )
      )
-     (call $~lib/rt/__tmptostack
-      (i32.const 9728)
-     )
+     (i32.const 9728)
     )
    )
    (then
@@ -9110,9 +9082,7 @@
        (i32.const 10)
       )
      )
-     (call $~lib/rt/__tmptostack
-      (i32.const 2368)
-     )
+     (i32.const 2368)
     )
    )
    (then
@@ -9142,9 +9112,7 @@
        (i32.const 10)
       )
      )
-     (call $~lib/rt/__tmptostack
-      (i32.const 2336)
-     )
+     (i32.const 2336)
     )
    )
    (then
@@ -9174,9 +9142,7 @@
        (i32.const 10)
       )
      )
-     (call $~lib/rt/__tmptostack
-      (i32.const 2336)
-     )
+     (i32.const 2336)
     )
    )
    (then
@@ -9206,9 +9172,7 @@
        (i32.const 10)
       )
      )
-     (call $~lib/rt/__tmptostack
-      (i32.const 9760)
-     )
+     (i32.const 9760)
     )
    )
    (then
@@ -9238,9 +9202,7 @@
        (i32.const 10)
       )
      )
-     (call $~lib/rt/__tmptostack
-      (i32.const 2336)
-     )
+     (i32.const 2336)
     )
    )
    (then
@@ -9265,9 +9227,7 @@
        (i32.const 10)
       )
      )
-     (call $~lib/rt/__tmptostack
-      (i32.const 9760)
-     )
+     (i32.const 9760)
     )
    )
    (then
@@ -9292,9 +9252,7 @@
        (i32.const 10)
       )
      )
-     (call $~lib/rt/__tmptostack
-      (i32.const 9792)
-     )
+     (i32.const 9792)
     )
    )
    (then
@@ -9319,9 +9277,7 @@
        (i32.const 10)
       )
      )
-     (call $~lib/rt/__tmptostack
-      (i32.const 2368)
-     )
+     (i32.const 2368)
     )
    )
    (then
@@ -9346,9 +9302,7 @@
        (i32.const 10)
       )
      )
-     (call $~lib/rt/__tmptostack
-      (i32.const 2368)
-     )
+     (i32.const 2368)
     )
    )
    (then
@@ -9373,9 +9327,7 @@
        (i32.const 10)
       )
      )
-     (call $~lib/rt/__tmptostack
-      (i32.const 2336)
-     )
+     (i32.const 2336)
     )
    )
    (then
@@ -9400,9 +9352,7 @@
        (i32.const 10)
       )
      )
-     (call $~lib/rt/__tmptostack
-      (i32.const 9728)
-     )
+     (i32.const 9728)
     )
    )
    (then
@@ -9427,9 +9377,7 @@
        (i32.const 0)
       )
      )
-     (call $~lib/rt/__tmptostack
-      (i32.const 9696)
-     )
+     (i32.const 9696)
     )
    )
    (then
@@ -9454,9 +9402,7 @@
        (i32.const 0)
       )
      )
-     (call $~lib/rt/__tmptostack
-      (i32.const 9696)
-     )
+     (i32.const 9696)
     )
    )
    (then
@@ -9481,9 +9427,7 @@
        (i32.const 10)
       )
      )
-     (call $~lib/rt/__tmptostack
-      (i32.const 9728)
-     )
+     (i32.const 9728)
     )
    )
    (then
@@ -9508,9 +9452,7 @@
        (i32.const 10)
       )
      )
-     (call $~lib/rt/__tmptostack
-      (i32.const 2336)
-     )
+     (i32.const 2336)
     )
    )
    (then
@@ -9535,9 +9477,7 @@
        (i32.const 10)
       )
      )
-     (call $~lib/rt/__tmptostack
-      (i32.const 9760)
-     )
+     (i32.const 9760)
     )
    )
    (then
@@ -9562,9 +9502,7 @@
        (i32.const 10)
       )
      )
-     (call $~lib/rt/__tmptostack
-      (i32.const 2336)
-     )
+     (i32.const 2336)
     )
    )
    (then
@@ -9589,9 +9527,7 @@
        (i32.const 10)
       )
      )
-     (call $~lib/rt/__tmptostack
-      (i32.const 9760)
-     )
+     (i32.const 9760)
     )
    )
    (then
@@ -9616,9 +9552,7 @@
        (i32.const 10)
       )
      )
-     (call $~lib/rt/__tmptostack
-      (i32.const 2368)
-     )
+     (i32.const 2368)
     )
    )
    (then
@@ -9636,21 +9570,11 @@
     (call $~lib/string/String.__eq
      (call $~lib/rt/__tmptostack
       (call $~lib/number/I32#toString
-       (if (result i32)
-        (i32.const 1)
-        (then
-         (i32.const 2)
-        )
-        (else
-         (i32.const 1)
-        )
-       )
+       (i32.const 2)
        (i32.const 10)
       )
      )
-     (call $~lib/rt/__tmptostack
-      (i32.const 2368)
-     )
+     (i32.const 2368)
     )
    )
    (then
@@ -9668,21 +9592,11 @@
     (call $~lib/string/String.__eq
      (call $~lib/rt/__tmptostack
       (call $~lib/number/I32#toString
-       (if (result i32)
-        (i32.const 0)
-        (then
-         (i32.const 2)
-        )
-        (else
-         (i32.const 0)
-        )
-       )
+       (i32.const 0)
        (i32.const 10)
       )
      )
-     (call $~lib/rt/__tmptostack
-      (i32.const 352)
-     )
+     (i32.const 352)
     )
    )
    (then
@@ -9700,21 +9614,11 @@
     (call $~lib/string/String.__eq
      (call $~lib/rt/__tmptostack
       (call $~lib/number/I32#toString
-       (if (result i32)
-        (i32.const 1)
-        (then
-         (i32.const 1)
-        )
-        (else
-         (i32.const 2)
-        )
-       )
+       (i32.const 1)
        (i32.const 10)
       )
      )
-     (call $~lib/rt/__tmptostack
-      (i32.const 2336)
-     )
+     (i32.const 2336)
     )
    )
    (then
@@ -9732,21 +9636,11 @@
     (call $~lib/string/String.__eq
      (call $~lib/rt/__tmptostack
       (call $~lib/number/I32#toString
-       (if (result i32)
-        (i32.const 0)
-        (then
-         (i32.const 0)
-        )
-        (else
-         (i32.const 2)
-        )
-       )
+       (i32.const 2)
        (i32.const 10)
       )
      )
-     (call $~lib/rt/__tmptostack
-      (i32.const 2368)
-     )
+     (i32.const 2368)
     )
    )
    (then
@@ -9781,9 +9675,7 @@
        )
       )
      )
-     (call $~lib/rt/__tmptostack
-      (i32.const 9824)
-     )
+     (i32.const 9824)
     )
    )
    (then
@@ -9813,9 +9705,7 @@
        )
       )
      )
-     (call $~lib/rt/__tmptostack
-      (i32.const 9856)
-     )
+     (i32.const 9856)
     )
    )
    (then
@@ -9845,9 +9735,7 @@
        )
       )
      )
-     (call $~lib/rt/__tmptostack
-      (i32.const 9888)
-     )
+     (i32.const 9888)
     )
    )
    (then
@@ -9877,9 +9765,7 @@
        )
       )
      )
-     (call $~lib/rt/__tmptostack
-      (i32.const 9920)
-     )
+     (i32.const 9920)
     )
    )
    (then
@@ -9909,9 +9795,7 @@
        )
       )
      )
-     (call $~lib/rt/__tmptostack
-      (i32.const 9952)
-     )
+     (i32.const 9952)
     )
    )
    (then
@@ -9941,9 +9825,7 @@
        )
       )
      )
-     (call $~lib/rt/__tmptostack
-      (i32.const 9984)
-     )
+     (i32.const 9984)
     )
    )
    (then
@@ -9973,9 +9855,7 @@
        )
       )
      )
-     (call $~lib/rt/__tmptostack
-      (i32.const 10016)
-     )
+     (i32.const 10016)
     )
    )
    (then
@@ -10005,9 +9885,7 @@
        )
       )
      )
-     (call $~lib/rt/__tmptostack
-      (i32.const 10048)
-     )
+     (i32.const 10048)
     )
    )
    (then
@@ -10037,9 +9915,7 @@
        )
       )
      )
-     (call $~lib/rt/__tmptostack
-      (i32.const 10080)
-     )
+     (i32.const 10080)
     )
    )
    (then
@@ -10069,9 +9945,7 @@
        )
       )
      )
-     (call $~lib/rt/__tmptostack
-      (i32.const 10112)
-     )
+     (i32.const 10112)
     )
    )
    (then
@@ -10101,9 +9975,7 @@
        )
       )
      )
-     (call $~lib/rt/__tmptostack
-      (i32.const 10144)
-     )
+     (i32.const 10144)
     )
    )
    (then
@@ -10133,9 +10005,7 @@
        )
       )
      )
-     (call $~lib/rt/__tmptostack
-      (i32.const 10176)
-     )
+     (i32.const 10176)
     )
    )
    (then

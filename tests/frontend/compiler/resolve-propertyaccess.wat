@@ -4506,9 +4506,7 @@
        (i32.const 10)
       )
      )
-     (call $~lib/rt/__tmptostack
-      (i32.const 2208)
-     )
+     (i32.const 2208)
     )
    )
    (then
@@ -4530,9 +4528,7 @@
        (i32.const 10)
       )
      )
-     (call $~lib/rt/__tmptostack
-      (i32.const 2320)
-     )
+     (i32.const 2320)
     )
    )
    (then
@@ -4554,9 +4550,7 @@
        (i32.const 10)
       )
      )
-     (call $~lib/rt/__tmptostack
-      (i32.const 2352)
-     )
+     (i32.const 2352)
     )
    )
    (then
@@ -4578,9 +4572,7 @@
        (i32.const 10)
       )
      )
-     (call $~lib/rt/__tmptostack
-      (i32.const 2384)
-     )
+     (i32.const 2384)
     )
    )
    (then
@@ -4602,9 +4594,7 @@
        (i32.const 10)
       )
      )
-     (call $~lib/rt/__tmptostack
-      (i32.const 2416)
-     )
+     (i32.const 2416)
     )
    )
    (then
@@ -4626,9 +4616,7 @@
        (i32.const 10)
       )
      )
-     (call $~lib/rt/__tmptostack
-      (i32.const 2448)
-     )
+     (i32.const 2448)
     )
    )
    (then
@@ -4650,9 +4638,7 @@
        (i32.const 10)
       )
      )
-     (call $~lib/rt/__tmptostack
-      (i32.const 2480)
-     )
+     (i32.const 2480)
     )
    )
    (then
@@ -4674,9 +4660,7 @@
        (i32.const 10)
       )
      )
-     (call $~lib/rt/__tmptostack
-      (i32.const 2512)
-     )
+     (i32.const 2512)
     )
    )
    (then
@@ -4698,9 +4682,7 @@
        (i32.const 10)
       )
      )
-     (call $~lib/rt/__tmptostack
-      (i32.const 2544)
-     )
+     (i32.const 2544)
     )
    )
    (then
@@ -4722,9 +4704,7 @@
        (i32.const 10)
       )
      )
-     (call $~lib/rt/__tmptostack
-      (i32.const 2576)
-     )
+     (i32.const 2576)
     )
    )
    (then
@@ -4758,9 +4738,7 @@
         (i32.const 10)
        )
       )
-      (call $~lib/rt/__tmptostack
-       (i32.const 2608)
-      )
+      (i32.const 2608)
      )
     )
     (then
@@ -4786,9 +4764,7 @@
         (i32.const 10)
        )
       )
-      (call $~lib/rt/__tmptostack
-       (i32.const 2640)
-      )
+      (i32.const 2640)
      )
     )
     (then

@@ -3993,9 +3993,7 @@
        (i32.const 0)
       )
      )
-     (call $~lib/rt/__tmptostack
-      (i32.const 528)
-     )
+     (i32.const 528)
     )
    )
    (then
@@ -4041,9 +4039,7 @@
        (i32.const 4)
       )
      )
-     (call $~lib/rt/__tmptostack
-      (i32.const 560)
-     )
+     (i32.const 560)
     )
    )
    (then
@@ -4068,9 +4064,7 @@
        (i32.const 2)
       )
      )
-     (call $~lib/rt/__tmptostack
-      (i32.const 592)
-     )
+     (i32.const 592)
     )
    )
    (then
@@ -4095,9 +4089,7 @@
        (i32.const 4)
       )
      )
-     (call $~lib/rt/__tmptostack
-      (i32.const 624)
-     )
+     (i32.const 624)
     )
    )
    (then
@@ -4122,9 +4114,7 @@
        (i32.const 4)
       )
      )
-     (call $~lib/rt/__tmptostack
-      (i32.const 656)
-     )
+     (i32.const 656)
     )
    )
    (then
@@ -4149,9 +4139,7 @@
        (i32.const 0)
       )
      )
-     (call $~lib/rt/__tmptostack
-      (i32.const 528)
-     )
+     (i32.const 528)
     )
    )
    (then
@@ -5749,9 +5737,7 @@
     (call $~lib/string/String.UTF8.decode
      (call $~lib/rt/__tmptostack
       (call $~lib/string/String.UTF8.encode
-       (call $~lib/rt/__tmptostack
-        (i32.const 880)
-       )
+       (i32.const 880)
        (i32.const 0)
        (i32.const 0)
       )
@@ -5766,9 +5752,7 @@
      (call $~lib/rt/__tmptostack
       (local.get $str)
      )
-     (call $~lib/rt/__tmptostack
-      (i32.const 880)
-     )
+     (i32.const 880)
     )
    )
    (then
@@ -5786,9 +5770,7 @@
     (call $~lib/string/String.UTF8.decode
      (call $~lib/rt/__tmptostack
       (call $~lib/string/String.UTF8.encode
-       (call $~lib/rt/__tmptostack
-        (i32.const 880)
-       )
+       (i32.const 880)
        (i32.const 0)
        (i32.const 1)
       )
@@ -5803,9 +5785,7 @@
      (call $~lib/rt/__tmptostack
       (local.get $str)
      )
-     (call $~lib/rt/__tmptostack
-      (i32.const 912)
-     )
+     (i32.const 912)
     )
    )
    (then
@@ -5823,9 +5803,7 @@
     (call $~lib/string/String.UTF8.decode
      (call $~lib/rt/__tmptostack
       (call $~lib/string/String.UTF8.encode
-       (call $~lib/rt/__tmptostack
-        (i32.const 944)
-       )
+       (i32.const 944)
        (i32.const 0)
        (i32.const 0)
       )
@@ -5840,9 +5818,7 @@
      (call $~lib/rt/__tmptostack
       (local.get $str)
      )
-     (call $~lib/rt/__tmptostack
-      (i32.const 944)
-     )
+     (i32.const 944)
     )
    )
    (then
@@ -5860,9 +5836,7 @@
     (call $~lib/string/String.UTF8.decode
      (call $~lib/rt/__tmptostack
       (call $~lib/string/String.UTF8.encode
-       (call $~lib/rt/__tmptostack
-        (i32.const 944)
-       )
+       (i32.const 944)
        (i32.const 0)
        (i32.const 1)
       )
@@ -5877,9 +5851,7 @@
      (call $~lib/rt/__tmptostack
       (local.get $str)
      )
-     (call $~lib/rt/__tmptostack
-      (i32.const 912)
-     )
+     (i32.const 912)
     )
    )
    (then
@@ -6187,9 +6159,7 @@
        (i32.const 0)
       )
      )
-     (call $~lib/rt/__tmptostack
-      (i32.const 528)
-     )
+     (i32.const 528)
     )
    )
    (then
@@ -6237,9 +6207,7 @@
        (i32.const 0)
       )
      )
-     (call $~lib/rt/__tmptostack
-      (i32.const 560)
-     )
+     (i32.const 560)
     )
    )
    (then
@@ -6265,9 +6233,7 @@
        (i32.const 0)
       )
      )
-     (call $~lib/rt/__tmptostack
-      (i32.const 624)
-     )
+     (i32.const 624)
     )
    )
    (then
@@ -6293,9 +6259,7 @@
        (i32.const 0)
       )
      )
-     (call $~lib/rt/__tmptostack
-      (i32.const 656)
-     )
+     (i32.const 656)
     )
    )
    (then
@@ -6321,9 +6285,7 @@
        (i32.const 0)
       )
      )
-     (call $~lib/rt/__tmptostack
-      (i32.const 528)
-     )
+     (i32.const 528)
     )
    )
    (then
@@ -6349,9 +6311,7 @@
        (i32.const 1)
       )
      )
-     (call $~lib/rt/__tmptostack
-      (i32.const 1056)
-     )
+     (i32.const 1056)
     )
    )
    (then
@@ -6377,9 +6337,7 @@
        (i32.const 1)
       )
      )
-     (call $~lib/rt/__tmptostack
-      (i32.const 656)
-     )
+     (i32.const 656)
     )
    )
    (then
@@ -6405,9 +6363,7 @@
        (i32.const 1)
       )
      )
-     (call $~lib/rt/__tmptostack
-      (i32.const 528)
-     )
+     (i32.const 528)
     )
    )
    (then
@@ -6613,14 +6569,10 @@
   (call $std/string-encoding/testUTF8DecodeNullTerminated)
   (call $std/string-encoding/testUTF8DecodeUnsafe)
   (call $std/string-encoding/testRoundtrip
-   (call $~lib/rt/__tmptostack
-    (i32.const 1088)
-   )
+   (i32.const 1088)
   )
   (call $std/string-encoding/testRoundtrip
-   (call $~lib/rt/__tmptostack
-    (i32.const 14208)
-   )
+   (i32.const 14208)
   )
   (call $~lib/rt/itcms/__collect)
  )

@@ -16,10 +16,10 @@
 
 #include "DoInlining.hpp"
 #include "ir/branch-utils.h"
-#include "ir/debuginfo.h"
 #include "ir/drop.h"
 #include "ir/literal-utils.h"
 #include "ir/localize.h"
+#include "ir/metadata.h"
 #include "ir/names.h"
 #include "ir/type-updating.h"
 #include "ir/utils.h"
@@ -286,7 +286,7 @@ static void doCodeInlining(wasm::Module *module, wasm::Function *into, const Inl
 
   // Generate and update the inlined contents
   auto *contents = wasm::ExpressionManipulator::copy(from->body, *module);
-  wasm::debuginfo::copyBetweenFunctions(from->body, contents, from, into);
+  wasm::metadata::copyBetweenFunctions(from->body, contents, from, into);
   updater.walk(contents);
   block->list.push_back(contents);
   block->type = retType;

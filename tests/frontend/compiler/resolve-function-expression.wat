@@ -4501,9 +4501,7 @@
        (i32.const 10)
       )
      )
-     (call $~lib/rt/__tmptostack
-      (i32.const 2384)
-     )
+     (i32.const 2384)
     )
    )
    (then

@@ -327,9 +327,7 @@
      (call $~lib/rt/__tmptostack
       (call $"issues/1714/bar<f64,i32>")
      )
-     (call $~lib/rt/__tmptostack
-      (i32.const 80)
-     )
+     (i32.const 80)
     )
    )
    (then

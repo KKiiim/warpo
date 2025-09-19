@@ -3517,41 +3517,14 @@
    )
   )
   (drop
-   (if (result i32)
-    (i32.const 1)
-    (then
-     (i32.const 2)
-    )
-    (else
-     (i32.const 1)
-    )
-   )
+   (i32.const 2)
   )
   (drop
    (i64.le_u
     (i64.sub
      (i64.shl
       (i64.reinterpret_f64
-       (if (result f64)
-        (i64.le_u
-         (i64.sub
-          (i64.shl
-           (i64.reinterpret_f64
-            (f64.const 1)
-           )
-           (i64.const 1)
-          )
-          (i64.const 2)
-         )
-         (i64.const -9007199254740994)
-        )
-        (then
-         (f64.const 2)
-        )
-        (else
-         (f64.const 1)
-        )
-       )
+       (f64.const 2)
       )
       (i64.const 1)
      )
@@ -3561,15 +3534,7 @@
    )
   )
   (global.set $logical/i
-   (if (result i32)
-    (i32.const 1)
-    (then
-     (i32.const 2)
-    )
-    (else
-     (i32.const 1)
-    )
-   )
+   (i32.const 2)
   )
   (if
    (i32.eqz
@@ -3589,15 +3554,7 @@
    )
   )
   (global.set $logical/i
-   (if (result i32)
-    (i32.const 0)
-    (then
-     (i32.const 0)
-    )
-    (else
-     (i32.const 1)
-    )
-   )
+   (i32.const 1)
   )
   (if
    (i32.eqz
@@ -3617,18 +3574,7 @@
    )
   )
   (global.set $logical/I
-   (if (result i64)
-    (i64.ne
-     (i64.const 1)
-     (i64.const 0)
-    )
-    (then
-     (i64.const 2)
-    )
-    (else
-     (i64.const 1)
-    )
-   )
+   (i64.const 2)
   )
   (if
    (i32.eqz
@@ -3648,18 +3594,7 @@
    )
   )
   (global.set $logical/I
-   (if (result i64)
-    (i64.ne
-     (i64.const 0)
-     (i64.const 0)
-    )
-    (then
-     (i64.const 0)
-    )
-    (else
-     (i64.const 1)
-    )
-   )
+   (i64.const 1)
   )
   (if
    (i32.eqz
@@ -3679,26 +3614,7 @@
    )
   )
   (global.set $logical/f
-   (if (result f32)
-    (i32.le_u
-     (i32.sub
-      (i32.shl
-       (i32.reinterpret_f32
-        (f32.const 1)
-       )
-       (i32.const 1)
-      )
-      (i32.const 2)
-     )
-     (i32.const -16777218)
-    )
-    (then
-     (f32.const 2)
-    )
-    (else
-     (f32.const 1)
-    )
-   )
+   (f32.const 2)
   )
   (if
    (i32.eqz
@@ -3718,26 +3634,7 @@
    )
   )
   (global.set $logical/f
-   (if (result f32)
-    (i32.le_u
-     (i32.sub
-      (i32.shl
-       (i32.reinterpret_f32
-        (f32.const 0)
-       )
-       (i32.const 1)
-      )
-      (i32.const 2)
-     )
-     (i32.const -16777218)
-    )
-    (then
-     (f32.const 0)
-    )
-    (else
-     (f32.const 1)
-    )
-   )
+   (f32.const 1)
   )
   (if
    (i32.eqz
@@ -3757,26 +3654,7 @@
    )
   )
   (global.set $logical/F
-   (if (result f64)
-    (i64.le_u
-     (i64.sub
-      (i64.shl
-       (i64.reinterpret_f64
-        (f64.const 1)
-       )
-       (i64.const 1)
-      )
-      (i64.const 2)
-     )
-     (i64.const -9007199254740994)
-    )
-    (then
-     (f64.const 2)
-    )
-    (else
-     (f64.const 1)
-    )
-   )
+   (f64.const 2)
   )
   (if
    (i32.eqz
@@ -3796,26 +3674,7 @@
    )
   )
   (global.set $logical/F
-   (if (result f64)
-    (i64.le_u
-     (i64.sub
-      (i64.shl
-       (i64.reinterpret_f64
-        (f64.const 0)
-       )
-       (i64.const 1)
-      )
-      (i64.const 2)
-     )
-     (i64.const -9007199254740994)
-    )
-    (then
-     (f64.const 0)
-    )
-    (else
-     (f64.const 1)
-    )
-   )
+   (f64.const 1)
   )
   (if
    (i32.eqz
@@ -3835,26 +3694,7 @@
    )
   )
   (global.set $logical/f
-   (if (result f32)
-    (i32.le_u
-     (i32.sub
-      (i32.shl
-       (i32.reinterpret_f32
-        (f32.const nan:0x400000)
-       )
-       (i32.const 1)
-      )
-      (i32.const 2)
-     )
-     (i32.const -16777218)
-    )
-    (then
-     (f32.const nan:0x400000)
-    )
-    (else
-     (f32.const 1)
-    )
-   )
+   (f32.const 1)
   )
   (if
    (i32.eqz
@@ -3874,26 +3714,7 @@
    )
   )
   (global.set $logical/f
-   (if (result f32)
-    (i32.le_u
-     (i32.sub
-      (i32.shl
-       (i32.reinterpret_f32
-        (f32.const 1)
-       )
-       (i32.const 1)
-      )
-      (i32.const 2)
-     )
-     (i32.const -16777218)
-    )
-    (then
-     (f32.const 1)
-    )
-    (else
-     (f32.const nan:0x400000)
-    )
-   )
+   (f32.const 1)
   )
   (if
    (i32.eqz
@@ -3913,26 +3734,7 @@
    )
   )
   (global.set $logical/F
-   (if (result f64)
-    (i64.le_u
-     (i64.sub
-      (i64.shl
-       (i64.reinterpret_f64
-        (f64.const nan:0x8000000000000)
-       )
-       (i64.const 1)
-      )
-      (i64.const 2)
-     )
-     (i64.const -9007199254740994)
-    )
-    (then
-     (f64.const nan:0x8000000000000)
-    )
-    (else
-     (f64.const 1)
-    )
-   )
+   (f64.const 1)
   )
   (if
    (i32.eqz
@@ -3952,26 +3754,7 @@
    )
   )
   (global.set $logical/F
-   (if (result f64)
-    (i64.le_u
-     (i64.sub
-      (i64.shl
-       (i64.reinterpret_f64
-        (f64.const 1)
-       )
-       (i64.const 1)
-      )
-      (i64.const 2)
-     )
-     (i64.const -9007199254740994)
-    )
-    (then
-     (f64.const 1)
-    )
-    (else
-     (f64.const nan:0x8000000000000)
-    )
-   )
+   (f64.const 1)
   )
   (if
    (i32.eqz
@@ -3991,26 +3774,7 @@
    )
   )
   (global.set $logical/f
-   (if (result f32)
-    (i32.le_u
-     (i32.sub
-      (i32.shl
-       (i32.reinterpret_f32
-        (f32.const 1)
-       )
-       (i32.const 1)
-      )
-      (i32.const 2)
-     )
-     (i32.const -16777218)
-    )
-    (then
-     (f32.const nan:0x400000)
-    )
-    (else
-     (f32.const 1)
-    )
-   )
+   (f32.const nan:0x400000)
   )
   (if
    (i32.eqz
@@ -4032,26 +3796,7 @@
    )
   )
   (global.set $logical/f
-   (if (result f32)
-    (i32.le_u
-     (i32.sub
-      (i32.shl
-       (i32.reinterpret_f32
-        (f32.const nan:0x400000)
-       )
-       (i32.const 1)
-      )
-      (i32.const 2)
-     )
-     (i32.const -16777218)
-    )
-    (then
-     (f32.const 1)
-    )
-    (else
-     (f32.const nan:0x400000)
-    )
-   )
+   (f32.const nan:0x400000)
   )
   (if
    (i32.eqz
@@ -4073,26 +3818,7 @@
    )
   )
   (global.set $logical/F
-   (if (result f64)
-    (i64.le_u
-     (i64.sub
-      (i64.shl
-       (i64.reinterpret_f64
-        (f64.const 1)
-       )
-       (i64.const 1)
-      )
-      (i64.const 2)
-     )
-     (i64.const -9007199254740994)
-    )
-    (then
-     (f64.const nan:0x8000000000000)
-    )
-    (else
-     (f64.const 1)
-    )
-   )
+   (f64.const nan:0x8000000000000)
   )
   (if
    (i32.eqz
@@ -4114,26 +3840,7 @@
    )
   )
   (global.set $logical/F
-   (if (result f64)
-    (i64.le_u
-     (i64.sub
-      (i64.shl
-       (i64.reinterpret_f64
-        (f64.const nan:0x8000000000000)
-       )
-       (i64.const 1)
-      )
-      (i64.const 2)
-     )
-     (i64.const -9007199254740994)
-    )
-    (then
-     (f64.const 1)
-    )
-    (else
-     (f64.const nan:0x8000000000000)
-    )
-   )
+   (f64.const nan:0x8000000000000)
   )
   (if
    (i32.eqz

@@ -6974,9 +6974,7 @@
        (i32.const 0)
       )
      )
-     (call $~lib/rt/__tmptostack
-      (i32.const 1968)
-     )
+     (i32.const 1968)
     )
    )
    (then
@@ -6998,9 +6996,7 @@
        (i32.const 0)
       )
      )
-     (call $~lib/rt/__tmptostack
-      (i32.const 1968)
-     )
+     (i32.const 1968)
     )
    )
    (then
@@ -7021,14 +7017,10 @@
        (call $~lib/rt/__tmptostack
         (global.get $issues/2873/f32arr)
        )
-       (call $~lib/rt/__tmptostack
-        (i32.const 2160)
-       )
+       (i32.const 2160)
       )
      )
-     (call $~lib/rt/__tmptostack
-      (i32.const 2192)
-     )
+     (i32.const 2192)
     )
    )
    (then
@@ -7049,14 +7041,10 @@
        (call $~lib/rt/__tmptostack
         (global.get $issues/2873/f64arr)
        )
-       (call $~lib/rt/__tmptostack
-        (i32.const 2160)
-       )
+       (i32.const 2160)
       )
      )
-     (call $~lib/rt/__tmptostack
-      (i32.const 2192)
-     )
+     (i32.const 2192)
     )
    )
    (then

@@ -1101,90 +1101,70 @@
   (drop
    (call $std/hash/check
     (call $~lib/util/hash/HASH<~lib/string/String>
-     (call $~lib/rt/__tmptostack
-      (i32.const 32)
-     )
+     (i32.const 32)
     )
    )
   )
   (drop
    (call $std/hash/check
     (call $~lib/util/hash/HASH<~lib/string/String>
-     (call $~lib/rt/__tmptostack
-      (i32.const 64)
-     )
+     (i32.const 64)
     )
    )
   )
   (drop
    (call $std/hash/check
     (call $~lib/util/hash/HASH<~lib/string/String>
-     (call $~lib/rt/__tmptostack
-      (i32.const 96)
-     )
+     (i32.const 96)
     )
    )
   )
   (drop
    (call $std/hash/check
     (call $~lib/util/hash/HASH<~lib/string/String>
-     (call $~lib/rt/__tmptostack
-      (i32.const 128)
-     )
+     (i32.const 128)
     )
    )
   )
   (drop
    (call $std/hash/check
     (call $~lib/util/hash/HASH<~lib/string/String>
-     (call $~lib/rt/__tmptostack
-      (i32.const 160)
-     )
+     (i32.const 160)
     )
    )
   )
   (drop
    (call $std/hash/check
     (call $~lib/util/hash/HASH<~lib/string/String>
-     (call $~lib/rt/__tmptostack
-      (i32.const 192)
-     )
+     (i32.const 192)
     )
    )
   )
   (drop
    (call $std/hash/check
     (call $~lib/util/hash/HASH<~lib/string/String>
-     (call $~lib/rt/__tmptostack
-      (i32.const 224)
-     )
+     (i32.const 224)
     )
    )
   )
   (drop
    (call $std/hash/check
     (call $~lib/util/hash/HASH<~lib/string/String>
-     (call $~lib/rt/__tmptostack
-      (i32.const 256)
-     )
+     (i32.const 256)
     )
    )
   )
   (drop
    (call $std/hash/check
     (call $~lib/util/hash/HASH<~lib/string/String>
-     (call $~lib/rt/__tmptostack
-      (i32.const 304)
-     )
+     (i32.const 304)
     )
    )
   )
   (drop
    (call $std/hash/check
     (call $~lib/util/hash/HASH<~lib/string/String>
-     (call $~lib/rt/__tmptostack
-      (i32.const 352)
-     )
+     (i32.const 352)
     )
    )
   )

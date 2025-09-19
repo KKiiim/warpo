@@ -6596,9 +6596,7 @@
        (i32.const 10)
       )
      )
-     (call $~lib/rt/__tmptostack
-      (i32.const 2208)
-     )
+     (i32.const 2208)
     )
    )
    (then
@@ -6628,9 +6626,7 @@
        (i32.const 0)
       )
      )
-     (call $~lib/rt/__tmptostack
-      (i32.const 3440)
-     )
+     (i32.const 3440)
     )
    )
    (then

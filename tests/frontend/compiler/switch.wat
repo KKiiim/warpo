@@ -582,9 +582,7 @@
          (call $~lib/rt/__tmptostack
           (local.get $1)
          )
-         (call $~lib/rt/__tmptostack
-          (i32.const 80)
-         )
+         (i32.const 80)
         )
        )
        (br_if $case1|0
@@ -592,9 +590,7 @@
          (call $~lib/rt/__tmptostack
           (local.get $1)
          )
-         (call $~lib/rt/__tmptostack
-          (i32.const 112)
-         )
+         (i32.const 112)
         )
        )
        (br_if $case2|0
@@ -602,9 +598,7 @@
          (call $~lib/rt/__tmptostack
           (local.get $1)
          )
-         (call $~lib/rt/__tmptostack
-          (i32.const 144)
-         )
+         (i32.const 144)
         )
        )
        (br $case3|0)
@@ -3947,9 +3941,7 @@
           (call $~lib/rt/__tmptostack
            (local.get $1)
           )
-          (call $~lib/rt/__tmptostack
-           (i32.const 80)
-          )
+          (i32.const 80)
          )
         )
         (br_if $case2|0
@@ -3957,9 +3949,7 @@
           (call $~lib/rt/__tmptostack
            (local.get $1)
           )
-          (call $~lib/rt/__tmptostack
-           (i32.const 112)
-          )
+          (i32.const 112)
          )
         )
         (br_if $case3|0
@@ -3967,9 +3957,7 @@
           (call $~lib/rt/__tmptostack
            (local.get $1)
           )
-          (call $~lib/rt/__tmptostack
-           (i32.const 144)
-          )
+          (i32.const 144)
          )
         )
         (br $case4|0)
@@ -5128,9 +5116,7 @@
    (i32.eqz
     (i32.eq
      (call $switch/doSwitchString
-      (call $~lib/rt/__tmptostack
-       (i32.const 80)
-      )
+      (i32.const 80)
      )
      (i32.const 1)
     )
@@ -5149,9 +5135,7 @@
    (i32.eqz
     (i32.eq
      (call $switch/doSwitchString
-      (call $~lib/rt/__tmptostack
-       (i32.const 112)
-      )
+      (i32.const 112)
      )
      (i32.const 2)
     )
@@ -5170,9 +5154,7 @@
    (i32.eqz
     (i32.eq
      (call $switch/doSwitchString
-      (call $~lib/rt/__tmptostack
-       (i32.const 144)
-      )
+      (i32.const 144)
      )
      (i32.const 3)
     )
@@ -5191,9 +5173,7 @@
    (i32.eqz
     (i32.eq
      (call $switch/doSwitchString
-      (call $~lib/rt/__tmptostack
-       (i32.const 176)
-      )
+      (i32.const 176)
      )
      (i32.const 4)
     )
@@ -5243,17 +5223,11 @@
        (call $~lib/string/String.__concat
         (call $~lib/rt/__tmptostack
          (call $~lib/string/String.__concat
-          (call $~lib/rt/__tmptostack
-           (i32.const 208)
-          )
-          (call $~lib/rt/__tmptostack
-           (i32.const 240)
-          )
+          (i32.const 208)
+          (i32.const 240)
          )
         )
-        (call $~lib/rt/__tmptostack
-         (i32.const 704)
-        )
+        (i32.const 704)
        )
       )
      )
@@ -5278,17 +5252,11 @@
        (call $~lib/string/String.__concat
         (call $~lib/rt/__tmptostack
          (call $~lib/string/String.__concat
-          (call $~lib/rt/__tmptostack
-           (i32.const 736)
-          )
-          (call $~lib/rt/__tmptostack
-           (i32.const 768)
-          )
+          (i32.const 736)
+          (i32.const 768)
          )
         )
-        (call $~lib/rt/__tmptostack
-         (i32.const 208)
-        )
+        (i32.const 208)
        )
       )
      )
@@ -5317,27 +5285,17 @@
            (call $~lib/string/String.__concat
             (call $~lib/rt/__tmptostack
              (call $~lib/string/String.__concat
-              (call $~lib/rt/__tmptostack
-               (i32.const 736)
-              )
-              (call $~lib/rt/__tmptostack
-               (i32.const 800)
-              )
+              (i32.const 736)
+              (i32.const 800)
              )
             )
-            (call $~lib/rt/__tmptostack
-             (i32.const 832)
-            )
+            (i32.const 832)
            )
           )
-          (call $~lib/rt/__tmptostack
-           (i32.const 704)
-          )
+          (i32.const 704)
          )
         )
-        (call $~lib/rt/__tmptostack
-         (i32.const 704)
-        )
+        (i32.const 704)
        )
       )
      )
@@ -5364,22 +5322,14 @@
          (call $~lib/string/String.__concat
           (call $~lib/rt/__tmptostack
            (call $~lib/string/String.__concat
-            (call $~lib/rt/__tmptostack
-             (i32.const 864)
-            )
-            (call $~lib/rt/__tmptostack
-             (i32.const 208)
-            )
+            (i32.const 864)
+            (i32.const 208)
            )
           )
-          (call $~lib/rt/__tmptostack
-           (i32.const 896)
-          )
+          (i32.const 896)
          )
         )
-        (call $~lib/rt/__tmptostack
-         (i32.const 832)
-        )
+        (i32.const 832)
        )
       )
      )
@@ -5419,9 +5369,7 @@
    (i32.eqz
     (i32.eq
      (call $switch/doSwitchNullableString
-      (call $~lib/rt/__tmptostack
-       (i32.const 80)
-      )
+      (i32.const 80)
      )
      (i32.const 1)
     )
@@ -5440,9 +5388,7 @@
    (i32.eqz
     (i32.eq
      (call $switch/doSwitchNullableString
-      (call $~lib/rt/__tmptostack
-       (i32.const 112)
-      )
+      (i32.const 112)
      )
      (i32.const 2)
     )
@@ -5461,9 +5407,7 @@
    (i32.eqz
     (i32.eq
      (call $switch/doSwitchNullableString
-      (call $~lib/rt/__tmptostack
-       (i32.const 144)
-      )
+      (i32.const 144)
      )
      (i32.const 3)
     )
@@ -5482,9 +5426,7 @@
    (i32.eqz
     (i32.eq
      (call $switch/doSwitchNullableString
-      (call $~lib/rt/__tmptostack
-       (i32.const 176)
-      )
+      (i32.const 176)
      )
      (i32.const 4)
     )
@@ -5507,17 +5449,11 @@
        (call $~lib/string/String.__concat
         (call $~lib/rt/__tmptostack
          (call $~lib/string/String.__concat
-          (call $~lib/rt/__tmptostack
-           (i32.const 208)
-          )
-          (call $~lib/rt/__tmptostack
-           (i32.const 240)
-          )
+          (i32.const 208)
+          (i32.const 240)
          )
         )
-        (call $~lib/rt/__tmptostack
-         (i32.const 704)
-        )
+        (i32.const 704)
        )
       )
      )
@@ -5542,17 +5478,11 @@
        (call $~lib/string/String.__concat
         (call $~lib/rt/__tmptostack
          (call $~lib/string/String.__concat
-          (call $~lib/rt/__tmptostack
-           (i32.const 736)
-          )
-          (call $~lib/rt/__tmptostack
-           (i32.const 768)
-          )
+          (i32.const 736)
+          (i32.const 768)
          )
         )
-        (call $~lib/rt/__tmptostack
-         (i32.const 208)
-        )
+        (i32.const 208)
        )
       )
      )
@@ -5581,27 +5511,17 @@
            (call $~lib/string/String.__concat
             (call $~lib/rt/__tmptostack
              (call $~lib/string/String.__concat
-              (call $~lib/rt/__tmptostack
-               (i32.const 736)
-              )
-              (call $~lib/rt/__tmptostack
-               (i32.const 800)
-              )
+              (i32.const 736)
+              (i32.const 800)
              )
             )
-            (call $~lib/rt/__tmptostack
-             (i32.const 832)
-            )
+            (i32.const 832)
            )
           )
-          (call $~lib/rt/__tmptostack
-           (i32.const 704)
-          )
+          (i32.const 704)
          )
         )
-        (call $~lib/rt/__tmptostack
-         (i32.const 704)
-        )
+        (i32.const 704)
        )
       )
      )
@@ -5628,22 +5548,14 @@
          (call $~lib/string/String.__concat
           (call $~lib/rt/__tmptostack
            (call $~lib/string/String.__concat
-            (call $~lib/rt/__tmptostack
-             (i32.const 864)
-            )
-            (call $~lib/rt/__tmptostack
-             (i32.const 208)
-            )
+            (i32.const 864)
+            (i32.const 208)
            )
           )
-          (call $~lib/rt/__tmptostack
-           (i32.const 896)
-          )
+          (i32.const 896)
          )
         )
-        (call $~lib/rt/__tmptostack
-         (i32.const 832)
-        )
+        (i32.const 832)
        )
       )
      )

@@ -107,95 +107,59 @@
  (func $start:std/console
   (call $~lib/console/console.assert<bool>
    (i32.const 0)
-   (call $~lib/rt/__tmptostack
-    (i32.const 32)
-   )
+   (i32.const 32)
   )
   (call $~lib/console/console.assert<bool>
    (i32.const 1)
-   (call $~lib/rt/__tmptostack
-    (i32.const 64)
-   )
+   (i32.const 64)
   )
   (call $~lib/console/console.log
-   (call $~lib/rt/__tmptostack
-    (i32.const 96)
-   )
+   (i32.const 96)
   )
   (call $~lib/console/console.debug
-   (call $~lib/rt/__tmptostack
-    (i32.const 144)
-   )
+   (i32.const 144)
   )
   (call $~lib/console/console.info
-   (call $~lib/rt/__tmptostack
-    (i32.const 192)
-   )
+   (i32.const 192)
   )
   (call $~lib/console/console.warn
-   (call $~lib/rt/__tmptostack
-    (i32.const 240)
-   )
+   (i32.const 240)
   )
   (call $~lib/console/console.error
-   (call $~lib/rt/__tmptostack
-    (i32.const 288)
-   )
+   (i32.const 288)
   )
   (call $~lib/console/console.time
-   (call $~lib/rt/__tmptostack
-    (i32.const 336)
-   )
+   (i32.const 336)
   )
   (call $~lib/console/console.timeLog
-   (call $~lib/rt/__tmptostack
-    (i32.const 336)
-   )
+   (i32.const 336)
   )
   (call $~lib/console/console.timeEnd
-   (call $~lib/rt/__tmptostack
-    (i32.const 336)
-   )
+   (i32.const 336)
   )
   (call $~lib/console/console.timeLog
-   (call $~lib/rt/__tmptostack
-    (i32.const 384)
-   )
+   (i32.const 384)
   )
   (call $~lib/console/console.timeEnd
-   (call $~lib/rt/__tmptostack
-    (i32.const 384)
-   )
+   (i32.const 384)
   )
   (call $~lib/console/console.time
-   (call $~lib/rt/__tmptostack
-    (i32.const 432)
-   )
+   (i32.const 432)
   )
   (call $~lib/console/console.time
-   (call $~lib/rt/__tmptostack
-    (i32.const 432)
-   )
+   (i32.const 432)
   )
   (call $~lib/console/console.log
-   (call $~lib/rt/__tmptostack
-    (i32.const 480)
-   )
+   (i32.const 480)
   )
   (call $~lib/console/console.log
-   (call $~lib/rt/__tmptostack
-    (i32.const 512)
-   )
+   (i32.const 512)
   )
   (call $~lib/console/console.log
-   (call $~lib/rt/__tmptostack
-    (i32.const 544)
-   )
+   (i32.const 544)
   )
   (call $~lib/console/console.log
-   (call $~lib/rt/__tmptostack
-    (i32.const 576)
-   )
+   (i32.const 576)
   )
  )
  (func $~start

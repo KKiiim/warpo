@@ -5651,9 +5651,7 @@
      )
     )
     (local.get $padding)
-    (call $~lib/rt/__tmptostack
-     (i32.const 848)
-    )
+    (i32.const 848)
    )
   )
  )
@@ -6443,9 +6441,7 @@
      (call $~lib/rt/__tmptostack
       (i32.const 2592)
      )
-     (call $~lib/rt/__tmptostack
-      (i32.const 2432)
-     )
+     (i32.const 2432)
     )
    )
   )
@@ -6921,9 +6917,7 @@
      (call $~lib/rt/__tmptostack
       (i32.const 4128)
      )
-     (call $~lib/rt/__tmptostack
-      (i32.const 2432)
-     )
+     (i32.const 2432)
     )
    )
   )
@@ -7019,9 +7013,7 @@
      (call $~lib/rt/__tmptostack
       (i32.const 4432)
      )
-     (call $~lib/rt/__tmptostack
-      (i32.const 2432)
-     )
+     (i32.const 2432)
     )
    )
   )
@@ -7315,9 +7307,7 @@
      (call $~lib/rt/__tmptostack
       (i32.const 5344)
      )
-     (call $~lib/rt/__tmptostack
-      (i32.const 2432)
-     )
+     (i32.const 2432)
     )
    )
   )
@@ -8993,9 +8983,7 @@
           (call $~lib/rt/__tmptostack
            (local.get $result|13)
           )
-          (call $~lib/rt/__tmptostack
-           (i32.const 2432)
-          )
+          (i32.const 2432)
          )
         )
        )
@@ -9101,9 +9089,7 @@
       (call $~lib/rt/__tmptostack
        (local.get $result|13)
       )
-      (call $~lib/rt/__tmptostack
-       (i32.const 2432)
-      )
+      (i32.const 2432)
      )
     )
    )
@@ -9560,9 +9546,7 @@
     (call $~lib/rt/__tmptostack
      (local.get $dateTimeString)
     )
-    (call $~lib/rt/__tmptostack
-     (i32.const 2464)
-    )
+    (i32.const 2464)
     (i32.const 0)
    )
   )
@@ -9692,9 +9676,7 @@
               (call $~lib/rt/__tmptostack
                (local.get $timeString)
               )
-              (call $~lib/rt/__tmptostack
-               (i32.const 2496)
-              )
+              (i32.const 2496)
               (i32.add
                (local.get $i)
                (i32.const 1)
@@ -9873,9 +9855,7 @@
        (call $~lib/rt/__tmptostack
         (local.get $timeString)
        )
-       (call $~lib/rt/__tmptostack
-        (i32.const 2496)
-       )
+       (i32.const 2496)
        (block (result i32)
         (global.set $~argumentsLength
          (i32.const 1)
@@ -9978,9 +9958,7 @@
         (call $~lib/rt/__tmptostack
          (local.get $secAndFrac)
         )
-        (call $~lib/rt/__tmptostack
-         (i32.const 2528)
-        )
+        (i32.const 2528)
         (i32.const 0)
        )
       )
@@ -10034,9 +10012,7 @@
               )
              )
              (i32.const 3)
-             (call $~lib/rt/__tmptostack
-              (i32.const 848)
-             )
+             (i32.const 848)
             )
            )
           )
@@ -10087,9 +10063,7 @@
      (call $~lib/rt/__tmptostack
       (local.get $dateString)
      )
-     (call $~lib/rt/__tmptostack
-      (i32.const 592)
-     )
+     (i32.const 592)
      (block (result i32)
       (global.set $~argumentsLength
        (i32.const 1)
@@ -13983,9 +13957,7 @@
         )
        )
       )
-      (call $~lib/rt/__tmptostack
-       (i32.const 2672)
-      )
+      (i32.const 2672)
      )
     )
     (then
@@ -14019,9 +13991,7 @@
         )
        )
       )
-      (call $~lib/rt/__tmptostack
-       (i32.const 2752)
-      )
+      (i32.const 2752)
      )
     )
     (then
@@ -14052,9 +14022,7 @@
         )
        )
       )
-      (call $~lib/rt/__tmptostack
-       (i32.const 2832)
-      )
+      (i32.const 2832)
      )
     )
     (then
@@ -14085,9 +14053,7 @@
         )
        )
       )
-      (call $~lib/rt/__tmptostack
-       (i32.const 2912)
-      )
+      (i32.const 2912)
      )
     )
     (then
@@ -14118,9 +14084,7 @@
         )
        )
       )
-      (call $~lib/rt/__tmptostack
-       (i32.const 2992)
-      )
+      (i32.const 2992)
      )
     )
     (then
@@ -14151,9 +14115,7 @@
         )
        )
       )
-      (call $~lib/rt/__tmptostack
-       (i32.const 3072)
-      )
+      (i32.const 3072)
      )
     )
     (then
@@ -14184,9 +14146,7 @@
         )
        )
       )
-      (call $~lib/rt/__tmptostack
-       (i32.const 3152)
-      )
+      (i32.const 3152)
      )
     )
     (then
@@ -14217,9 +14177,7 @@
         )
        )
       )
-      (call $~lib/rt/__tmptostack
-       (i32.const 3232)
-      )
+      (i32.const 3232)
      )
     )
     (then
@@ -14250,9 +14208,7 @@
         )
        )
       )
-      (call $~lib/rt/__tmptostack
-       (i32.const 3312)
-      )
+      (i32.const 3312)
      )
     )
     (then
@@ -14285,9 +14241,7 @@
         )
        )
       )
-      (call $~lib/rt/__tmptostack
-       (i32.const 4240)
-      )
+      (i32.const 4240)
      )
     )
     (then
@@ -14318,9 +14272,7 @@
         )
        )
       )
-      (call $~lib/rt/__tmptostack
-       (i32.const 4304)
-      )
+      (i32.const 4304)
      )
     )
     (then
@@ -14351,9 +14303,7 @@
         )
        )
       )
-      (call $~lib/rt/__tmptostack
-       (i32.const 4368)
-      )
+      (i32.const 4368)
      )
     )
     (then
@@ -14386,9 +14336,7 @@
         )
        )
       )
-      (call $~lib/rt/__tmptostack
-       (i32.const 4480)
-      )
+      (i32.const 4480)
      )
     )
     (then
@@ -14419,9 +14367,7 @@
         )
        )
       )
-      (call $~lib/rt/__tmptostack
-       (i32.const 4528)
-      )
+      (i32.const 4528)
      )
     )
     (then
@@ -14454,9 +14400,7 @@
         )
        )
       )
-      (call $~lib/rt/__tmptostack
-       (i32.const 5424)
-      )
+      (i32.const 5424)
      )
     )
     (then
@@ -14487,9 +14431,7 @@
         )
        )
       )
-      (call $~lib/rt/__tmptostack
-       (i32.const 5504)
-      )
+      (i32.const 5504)
      )
     )
     (then
@@ -14520,9 +14462,7 @@
         )
        )
       )
-      (call $~lib/rt/__tmptostack
-       (i32.const 5584)
-      )
+      (i32.const 5584)
      )
     )
     (then
@@ -14540,9 +14480,7 @@
    (local.set $date|127
     (call $~lib/rt/__localtostack
      (call $~lib/date/Date.fromString
-      (call $~lib/rt/__tmptostack
-       (i32.const 5664)
-      )
+      (i32.const 5664)
      )
     )
    )
@@ -14579,9 +14517,7 @@
    (local.set $date|127
     (call $~lib/rt/__localtostack
      (call $~lib/date/Date.fromString
-      (call $~lib/rt/__tmptostack
-       (i32.const 5936)
-      )
+      (i32.const 5936)
      )
     )
    )
@@ -14618,9 +14554,7 @@
    (local.set $date|127
     (call $~lib/rt/__localtostack
      (call $~lib/date/Date.fromString
-      (call $~lib/rt/__tmptostack
-       (i32.const 5984)
-      )
+      (i32.const 5984)
      )
     )
    )
@@ -14657,9 +14591,7 @@
    (local.set $date|127
     (call $~lib/rt/__localtostack
      (call $~lib/date/Date.fromString
-      (call $~lib/rt/__tmptostack
-       (i32.const 6032)
-      )
+      (i32.const 6032)
      )
     )
    )
@@ -14696,9 +14628,7 @@
    (local.set $date|127
     (call $~lib/rt/__localtostack
      (call $~lib/date/Date.fromString
-      (call $~lib/rt/__tmptostack
-       (i32.const 6096)
-      )
+      (i32.const 6096)
      )
     )
    )
@@ -14735,9 +14665,7 @@
    (local.set $date|127
     (call $~lib/rt/__localtostack
      (call $~lib/date/Date.fromString
-      (call $~lib/rt/__tmptostack
-       (i32.const 6176)
-      )
+      (i32.const 6176)
      )
     )
    )
@@ -14774,9 +14702,7 @@
    (local.set $date|127
     (call $~lib/rt/__localtostack
      (call $~lib/date/Date.fromString
-      (call $~lib/rt/__tmptostack
-       (i32.const 6256)
-      )
+      (i32.const 6256)
      )
     )
    )
@@ -14813,9 +14739,7 @@
    (local.set $date|127
     (call $~lib/rt/__localtostack
      (call $~lib/date/Date.fromString
-      (call $~lib/rt/__tmptostack
-       (i32.const 6336)
-      )
+      (i32.const 6336)
      )
     )
    )
@@ -14852,9 +14776,7 @@
    (local.set $date|127
     (call $~lib/rt/__localtostack
      (call $~lib/date/Date.fromString
-      (call $~lib/rt/__tmptostack
-       (i32.const 6416)
-      )
+      (i32.const 6416)
      )
     )
    )
@@ -14891,9 +14813,7 @@
    (local.set $date|127
     (call $~lib/rt/__localtostack
      (call $~lib/date/Date.fromString
-      (call $~lib/rt/__tmptostack
-       (i32.const 6480)
-      )
+      (i32.const 6480)
      )
     )
    )
@@ -14930,9 +14850,7 @@
    (local.set $date|127
     (call $~lib/rt/__localtostack
      (call $~lib/date/Date.fromString
-      (call $~lib/rt/__tmptostack
-       (i32.const 6560)
-      )
+      (i32.const 6560)
      )
     )
    )
@@ -14969,9 +14887,7 @@
    (local.set $date|127
     (call $~lib/rt/__localtostack
      (call $~lib/date/Date.fromString
-      (call $~lib/rt/__tmptostack
-       (i32.const 6640)
-      )
+      (i32.const 6640)
      )
     )
    )
@@ -15008,9 +14924,7 @@
    (local.set $date|127
     (call $~lib/rt/__localtostack
      (call $~lib/date/Date.fromString
-      (call $~lib/rt/__tmptostack
-       (i32.const 6720)
-      )
+      (i32.const 6720)
      )
     )
    )
@@ -15047,9 +14961,7 @@
    (local.set $date|127
     (call $~lib/rt/__localtostack
      (call $~lib/date/Date.fromString
-      (call $~lib/rt/__tmptostack
-       (i32.const 6800)
-      )
+      (i32.const 6800)
      )
     )
    )
@@ -15086,9 +14998,7 @@
    (local.set $date|127
     (call $~lib/rt/__localtostack
      (call $~lib/date/Date.fromString
-      (call $~lib/rt/__tmptostack
-       (i32.const 6896)
-      )
+      (i32.const 6896)
      )
     )
    )
@@ -15125,9 +15035,7 @@
    (local.set $date|127
     (call $~lib/rt/__localtostack
      (call $~lib/date/Date.fromString
-      (call $~lib/rt/__tmptostack
-       (i32.const 6928)
-      )
+      (i32.const 6928)
      )
     )
    )
@@ -15164,9 +15072,7 @@
    (local.set $date|127
     (call $~lib/rt/__localtostack
      (call $~lib/date/Date.fromString
-      (call $~lib/rt/__tmptostack
-       (i32.const 6960)
-      )
+      (i32.const 6960)
      )
     )
    )
@@ -15203,9 +15109,7 @@
    (local.set $date|127
     (call $~lib/rt/__localtostack
      (call $~lib/date/Date.fromString
-      (call $~lib/rt/__tmptostack
-       (i32.const 6992)
-      )
+      (i32.const 6992)
      )
     )
    )
@@ -15242,9 +15146,7 @@
    (local.set $date|127
     (call $~lib/rt/__localtostack
      (call $~lib/date/Date.fromString
-      (call $~lib/rt/__tmptostack
-       (i32.const 5664)
-      )
+      (i32.const 5664)
      )
     )
    )
@@ -15281,9 +15183,7 @@
    (local.set $date|127
     (call $~lib/rt/__localtostack
      (call $~lib/date/Date.fromString
-      (call $~lib/rt/__tmptostack
-       (i32.const 7040)
-      )
+      (i32.const 7040)
      )
     )
    )
@@ -15320,9 +15220,7 @@
    (local.set $date|127
     (call $~lib/rt/__localtostack
      (call $~lib/date/Date.fromString
-      (call $~lib/rt/__tmptostack
-       (i32.const 6032)
-      )
+      (i32.const 6032)
      )
     )
    )
@@ -15630,9 +15528,7 @@
         )
        )
       )
-      (call $~lib/rt/__tmptostack
-       (i32.const 7104)
-      )
+      (i32.const 7104)
      )
     )
     (then
@@ -15655,9 +15551,7 @@
         )
        )
       )
-      (call $~lib/rt/__tmptostack
-       (i32.const 7184)
-      )
+      (i32.const 7184)
      )
     )
     (then
@@ -15879,9 +15773,7 @@
         )
        )
       )
-      (call $~lib/rt/__tmptostack
-       (i32.const 7264)
-      )
+      (i32.const 7264)
      )
     )
     (then
@@ -15904,9 +15796,7 @@
         )
        )
       )
-      (call $~lib/rt/__tmptostack
-       (i32.const 7344)
-      )
+      (i32.const 7344)
      )
     )
     (then

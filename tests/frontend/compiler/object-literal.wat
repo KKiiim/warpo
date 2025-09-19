@@ -3729,9 +3729,7 @@
        )
       )
      )
-     (call $~lib/rt/__tmptostack
-      (i32.const 32)
-     )
+     (i32.const 32)
     )
    )
    (then
@@ -3981,9 +3979,7 @@
        (local.get $unmanaged)
       )
      )
-     (call $~lib/rt/__tmptostack
-      (i32.const 576)
-     )
+     (i32.const 576)
     )
    )
    (then
@@ -4497,9 +4493,7 @@
        )
       )
      )
-     (call $~lib/rt/__tmptostack
-      (i32.const 608)
-     )
+     (i32.const 608)
     )
    )
    (then
@@ -4591,17 +4585,13 @@
    (call $~lib/rt/__tmptostack
     (local.get $this)
    )
-   (call $~lib/rt/__tmptostack
-    (i32.const 640)
-   )
+   (i32.const 640)
   )
   (call $object-literal/OmittedFoo#set:baz
    (call $~lib/rt/__tmptostack
     (local.get $this)
    )
-   (call $~lib/rt/__tmptostack
-    (i32.const 672)
-   )
+   (i32.const 672)
   )
   (call $object-literal/OmittedFoo#set:qux
    (call $~lib/rt/__tmptostack
@@ -4672,9 +4662,7 @@
        )
       )
      )
-     (call $~lib/rt/__tmptostack
-      (i32.const 640)
-     )
+     (i32.const 640)
     )
    )
    (then
@@ -4697,9 +4685,7 @@
        )
       )
      )
-     (call $~lib/rt/__tmptostack
-      (i32.const 672)
-     )
+     (i32.const 672)
     )
    )
    (then
@@ -5018,9 +5004,7 @@
       (call $~lib/rt/__tmptostack
        (local.get $0)
       )
-      (call $~lib/rt/__tmptostack
-       (i32.const 32)
-      )
+      (i32.const 32)
      )
      (local.get $0)
     )
@@ -5041,9 +5025,7 @@
      (local.get $1)
      (call $~lib/rt/__tmptostack
       (call $~lib/string/String#substring
-       (call $~lib/rt/__tmptostack
-        (i32.const 32)
-       )
+       (i32.const 32)
        (i32.const 0)
        (i32.const 5)
       )
@@ -5142,9 +5124,7 @@
       (call $~lib/rt/__tmptostack
        (local.get $3)
       )
-      (call $~lib/rt/__tmptostack
-       (i32.const 608)
-      )
+      (i32.const 608)
      )
      (f64.store offset=8
       (local.get $3)
