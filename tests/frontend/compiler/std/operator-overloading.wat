@@ -6511,9 +6511,7 @@
    (block $std/operator-overloading/TesterInlineStatic.postInc|inlined.0 (result i32)
     (local.set $a
      (call $~lib/rt/__localtostack
-      (call $~lib/rt/__localtostack
-       (global.get $std/operator-overloading/ais1)
-      )
+      (global.get $std/operator-overloading/ais1)
      )
     )
     (br $std/operator-overloading/TesterInlineStatic.postInc|inlined.0

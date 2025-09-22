@@ -5142,9 +5142,7 @@
        (call $~lib/rt/__tmptostack
         (call $resolve-unary/Bar.postfix_inc
          (call $~lib/rt/__tmptostack
-          (call $~lib/rt/__localtostack
-           (global.get $resolve-unary/bar)
-          )
+          (global.get $resolve-unary/bar)
          )
         )
        )
@@ -5171,9 +5169,7 @@
        (call $~lib/rt/__tmptostack
         (call $resolve-unary/Bar.postfix_dec
          (call $~lib/rt/__tmptostack
-          (call $~lib/rt/__localtostack
-           (global.get $resolve-unary/bar)
-          )
+          (global.get $resolve-unary/bar)
          )
         )
        )
