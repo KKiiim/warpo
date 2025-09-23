@@ -1,0 +1,42 @@
+name: publish
+
+on:
+  release:
+    types: [published]
+
+jobs:
+  build_and_upload:
+    strategy:
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - run: npm ci
+      - uses: ./.github/action/build
+        with:
+          CMAKE_ARGS: "-DWARPO_RELEASE=ON"
+      - name: Set Artifact Name
+        id: set_artifact_name
+        run: |
+          if [ "${{ runner.os }}" == "macOS" ]; then
+            echo "filename=app-macos" >> $GITHUB_OUTPUT
+          elif [ "${{ runner.os }}" == "Linux" ]; then
+            echo "filename=app-linux" >> $GITHUB_OUTPUT
+          fi
+      - name: Pack build/warpo directory
+        run: |
+          if [ "${{ runner.os }}" == "macOS" ]; then
+            echo "filename=app-macos" >> $GITHUB_OUTPUT
+          elif [ "${{ runner.os }}" == "Linux" ]; then
+            echo "filename=app-linux" >> $GITHUB_OUTPUT
+          fi
+          tar -czvf build/warpo-${{ github.event.release.tag }}-${{ steps.set_artifact_name.outputs.filename }}.tar.gz -C build warpo
+      - name: Upload to GitHub Release
+        uses: softprops/action-gh-release@v1
+        with:
+          files: |
+            build/warpo-${{ github.event.release.tag }}-${{ steps.set_artifact_name.outputs.filename }}.tar.gz
