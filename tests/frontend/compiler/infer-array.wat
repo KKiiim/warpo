@@ -4821,11 +4821,6 @@
        (i32.const 0)
        (local.get $a|19)
       )
-      (call $~lib/array/Array<infer-array/Ref|null>#__set
-       (local.get $20)
-       (i32.const 1)
-       (i32.const 0)
-      )
       (local.get $20)
      )
     )

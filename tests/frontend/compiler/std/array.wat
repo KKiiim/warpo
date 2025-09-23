@@ -44890,11 +44890,6 @@
       )
       (call $~lib/array/Array<std/array/Ref|null>#__set
        (local.get $147)
-       (i32.const 1)
-       (i32.const 0)
-      )
-      (call $~lib/array/Array<std/array/Ref|null>#__set
-       (local.get $147)
        (i32.const 2)
        (call $std/array/Ref#constructor
         (i32.const 0)
@@ -48816,11 +48811,6 @@
         (i32.const 0)
         (i32.const 0)
        )
-      )
-      (call $~lib/array/Array<std/array/Ref|null>#__set
-       (local.get $235)
-       (i32.const 1)
-       (i32.const 0)
       )
       (call $~lib/array/Array<std/array/Ref|null>#__set
        (local.get $235)
