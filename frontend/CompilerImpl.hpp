@@ -17,7 +17,8 @@
 #include "warp_runner/warpRunner.hpp"
 #include "warpo/common/AsModule.hpp"
 #include "warpo/frontend/Compiler.hpp"
-#include "wasm-compiler/src/WasmModule/WasmModule.hpp"
+
+#include "src/WasmModule/WasmModule.hpp"
 
 namespace warpo::frontend {
 

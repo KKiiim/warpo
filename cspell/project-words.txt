@@ -5,6 +5,7 @@ currp
 Dependee
 DWARPO
 Eqref
+googletest
 gtest
 insts
 localtostack

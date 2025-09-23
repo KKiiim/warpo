@@ -22,13 +22,13 @@
 #include "warpo/support/Debug.hpp"
 #include "warpo/support/FileSystem.hpp"
 #include "warpo/support/Statistics.hpp"
-#include "wasm-compiler/src/WasmModule/WasmModule.hpp"
-#include "wasm-compiler/src/core/common/ILogger.hpp"
-#include "wasm-compiler/src/core/common/NativeSymbol.hpp"
-#include "wasm-compiler/src/utils/STDCompilerLogger.hpp"
 #include "wasm.h"
 
+#include "src/WasmModule/WasmModule.hpp"
+#include "src/core/common/ILogger.hpp"
+#include "src/core/common/NativeSymbol.hpp"
 #include "src/core/runtime/TrapException.hpp"
+#include "src/utils/STDCompilerLogger.hpp"
 
 namespace warpo::frontend {
 

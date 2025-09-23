@@ -2,7 +2,7 @@
 
 #include <vector>
 
-#include "wasm-compiler/src/core/common/NativeSymbol.hpp"
+#include "src/core/common/NativeSymbol.hpp"
 
 namespace warpo::frontend {
 

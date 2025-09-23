@@ -7,7 +7,8 @@
 
 #include "LinkedAPI.hpp"
 #include "warpo/support/Container.hpp"
-#include "wasm-compiler/src/core/common/NativeSymbol.hpp"
+
+#include "src/core/common/NativeSymbol.hpp"
 
 namespace warpo::frontend {
 

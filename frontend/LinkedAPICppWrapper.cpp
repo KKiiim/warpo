@@ -8,9 +8,10 @@
 
 #include "CompilerImpl.hpp"
 #include "LinkedAPI.hpp"
-#include "wasm-compiler/src/WasmModule/WasmModule.hpp"
-#include "wasm-compiler/src/core/common/NativeSymbol.hpp"
-#include "wasm-compiler/src/core/common/function_traits.hpp"
+
+#include "src/WasmModule/WasmModule.hpp"
+#include "src/core/common/NativeSymbol.hpp"
+#include "src/core/common/function_traits.hpp"
 
 namespace warpo::frontend {
 
