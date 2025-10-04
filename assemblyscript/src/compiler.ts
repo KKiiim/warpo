@@ -10022,10 +10022,7 @@ export class Compiler extends DiagnosticEmitter {
   canOptimizeZeroInitialization(valueExpr: ExpressionRef): bool {
     const runtime = this.options.runtime;
     // Memory will be filled with 0 on itcms.__new
-    // Memory grow will default to initialized with 0 as wasm spec
-    return (runtime == Runtime.Incremental || runtime == Runtime.Stub)
-      ? isConstZero(valueExpr)
-      : false;
+    return runtime == Runtime.Incremental ? isConstZero(valueExpr) : false;
   }
 
   /** Makes a constant zero of the specified type. */
