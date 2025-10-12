@@ -4,11 +4,11 @@
 
 #include <algorithm>
 #include <argparse/argparse.hpp>
-#include <array>
 #include <atomic>
 #include <binaryen/src/binaryen-c.h>
 #include <cassert>
 #include <cstddef>
+#include <cstdlib>
 #include <exception>
 #include <filesystem>
 #include <fmt/base.h>
@@ -16,7 +16,6 @@
 #include <nlohmann/json.hpp>
 #include <pass.h>
 #include <passes/GC/OptLower.hpp>
-#include <set>
 #include <sstream>
 #include <stdexcept>
 #include <string>
@@ -49,36 +48,81 @@ cli::Opt<bool> updateFlag{
 
 enum class TestResult : uint8_t { Success, Failure, Skip };
 
-frontend::CompilationResult compile(nlohmann::json const &configJson, std::filesystem::path const &tsPath) {
-  std::vector<std::string> const entries{tsPath.string()};
-  frontend::Config config = frontend::getDefaultConfig();
-  config.useColorfulDiagMessage = false;
-  if (configJson.contains("asc_flags")) {
-    nlohmann::json::array_t const &ascFlags = configJson["asc_flags"].get<nlohmann::json::array_t>();
-    for (auto const &flag : ascFlags) {
-      if (flag == "--exportStart _start")
-        config.exportStart = "_start";
-      else if (flag == "--exportRuntime")
-        config.exportRuntime = true;
-      else if (flag == "--initialMemory 2")
-        config.initialMemory = 2;
-      else if (flag == "--use Date=")
-        config.uses["Date"] = "";
-      else if (flag == "--runtime incremental")
-        static_cast<void>(0); // do nothing, incremental is default
-      else if (flag == "--bindings raw")
-        static_cast<void>(0); // do nothing, raw binding is default
-      else if (flag == "--enableExtensions")
-        config.enableExtensions = true;
-    }
+class TestConfigJson {
+  nlohmann::json const configJson_;
+
+public:
+  explicit TestConfigJson(nlohmann::json const &configJson) : configJson_(configJson) {
+    assert(configJson_.is_object());
   }
-  return frontend::compile(entries, config);
+
+  frontend::Config createConfig() const {
+    frontend::Config config = frontend::getDefaultConfig();
+    config.useColorfulDiagMessage = false;
+    config.features =
+        common::Features::bulkMemory() | common::Features::mutableGlobals() | common::Features::signExtension();
+    if (configJson_.contains("asc_flags")) {
+      nlohmann::json::array_t const &ascFlags = configJson_["asc_flags"].get<nlohmann::json::array_t>();
+      for (nlohmann::basic_json<> const &flag : ascFlags) {
+        if (flag == "--exportStart _start")
+          config.exportStart = "_start";
+        else if (flag == "--exportRuntime")
+          config.exportRuntime = true;
+        else if (flag == "--initialMemory 2")
+          config.initialMemory = 2;
+        else if (flag == "--use Date=")
+          config.uses["Date"] = "";
+        else if (flag == "--runtime incremental")
+          static_cast<void>(0); // do nothing, incremental is default
+        else if (flag == "--bindings raw")
+          static_cast<void>(0); // do nothing, raw binding is default
+        else if (flag == "--enableExtensions")
+          config.enableExtensions = true;
+        else if (flag == "--shrinkLevel 3")
+          config.shrinkLevel = 3;
+        else
+          throw std::logic_error("unsupported asc_flag: " + flag.get<std::string>());
+      }
+    }
+    return config;
+  }
+  bool hasNonTrappingF2IFeature() const {
+    return configJson_.contains("features") &&
+           std::ranges::any_of(configJson_["features"].get<nlohmann::json::array_t>(),
+                               [](nlohmann::basic_json<> const &flag) { return flag == "nontrapping-f2i"; });
+  }
+  bool hasExportStart() const {
+    return configJson_.contains("asc_flags") &&
+           std::ranges::any_of(configJson_["asc_flags"].get<nlohmann::json::array_t>(),
+                               [](nlohmann::basic_json<> const &flag) { return flag == "--exportStart _start"; });
+  }
+  bool checkErrorMessage() const { return configJson_.contains("stderr"); }
+  std::vector<std::string> getExpectedErrorMessages() const {
+    assert(checkErrorMessage());
+    std::vector<std::string> expectedStderr;
+    if (configJson_["stderr"].is_string()) {
+      expectedStderr.push_back(configJson_["stderr"].get<std::string>());
+    } else if (configJson_["stderr"].is_array()) {
+      for (auto const &item : configJson_["stderr"]) {
+        expectedStderr.push_back(item.get<std::string>());
+      }
+    }
+    return expectedStderr;
+  }
+};
+
+frontend::CompilationResult compile(TestConfigJson const &configJson, std::filesystem::path const &tsPath) {
+  std::vector<std::string> const entries{tsPath.string()};
+  return frontend::compile(entries, configJson.createConfig());
 }
 
-[[nodiscard]] TestResult runModuleOnWarp(AsModule const &asModule) {
-  // skip unsupported test cases which has global imports
-  if (std::ranges::any_of(asModule.get()->globals,
-                          [](std::unique_ptr<wasm::Global> const &global) { return global->imported(); }))
+[[nodiscard]] TestResult runModuleOnWarp(TestConfigJson const &configJson, std::filesystem::path const &tsPath,
+                                         AsModule const &asModule) {
+  bool const hasImportedGlobal = std::ranges::any_of(
+      asModule.get()->globals, [](std::unique_ptr<wasm::Global> const &global) { return global->imported(); });
+  if (hasImportedGlobal)
+    return TestResult::Skip;
+  if (configJson.hasNonTrappingF2IFeature())
     return TestResult::Skip;
 
   // lowering built-in imports
@@ -103,65 +147,53 @@ frontend::CompilationResult compile(nlohmann::json const &configJson, std::files
     r->initFromBytecode(vb::Span<const uint8_t>{wasm.data(), wasm.size()},
                         vb::Span<vb::NativeSymbol const>{linkedAPI.data(), linkedAPI.size()}, false);
     r->start(r.getStackTop());
+    if (configJson.hasExportStart())
+      r->callExportedFunctionWithName<0>(r.getStackTop(), "_start");
   } catch (vb::TrapException &e) {
-    std::cout << e.what() << ": " << static_cast<uint32_t>(e.getTrapCode()) << std::endl;
+    fmt::println("FAILED '{}': execution trapped due to {}", tsPath.c_str(), e.what());
     return TestResult::Failure;
   } catch (vb::LinkingException &e) {
     // Linking failed is acceptable, skip unsupported function
+    fmt::println("SKIP '{}': {}", tsPath.c_str(), e.what());
     return TestResult::Skip;
   } catch (const std::exception &e) {
     // Feature not implemented in warp is acceptable
-    bool const skip = std::string(e.what()).find("feature not implemented") != std::string::npos;
-    if (!skip) {
-      std::cout << e.what() << std::endl;
+    bool const featureNotImplemented = std::string(e.what()).find("feature not implemented") != std::string::npos;
+    if (!featureNotImplemented) {
+      fmt::println("FAILED '{}': {}", tsPath.c_str(), e.what());
       return TestResult::Failure;
     }
+    fmt::println("SKIP '{}': {}", tsPath.c_str(), e.what());
     return TestResult::Skip;
   }
 
   return TestResult::Success;
 }
 
-[[nodiscard]] TestResult runUpdate(nlohmann::json const &configJson, std::filesystem::path const &tsPath,
+[[nodiscard]] TestResult runUpdate(TestConfigJson const &configJson, std::filesystem::path const &tsPath,
                                    std::filesystem::path const &expectedOutPath) {
+  if (configJson.checkErrorMessage())
+    return TestResult::Success;
   frontend::CompilationResult const ret = compile(configJson, tsPath);
   if (ret.m.invalid()) {
-    if (configJson.contains("stderr")) {
-      return TestResult::Success;
-    } else {
-      fmt::println("FAILED '{}': expected to compile successfully\nerror message: {}", tsPath.c_str(),
-                   ret.errorMessage);
-      return TestResult::Failure;
-    }
+    fmt::println("FAILED '{}': expected to compile successfully\nerror message: {}", tsPath.c_str(), ret.errorMessage);
+    return TestResult::Failure;
   }
   std::stringstream ss;
   ss << *ret.m.get();
   std::string actual = std::move(ss).str();
   writeBinaryFile(expectedOutPath, std::move(actual));
-  return runModuleOnWarp(ret.m);
+  return runModuleOnWarp(configJson, tsPath, ret.m);
 }
 
-[[nodiscard]] TestResult runCompilationErrorCase(nlohmann::json const &configJson,
+[[nodiscard]] TestResult runCompilationErrorCase(TestConfigJson const &configJson,
                                                  std::filesystem::path const &tsPath) {
   frontend::CompilationResult const ret = compile(configJson, tsPath);
-  if (ret.m.valid()) {
-    fmt::println("'{}' success to compile but expect failed", tsPath.c_str());
-    return TestResult::Failure;
-  }
-  assert(configJson.contains("stderr"));
-  std::vector<std::string> expectedStderr;
-  if (configJson["stderr"].is_string()) {
-    expectedStderr.push_back(configJson["stderr"].get<std::string>());
-  } else if (configJson["stderr"].is_array()) {
-    for (auto const &item : configJson["stderr"]) {
-      expectedStderr.push_back(item.get<std::string>());
-    }
-  }
+  std::vector<std::string> const expectedStderr{configJson.getExpectedErrorMessages()};
 
   size_t lastIndex = 0;
   bool failed = false;
-  for (auto const &expectedErrorMessageLineJson : configJson["stderr"].get<nlohmann::json::array_t>()) {
-    std::string const expectedErrorMessageLine = expectedErrorMessageLineJson.get<std::string>();
+  for (std::string const &expectedErrorMessageLine : expectedStderr) {
     size_t const index = ret.errorMessage.find(expectedErrorMessageLine, lastIndex);
     if (index == std::string::npos) {
       fmt::println("\tmissing pattern '{}' in stderr.", expectedErrorMessageLine);
@@ -181,7 +213,7 @@ frontend::CompilationResult compile(nlohmann::json const &configJson, std::files
   return TestResult::Success;
 }
 
-[[nodiscard]] TestResult runSnapshotCase(nlohmann::json const &configJson, std::filesystem::path const &tsPath,
+[[nodiscard]] TestResult runSnapshotCase(TestConfigJson const &configJson, std::filesystem::path const &tsPath,
                                          std::filesystem::path const &expectedOutPath) {
   frontend::CompilationResult const ret = compile(configJson, tsPath);
   if (ret.m.invalid()) {
@@ -196,54 +228,25 @@ frontend::CompilationResult compile(nlohmann::json const &configJson, std::files
     fmt::println("FAILED '{}': mismatched wat output", tsPath.c_str());
     return TestResult::Failure;
   }
-  return runModuleOnWarp(ret.m);
-}
-
-bool isAnyASCFlagsNotImplemented(nlohmann::json::array_t const &ascFlags, std::filesystem::path const &tsPath) {
-  if (ascFlags.empty())
-    return false;
-  constexpr std::array<const char *, 7> allowedASCFlags = {
-      "--exportStart _start", "--runtime incremental", "--initialMemory 2",  "--exportRuntime",
-      "--bindings raw",       "--use Date=",           "--enableExtensions",
-  };
-  for (auto const &flag : ascFlags) {
-    if (0 == std::count(std::begin(allowedASCFlags), std::end(allowedASCFlags), flag.get<std::string>())) {
-      fmt::println("SKIP '{}': has not supported asc_flags '{}'", tsPath.c_str(), flag.get<std::string>());
-      return true;
-    }
-  }
-  return false;
-}
-
-bool shouldSkipTestCase(nlohmann::json const &configJson, std::filesystem::path const &tsPath) {
-  constexpr const char *ascFlags = "asc_flags";
-  constexpr const char *features = "features";
-  if (configJson.contains(ascFlags)) {
-    if (isAnyASCFlagsNotImplemented(configJson[ascFlags].get<nlohmann::json::array_t>(), tsPath))
-      return true;
-  }
-  if (configJson.contains(features) && !configJson[features].get<nlohmann::json::array_t>().empty()) {
-    fmt::println("SKIP '{}': has not supported features", tsPath.c_str());
-    return true;
-  }
-  return false;
+  return runModuleOnWarp(configJson, tsPath, ret.m);
 }
 
 [[nodiscard]] TestResult run(std::filesystem::path const &tsPath) {
   try {
     std::filesystem::path const jsonPath = replaceExtension(tsPath, ".json");
-    nlohmann::json const configJson =
-        std::filesystem::exists(jsonPath) ? nlohmann::json::parse(readTextFile(jsonPath)) : nlohmann::json{};
-    if (shouldSkipTestCase(configJson, tsPath))
-      return TestResult::Skip;
+    nlohmann::json const j = nlohmann::json::parse(std::filesystem::exists(jsonPath) ? readTextFile(jsonPath) : "{}");
+    TestConfigJson const configJson{j};
     std::filesystem::path const expectedOutPath = replaceExtension(tsPath, ".wat");
     if (updateFlag.get())
       return runUpdate(configJson, tsPath, expectedOutPath);
-    if (!std::filesystem::exists(expectedOutPath)) {
+    if (configJson.checkErrorMessage()) {
+      if (std::filesystem::exists(expectedOutPath)) {
+        fmt::println("{} should be removed when --stderr is specified.", expectedOutPath.c_str());
+        std::abort();
+      }
       return runCompilationErrorCase(configJson, tsPath);
-    } else {
-      return runSnapshotCase(configJson, tsPath, expectedOutPath);
     }
+    return runSnapshotCase(configJson, tsPath, expectedOutPath);
   } catch (std::exception const &e) {
     fmt::println("FAILED '{}': unkown error {}", tsPath.c_str(), e.what());
     return TestResult::Failure;
