@@ -19,10 +19,12 @@
 #include "ir/iteration.h"
 #include "ir/local-structural-dominance.h"
 #include "ir/module-utils.h"
+#include "ir/subtype-exprs.h"
 #include "ir/subtypes.h"
 #include "ir/type-updating.h"
 #include "support/string.h"
 #include "tools/fuzzing/heap-types.h"
+#include "wasm-io.h"
 
 namespace wasm {
 
@@ -32,6 +34,8 @@ TranslateToFuzzReader::TranslateToFuzzReader(Module& wasm,
   : wasm(wasm), closedWorld(closedWorld), builder(wasm),
     random(std::move(input), wasm.features),
     publicTypeValidator(wasm.features) {
+
+  haveInitialFunctions = !wasm.functions.empty();
 
   // - funcref cannot be logged because referenced functions can be inlined or
   // removed during optimization
@@ -348,6 +352,7 @@ void TranslateToFuzzReader::build() {
   setupHeapTypes();
   setupTables();
   setupGlobals();
+  useImportedGlobals();
   if (wasm.features.hasExceptionHandling()) {
     setupTags();
     addImportThrowingSupport();
@@ -358,7 +363,12 @@ void TranslateToFuzzReader::build() {
   addImportLoggingSupport();
   addImportCallingSupport();
   addImportSleepSupport();
+
+  // First, modify initial functions. That includes removing imports. Then,
+  // use the imported module, which are function imports that we allow.
   modifyInitialFunctions();
+  useImportedFunctions();
+
   processFunctions();
   if (fuzzParams->HANG_LIMIT > 0) {
     addHangLimitSupport();
@@ -616,6 +626,20 @@ void TranslateToFuzzReader::setupTables() {
   }
 }
 
+void TranslateToFuzzReader::useGlobalLater(Global* global) {
+  auto type = global->type;
+  auto name = global->name;
+  globalsByType[type].push_back(name);
+  if (global->mutable_) {
+    mutableGlobalsByType[type].push_back(name);
+  } else {
+    immutableGlobalsByType[type].push_back(name);
+    if (global->imported()) {
+      importedImmutableGlobalsByType[type].push_back(name);
+    }
+  }
+}
+
 void TranslateToFuzzReader::setupGlobals() {
   // If there were initial wasm contents, there may be imported globals. That
   // would be a problem in the fuzzer harness as we'd error if we do not
@@ -641,20 +665,6 @@ void TranslateToFuzzReader::setupGlobals() {
       }
     }
   }
-
-  auto useGlobalLater = [&](Global* global) {
-    auto type = global->type;
-    auto name = global->name;
-    globalsByType[type].push_back(name);
-    if (global->mutable_) {
-      mutableGlobalsByType[type].push_back(name);
-    } else {
-      immutableGlobalsByType[type].push_back(name);
-      if (global->imported()) {
-        importedImmutableGlobalsByType[type].push_back(name);
-      }
-    }
-  };
 
   // Randomly assign some globals from initial content to be ignored for the
   // fuzzer to use. Such globals will only be used from initial content. This is
@@ -703,9 +713,23 @@ void TranslateToFuzzReader::setupGlobals() {
       type = getMVPType();
       init = makeConst(type);
     }
-    auto global = builder.makeGlobal(
-      Names::getValidGlobalName(wasm, "global$"), type, init, mutability);
+    auto name = Names::getValidGlobalName(wasm, "global$");
+    auto global = builder.makeGlobal(name, type, init, mutability);
     useGlobalLater(wasm.addGlobal(std::move(global)));
+
+    // Export some globals, where we can.
+    if (preserveImportsAndExports || type.isTuple() ||
+        !isValidPublicType(type)) {
+      continue;
+    }
+    if (mutability == Builder::Mutable && !wasm.features.hasMutableGlobals()) {
+      continue;
+    }
+    if (oneIn(2)) {
+      auto exportName = Names::getValidExportName(wasm, name);
+      wasm.addExport(
+        Builder::makeExport(exportName, name, ExternalKind::Global));
+    }
   }
 }
 
@@ -919,7 +943,7 @@ void TranslateToFuzzReader::addImportLoggingSupport() {
       // simpler than avoiding calls to logging in all the rest of the logic).
       func->body = builder.makeNop();
     }
-    func->type = Signature(type, Type::none);
+    func->type = Type(Signature(type, Type::none), NonNullable, Exact);
     wasm.addFunction(std::move(func));
   }
 }
@@ -967,7 +991,8 @@ void TranslateToFuzzReader::addImportCallingSupport() {
     func->name = callExportImportName;
     func->module = "fuzzing-support";
     func->base = "call-export";
-    func->type = Signature({Type::i32, Type::i32}, Type::none);
+    func->type =
+      Type(Signature({Type::i32, Type::i32}, Type::none), NonNullable, Exact);
     wasm.addFunction(std::move(func));
   }
 
@@ -981,7 +1006,7 @@ void TranslateToFuzzReader::addImportCallingSupport() {
     func->name = callExportCatchImportName;
     func->module = "fuzzing-support";
     func->base = "call-export-catch";
-    func->type = Signature(Type::i32, Type::i32);
+    func->type = Type(Signature(Type::i32, Type::i32), NonNullable, Exact);
     wasm.addFunction(std::move(func));
   }
 
@@ -998,7 +1023,9 @@ void TranslateToFuzzReader::addImportCallingSupport() {
       // As call-export, there is a flags param that allows us to catch+rethrow
       // all exceptions.
       func->type =
-        Signature({Type(HeapType::func, Nullable), Type::i32}, Type::none);
+        Type(Signature({Type(HeapType::func, Nullable), Type::i32}, Type::none),
+             NonNullable,
+             Exact);
       wasm.addFunction(std::move(func));
     }
 
@@ -1011,7 +1038,9 @@ void TranslateToFuzzReader::addImportCallingSupport() {
       func->name = callRefCatchImportName;
       func->module = "fuzzing-support";
       func->base = "call-ref-catch";
-      func->type = Signature(Type(HeapType::func, Nullable), Type::i32);
+      func->type = Type(Signature(Type(HeapType::func, Nullable), Type::i32),
+                        NonNullable,
+                        Exact);
       wasm.addFunction(std::move(func));
     }
   }
@@ -1033,7 +1062,7 @@ void TranslateToFuzzReader::addImportThrowingSupport() {
     // As with logging, implement in a trivial way when we cannot add imports.
     func->body = builder.makeNop();
   }
-  func->type = Signature(Type::i32, Type::none);
+  func->type = Type(Signature(Type::i32, Type::none), NonNullable, Exact);
   wasm.addFunction(std::move(func));
 }
 
@@ -1053,6 +1082,14 @@ void TranslateToFuzzReader::addImportTableSupport() {
     return;
   }
 
+  // Do not always export the table even if we can, as it inhibits some things
+  // in the fuzzer (with this export, the wasm becomes more sensitive to
+  // otherwise inconsequential changes: calling the table-get/set imports is
+  // influenced by the existence of this export).
+  if (!random.oneIn(3)) {
+    return;
+  }
+
   // Export the table.
   wasm.addExport(
     builder.makeExport("table", funcrefTableName, ExternalKind::Table));
@@ -1064,7 +1101,9 @@ void TranslateToFuzzReader::addImportTableSupport() {
     func->name = tableGetImportName;
     func->module = "fuzzing-support";
     func->base = "table-get";
-    func->type = Signature({Type::i32}, Type(HeapType::func, Nullable));
+    func->type = Type(Signature({Type::i32}, Type(HeapType::func, Nullable)),
+                      NonNullable,
+                      Exact);
     wasm.addFunction(std::move(func));
   }
 
@@ -1076,7 +1115,9 @@ void TranslateToFuzzReader::addImportTableSupport() {
     func->module = "fuzzing-support";
     func->base = "table-set";
     func->type =
-      Signature({Type::i32, Type(HeapType::func, Nullable)}, Type::none);
+      Type(Signature({Type::i32, Type(HeapType::func, Nullable)}, Type::none),
+           NonNullable,
+           Exact);
     wasm.addFunction(std::move(func));
   }
 }
@@ -1096,7 +1137,8 @@ void TranslateToFuzzReader::addImportSleepSupport() {
   func->name = sleepImportName;
   func->module = "fuzzing-support";
   func->base = "sleep";
-  func->type = Signature({Type::i32, Type::i32}, Type::i32);
+  func->type =
+    Type(Signature({Type::i32, Type::i32}, Type::i32), NonNullable, Exact);
   wasm.addFunction(std::move(func));
 }
 
@@ -1142,7 +1184,10 @@ void TranslateToFuzzReader::addHashMemorySupport() {
   auto* body = builder.makeBlock(contents);
   hashMemoryName = Names::getValidFunctionName(wasm, "hashMemory");
   auto* hasher = wasm.addFunction(builder.makeFunction(
-    hashMemoryName, Signature(Type::none, Type::i32), {Type::i32}, body));
+    hashMemoryName,
+    Type(Signature(Type::none, Type::i32), NonNullable, Exact),
+    {Type::i32},
+    body));
 
   if (!preserveImportsAndExports && !wasm.getExportOrNull("hashMemory")) {
     wasm.addExport(
@@ -1152,6 +1197,76 @@ void TranslateToFuzzReader::addHashMemorySupport() {
       wasm.addExport(builder.makeExport(
         "memory", wasm.memories[0]->name, ExternalKind::Memory));
     }
+  }
+}
+
+void TranslateToFuzzReader::setImportedModule(std::string importedModuleName) {
+  importedModule.emplace();
+
+  importedModule->features = FeatureSet::All;
+  ModuleReader().read(importedModuleName, *importedModule);
+}
+
+void TranslateToFuzzReader::useImportedFunctions() {
+  if (!importedModule) {
+    return;
+  }
+
+  // Add some of the module's exported functions as imports, at a random rate.
+  auto rate = upTo(100);
+  for (auto& exp : importedModule->exports) {
+    if (exp->kind != ExternalKind::Function || upTo(100) > rate) {
+      continue;
+    }
+
+    auto* func = importedModule->getFunction(*exp->getInternalName());
+    auto name =
+      Names::getValidFunctionName(wasm, "primary_" + exp->name.toString());
+    // We can import it as its own type, or any (declared) supertype.
+    // TODO: this will be inexact eventually
+    auto type = getSuperType(func->type).with(NonNullable).with(Exact);
+    auto import = builder.makeFunction(name, type, {});
+    import->module = "primary";
+    import->base = exp->name;
+    wasm.addFunction(std::move(import));
+  }
+
+  // TODO: All other imports: memories, tables, etc. We must, as we do
+  //       with functions, take care to run this *after* the removal of those
+  //       imports (as normally we remove them all, as the fuzzer harness will
+  //       not provide them, but an imported module is the exception).
+}
+
+void TranslateToFuzzReader::useImportedGlobals() {
+  if (!importedModule) {
+    return;
+  }
+
+  // Add some of the module's exported globals as imports, at a random rate.
+  auto rate = upTo(100);
+  for (auto& exp : importedModule->exports) {
+    if (exp->kind != ExternalKind::Global || upTo(100) > rate) {
+      continue;
+    }
+
+    auto* global = importedModule->getGlobal(*exp->getInternalName());
+    auto name =
+      Names::getValidGlobalName(wasm, "primary_" + exp->name.toString());
+    // We can import it as its own type, or if immutable, any (declared)
+    // supertype.
+    Type type;
+    Builder::Mutability mutability;
+    if (global->mutable_) {
+      mutability = Builder::Mutable;
+      type = global->type;
+    } else {
+      mutability = Builder::Immutable;
+      type = getSuperType(global->type);
+    }
+    auto import = builder.makeGlobal(name, type, nullptr, mutability);
+    import->module = "primary";
+    import->base = exp->name;
+    useGlobalLater(wasm.addGlobal(std::move(import)));
   }
 }
 
@@ -1391,6 +1506,14 @@ void TranslateToFuzzReader::processFunctions() {
   const int RESOLUTION = 10;
   auto chance = upTo(RESOLUTION + 1);
 
+  // We do not want to always add new functions, if there are initial ones:
+  // adding many additional functions will cause a lot of global properties to
+  // change, e.g., if the initial content was a carefully crafted testcase
+  // showing some situation of reads and writes between struct fields, adding
+  // many new functions will likely add reads and writes to all the fields,
+  // preventing global operations like field removal or immutabilification.
+  auto allowNew = !haveInitialFunctions || !oneIn(10);
+
   // Keep working while we have random data.
   while (!random.finished()) {
     if (!moddable.empty() && upTo(RESOLUTION) < chance) {
@@ -1403,7 +1526,7 @@ void TranslateToFuzzReader::processFunctions() {
       // place, and truncating.
       moddable[index] = moddable.back();
       moddable.pop_back();
-    } else {
+    } else if (allowNew) {
       // Add a new function
       auto* func = addFunction();
       addInvocations(func);
@@ -1413,6 +1536,10 @@ void TranslateToFuzzReader::processFunctions() {
       if (allowOOB) {
         moddable.push_back(func);
       }
+    } else {
+      // If we found nothing to do, consume some data so that we make progress
+      // towards the loop ending.
+      get();
     }
   }
 
@@ -1471,16 +1598,32 @@ Function* TranslateToFuzzReader::addFunction() {
   auto allocation = std::make_unique<Function>();
   auto* func = allocation.get();
   func->name = Names::getValidFunctionName(wasm, "func");
-  Index numParams = upToSquared(fuzzParams->MAX_PARAMS);
-  std::vector<Type> params;
-  params.reserve(numParams);
-  for (Index i = 0; i < numParams; i++) {
-    auto type = getSingleConcreteType();
-    params.push_back(type);
+
+  // Pick params and results. There may be an interesting heap type we can use.
+  std::optional<HeapType> funcType;
+  auto& funcTypes = interestingHeapSubTypes[HeapTypes::func];
+  if (!funcTypes.empty() && oneIn(2)) {
+    auto type = pick(funcTypes);
+    if (type.getSignature().params.size() < (size_t)fuzzParams->MAX_PARAMS) {
+      // This is suitable for us.
+      funcType = type;
+    }
   }
-  auto paramType = Type(params);
-  auto resultType = getControlFlowType();
-  func->type = Signature(paramType, resultType);
+  if (!funcType) {
+    // Generate a new type on the fly.
+    Index numParams = upToSquared(fuzzParams->MAX_PARAMS);
+    std::vector<Type> params;
+    params.reserve(numParams);
+    for (Index i = 0; i < numParams; i++) {
+      auto type = getSingleConcreteType();
+      params.push_back(type);
+    }
+    auto paramType = Type(params);
+    auto resultType = getControlFlowType();
+    funcType = Signature(paramType, resultType);
+  }
+  func->type = Type(*funcType, NonNullable, Exact);
+
   Index numVars = upToSquared(fuzzParams->MAX_VARS);
   for (Index i = 0; i < numVars; i++) {
     auto type = getConcreteType();
@@ -1510,6 +1653,8 @@ Function* TranslateToFuzzReader::addFunction() {
   // at least one, though, to keep each testcase interesting. Avoid non-
   // nullable params, as those cannot be constructed by the fuzzer on the
   // outside.
+  auto paramType = func->getParams();
+  auto resultType = func->getResults();
   bool validExportParams =
     std::all_of(paramType.begin(), paramType.end(), [&](Type t) {
       return t.isDefaultable() && isValidPublicType(t);
@@ -1520,9 +1665,9 @@ Function* TranslateToFuzzReader::addFunction() {
     wasm.addExport(
       Builder::makeExport(func->name, func->name, ExternalKind::Function));
   }
-  // add some to an elem segment
+  // add some to an elem segment TODO we could do this for imported funcs too
   while (oneIn(3) && !random.finished()) {
-    auto type = Type(func->type, NonNullable);
+    auto type = func->type;
     std::vector<ElementSegment*> compatibleSegments;
     ModuleUtils::iterActiveElementSegments(wasm, [&](ElementSegment* segment) {
       if (Type::isSubType(type, segment->type)) {
@@ -1530,7 +1675,8 @@ Function* TranslateToFuzzReader::addFunction() {
       }
     });
     auto& randomElem = compatibleSegments[upTo(compatibleSegments.size())];
-    randomElem->data.push_back(builder.makeRefFunc(func->name, func->type));
+    randomElem->data.push_back(
+      builder.makeRefFunc(func->name, func->type.getHeapType()));
   }
   numAddedFunctions++;
   return func;
@@ -1719,16 +1865,66 @@ void TranslateToFuzzReader::mutate(Function* func) {
   // reasonable chance of making some changes.
   percentChance = std::max(percentChance, Index(3));
 
+  // First, find things to replace and their types. SubtypingDiscoverer needs to
+  // do this in a single, full walk (as types of children depend on parents, and
+  // even block targets).
+  struct Finder
+    : public ControlFlowWalker<Finder, SubtypingDiscoverer<Finder>> {
+    // Maps children we can replace to the types we can replace them with. We
+    // only store nontrivial ones (i.e., where the type is not just the child's
+    // type).
+    std::unordered_map<Expression*, Type> childTypes;
+
+    // We only care about constraints on Expression* things.
+    void noteSubtype(Type sub, Type super) {}
+    void noteSubtype(HeapType sub, HeapType super) {}
+
+    void noteSubtype(Type sub, Expression* super) {
+      // The expression must be a supertype of a fixed type. Nothing to do.
+    }
+    void noteSubtype(Expression* sub, Type super) {
+      if (super.isRef() && sub->type != super) {
+        // This is a nontrivial opportunity to replace sub with a given type.
+        childTypes[sub] = super;
+      }
+    }
+    void noteSubtype(Expression* sub, Expression* super) {
+      noteSubtype(sub, super->type);
+    }
+    void noteNonFlowSubtype(Expression* sub, Type super) {
+      noteSubtype(sub, super);
+    }
+
+    // TODO: Many casts can accept the top type. We may need to use visit*(), to
+    //       handle each expression class separately.
+    void noteCast(HeapType src, Type dst) {}
+    void noteCast(Expression* src, Type dst) {}
+    void noteCast(Expression* src, Expression* dst) {}
+  } finder;
+
+  if (oneIn(2)) {
+    // |finder| reads the IR, and it must be totally valid - e.g. breaks have a
+    // proper break target - or else we'd hit internal errors. Fix it up first.
+    // (Otherwise, fixing it up is done once after mutation, and in that case
+    // we can mutate the IR in simple ways but not read it using
+    // useSubtypingDiscoverer). We avoid always doing this second fixup as it
+    // may bias the code in some ways.
+    fixAfterChanges(func);
+    finder.walkFunctionInModule(func, &wasm);
+  }
+
+  // Next, modify things.
   struct Modder : public PostWalker<Modder, UnifiedExpressionVisitor<Modder>> {
     TranslateToFuzzReader& parent;
     Index percentChance;
+    Finder& finder;
 
     // Whether to replace with unreachable. This can lead to less code getting
     // executed, so we don't want to do it all the time even in a big function.
     bool allowUnreachable;
 
-    Modder(TranslateToFuzzReader& parent, Index percentChance)
-      : parent(parent), percentChance(percentChance) {
+    Modder(TranslateToFuzzReader& parent, Index percentChance, Finder& finder)
+      : parent(parent), percentChance(percentChance), finder(finder) {
       // If the parent allows it then sometimes replace with an unreachable, and
       // sometimes not. Even if we allow it, only do it in certain functions
       // (half the time) and only do it rarely (see below).
@@ -1736,136 +1932,152 @@ void TranslateToFuzzReader::mutate(Function* func) {
     }
 
     void visitExpression(Expression* curr) {
-      if (parent.upTo(100) < percentChance &&
-          parent.canBeArbitrarilyReplaced(curr)) {
-        // We can replace in various modes, see below. Generate a random number
-        // up to 100 to help us there.
-        int mode = parent.upTo(100);
-
-        if (allowUnreachable && mode < 5) {
-          replaceCurrent(parent.make(Type::unreachable));
-          return;
-        }
-
-        // For constants, perform only a small tweaking in some cases.
-        // TODO: more minor tweaks to immediates, like making a load atomic or
-        // not, changing an offset, etc.
-        if (auto* c = curr->dynCast<Const>()) {
-          if (mode < 50) {
-            c->value = parent.tweak(c->value);
-          } else {
-            // Just replace the entire thing.
-            replaceCurrent(parent.make(curr->type));
-          }
-          return;
-        }
-
-        // Generate a replacement for the expression, and by default replace all
-        // of |curr| (including children) with that replacement, but in some
-        // cases we can do more subtle things.
-        //
-        // Note that such a replacement is not always valid due to nesting of
-        // labels, but we'll fix that up later. Note also that make() picks a
-        // subtype, so this has a chance to replace us with anything that is
-        // valid to put here.
-        auto* rep = parent.make(curr->type);
-        if (mode < 33 && rep->type != Type::none) {
-          // This has a non-none type. Replace the output, keeping the
-          // expression and its children in a drop. This "interposes" between
-          // this expression and its parent, something like this:
-          //
-          //    (D
-          //      (A
-          //        (B)
-          //        (C)
-          //      )
-          //    )
-          ////
-          //    => ;; keep A, replace it in the parent
-          //
-          //    (D
-          //      (block
-          //        (drop
-          //          (A
-          //            (B)
-          //            (C)
-          //          )
-          //        )
-          //        (NEW)
-          //      )
-          //    )
-          //
-          // We also sometimes try to insert A as a child of NEW, so we actually
-          // interpose directly:
-          //
-          //    (D
-          //      (NEW
-          //        (A
-          //          (B)
-          //          (C)
-          //        )
-          //      )
-          //    )
-          //
-          // We do not do that all the time, as inserting a drop is actually an
-          // important situation to test: the drop makes the output of A unused,
-          // which may let optimizations remove it.
-          if ((mode & 1) && replaceChildWith(rep, curr)) {
-            // We managed to replace one of the children with curr, and have
-            // nothing more to do.
-          } else {
-            // Drop curr and append.
-            rep =
-              parent.builder.makeSequence(parent.builder.makeDrop(curr), rep);
-          }
-        } else if (mode >= 66 && !Properties::isControlFlowStructure(curr)) {
-          ChildIterator children(curr);
-          auto numChildren = children.getNumChildren();
-          if (numChildren > 0 && numChildren < 5) {
-            // This is a normal (non-control-flow) expression with at least one
-            // child (and not an excessive amount of them; see the processing
-            // below). "Interpose" between the children and this expression by
-            // keeping them and replacing the parent |curr|. We do this by
-            // generating drops of the children, like this:
-            //
-            //  (A
-            //    (B)
-            //    (C)
-            //  )
-            //
-            //  => ;; keep children, replace A
-            //
-            //  (block
-            //    (drop (B))
-            //    (drop (C))
-            //    (NEW)
-            //  )
-            //
-            auto* block = parent.builder.makeBlock();
-            for (auto* child : children) {
-              // Only drop the child if we can't replace it as one of NEW's
-              // children. This does a linear scan of |rep| which is the reason
-              // for the above limit on the number of children.
-              if (!replaceChildWith(rep, child)) {
-                block->list.push_back(parent.builder.makeDrop(child));
-              }
-            }
-
-            if (!block->list.empty()) {
-              // We need the block, that is, we did not find a place for all the
-              // children.
-              block->list.push_back(rep);
-              block->finalize();
-              rep = block;
-            }
-          }
-        }
-        replaceCurrent(rep);
+      // See if we want to replace it.
+      if (!parent.canBeArbitrarilyReplaced(curr) ||
+          parent.upTo(100) >= percentChance) {
+        return;
       }
+
+      // Find the type to replace with.
+      auto type = curr->type;
+      if (type.isRef()) {
+        auto iter = finder.childTypes.find(curr);
+        if (iter != finder.childTypes.end()) {
+          type = iter->second;
+          // We can only be given a less-refined type (certainly we can replace
+          // curr with its own type).
+          assert(Type::isSubType(curr->type, type));
+          // We only store an interesting non-trivial type.
+          assert(type != curr->type);
+        }
+      }
+
+      // We can replace in various modes, see below. Generate a random number
+      // up to 100 to help us there.
+      int mode = parent.upTo(100);
+
+      if (allowUnreachable && mode < 5) {
+        replaceCurrent(parent.make(Type::unreachable));
+        return;
+      }
+
+      // For constants, perform only a small tweaking in some cases.
+      // TODO: more minor tweaks to immediates, like making a load atomic or
+      // not, changing an offset, etc.
+      if (auto* c = curr->dynCast<Const>()) {
+        if (mode < 50) {
+          c->value = parent.tweak(c->value);
+        } else {
+          // Just replace the entire thing.
+          replaceCurrent(parent.make(type));
+        }
+        return;
+      }
+
+      // Generate a replacement for the expression, and by default replace all
+      // of |curr| (including children) with that replacement, but in some
+      // cases we can do more subtle things.
+      //
+      // Note that such a replacement is not always valid due to nesting of
+      // labels, but we'll fix that up later. Note also that make() picks a
+      // subtype, so this has a chance to replace us with anything that is
+      // valid to put here.
+      auto* rep = parent.make(type);
+      if (mode < 33 && rep->type != Type::none) {
+        // This has a non-none type. Replace the output, keeping the
+        // expression and its children in a drop. This "interposes" between
+        // this expression and its parent, something like this:
+        //
+        //    (D
+        //      (A
+        //        (B)
+        //        (C)
+        //      )
+        //    )
+        ////
+        //    => ;; keep A, replace it in the parent
+        //
+        //    (D
+        //      (block
+        //        (drop
+        //          (A
+        //            (B)
+        //            (C)
+        //          )
+        //        )
+        //        (NEW)
+        //      )
+        //    )
+        //
+        // We also sometimes try to insert A as a child of NEW, so we actually
+        // interpose directly:
+        //
+        //    (D
+        //      (NEW
+        //        (A
+        //          (B)
+        //          (C)
+        //        )
+        //      )
+        //    )
+        //
+        // We do not do that all the time, as inserting a drop is actually an
+        // important situation to test: the drop makes the output of A unused,
+        // which may let optimizations remove it.
+        if ((mode & 1) && replaceChildWith(rep, curr)) {
+          // We managed to replace one of the children with curr, and have
+          // nothing more to do.
+        } else {
+          // Drop curr and append.
+          rep = parent.builder.makeSequence(parent.builder.makeDrop(curr), rep);
+        }
+      } else if (mode >= 66 && !Properties::isControlFlowStructure(curr)) {
+        ChildIterator children(curr);
+        auto numChildren = children.getNumChildren();
+        if (numChildren > 0 && numChildren < 5) {
+          // This is a normal (non-control-flow) expression with at least one
+          // child (and not an excessive amount of them; see the processing
+          // below). "Interpose" between the children and this expression by
+          // keeping them and replacing the parent |curr|. We do this by
+          // generating drops of the children, like this:
+          //
+          //  (A
+          //    (B)
+          //    (C)
+          //  )
+          //
+          //  => ;; keep children, replace A
+          //
+          //  (block
+          //    (drop (B))
+          //    (drop (C))
+          //    (NEW)
+          //  )
+          //
+          auto* block = parent.builder.makeBlock();
+          for (auto* child : children) {
+            // Only drop the child if we can't replace it as one of NEW's
+            // children. This does a linear scan of |rep| which is the reason
+            // for the above limit on the number of children.
+            if (!replaceChildWith(rep, child)) {
+              block->list.push_back(parent.builder.makeDrop(child));
+            }
+          }
+
+          if (!block->list.empty()) {
+            // We need the block, that is, we did not find a place for all the
+            // children.
+            block->list.push_back(rep);
+            block->finalize();
+            rep = block;
+          }
+        }
+      }
+      replaceCurrent(rep);
     }
   };
 
-  Modder modder(*this, percentChance);
+  Modder modder(*this, percentChance, finder);
   modder.walkFunctionInModule(func, &wasm);
 }
 
@@ -2038,7 +2250,8 @@ void TranslateToFuzzReader::addInvocations(Function* func) {
   if (wasm.getFunctionOrNull(name) || wasm.getExportOrNull(name)) {
     return;
   }
-  auto invoker = builder.makeFunction(name, Signature(), {});
+  auto invoker =
+    builder.makeFunction(name, Type(Signature(), NonNullable, Exact), {});
   Block* body = builder.makeBlock();
   invoker->body = body;
   FunctionCreationContext context(*this, invoker.get());
@@ -2112,8 +2325,10 @@ Expression* TranslateToFuzzReader::make(Type type) {
     ret = _makeunreachable();
   }
   if (!Type::isSubType(ret->type, type)) {
-    Fatal() << "Did not generate the right subtype of " << type
-            << ", instead we have " << ret->type << " : " << *ret << '\n';
+    Fatal() << "Did not generate the right subtype of "
+            << ModuleType(wasm, type) << ", instead we have "
+            << ModuleType(wasm, ret->type) << " : "
+            << ModuleExpression(wasm, ret) << '\n';
   }
   nesting--;
   return ret;
@@ -2203,6 +2418,10 @@ Expression* TranslateToFuzzReader::_makeConcrete(Type type) {
     if (type.isInexact() || wasm.features.hasCustomDescriptors()) {
       options.add(FeatureSet::ReferenceTypes | FeatureSet::GC,
                   &Self::makeRefCast);
+    }
+    if (heapType.getDescribedType()) {
+      options.add(FeatureSet::ReferenceTypes | FeatureSet::GC,
+                  &Self::makeRefGetDesc);
     }
   }
   if (wasm.features.hasGC()) {
@@ -2706,7 +2925,7 @@ Expression* TranslateToFuzzReader::makeCallIndirect(Type type) {
   }
   // TODO: use a random table
   return builder.makeCallIndirect(
-    funcrefTableName, target, args, targetFn->type, isReturn);
+    funcrefTableName, target, args, targetFn->type.getHeapType(), isReturn);
 }
 
 Expression* TranslateToFuzzReader::makeCallRef(Type type) {
@@ -2734,7 +2953,10 @@ Expression* TranslateToFuzzReader::makeCallRef(Type type) {
   }
   // TODO: half the time make a completely random item with that type.
   return builder.makeCallRef(
-    builder.makeRefFunc(target->name, target->type), args, type, isReturn);
+    builder.makeRefFunc(target->name, target->type.getHeapType()),
+    args,
+    type,
+    isReturn);
 }
 
 Expression* TranslateToFuzzReader::makeLocalGet(Type type) {
@@ -3355,10 +3577,11 @@ Expression* TranslateToFuzzReader::makeRefFuncConst(Type type) {
     assert(heapType.getBasic(Unshared) == HeapType::func);
     // With high probability, use the last created function if possible.
     // Otherwise, continue on to select some other function.
-    if (funcContext && funcContext->func->type.getShared() == share &&
+    if (funcContext &&
+        funcContext->func->type.getHeapType().getShared() == share &&
         !oneIn(4)) {
       auto* target = funcContext->func;
-      return builder.makeRefFunc(target->name, target->type);
+      return builder.makeRefFunc(target->name, target->type.getHeapType());
     }
   }
   // Look for a proper function starting from a random location, and loop from
@@ -3368,8 +3591,8 @@ Expression* TranslateToFuzzReader::makeRefFuncConst(Type type) {
     Index i = start;
     do {
       auto& func = wasm.functions[i];
-      if (Type::isSubType(Type(func->type, NonNullable), type)) {
-        return builder.makeRefFunc(func->name, func->type);
+      if (Type::isSubType(func->type, type)) {
+        return builder.makeRefFunc(func->name, func->type.getHeapType());
       }
       i = (i + 1) % wasm.functions.size();
     } while (i != start);
@@ -3403,8 +3626,11 @@ Expression* TranslateToFuzzReader::makeRefFuncConst(Type type) {
   auto* body = heapType.getSignature().results == Type::none
                  ? (Expression*)builder.makeNop()
                  : (Expression*)builder.makeUnreachable();
-  auto* func = wasm.addFunction(builder.makeFunction(
-    Names::getValidFunctionName(wasm, "ref_func_target"), heapType, {}, body));
+  auto* func = wasm.addFunction(
+    builder.makeFunction(Names::getValidFunctionName(wasm, "ref_func_target"),
+                         Type(heapType, NonNullable, Exact),
+                         {},
+                         body));
   return builder.makeRefFunc(func->name, heapType);
 }
 
@@ -4881,7 +5107,33 @@ Expression* TranslateToFuzzReader::makeRefCast(Type type) {
       // This unreachable avoids a warning on refType being possibly undefined.
       WASM_UNREACHABLE("bad case");
   }
-  return builder.makeRefCast(make(refType), type);
+  auto* ref = make(refType);
+
+  // Emit a non-descriptor cast if we have to, or otherwise half the time.
+  auto desc = type.getHeapType().getDescriptorType();
+  if (!desc || oneIn(2)) {
+    return builder.makeRefCast(ref, type);
+  }
+
+  // Emit a descriptor for a descriptor cast.
+  auto* descRef = make(type.with(*desc));
+  auto* ret = builder.makeRefCast(ref, descRef, type);
+  // descRef may be a subtype of the type we asked make() for, and if so then
+  // it might have a different described type - perhaps even an unrelated one,
+  // if the descriptors subtype but not the describees. Use an exact type to
+  // fix that up.
+  if (!Type::isSubType(ret->type, type)) {
+    descRef = make(type.with(*desc).with(Exact));
+    ret = builder.makeRefCast(ref, descRef, type);
+  }
+  return ret;
+}
+
+Expression* TranslateToFuzzReader::makeRefGetDesc(Type type) {
+  auto described = type.getHeapType().getDescribedType();
+  assert(described);
+  auto refType = type.with(*described);
+  return builder.makeRefGetDesc(make(refType));
 }
 
 Expression* TranslateToFuzzReader::makeBrOn(Type type) {
@@ -5645,6 +5897,9 @@ HeapType TranslateToFuzzReader::getSuperType(HeapType type) {
 }
 
 Type TranslateToFuzzReader::getSuperType(Type type) {
+  if (!type.isRef()) {
+    return type;
+  }
   auto heapType = getSuperType(type.getHeapType());
   auto nullability = getSuperType(type.getNullability());
   auto superType = Type(heapType, nullability);

@@ -38,6 +38,11 @@
 ;; CHECK-NEXT:                                                 after optimization, helping
 ;; CHECK-NEXT:                                                 fuzzing find bugs
 ;; CHECK-NEXT:
+;; CHECK-NEXT:   --fuzz-exec-second                            A second module to link with the
+;; CHECK-NEXT:                                                 first, for fuzz-exec-before
+;; CHECK-NEXT:                                                 (only before, as optimizations
+;; CHECK-NEXT:                                                 are not applied to it)
+;; CHECK-NEXT:
 ;; CHECK-NEXT:   --extra-fuzz-command,-efc                     An extra command to run on the
 ;; CHECK-NEXT:                                                 output before and after
 ;; CHECK-NEXT:                                                 optimizing. The output is
@@ -65,6 +70,9 @@
 ;; CHECK-NEXT:                                                 fuzzing
 ;; CHECK-NEXT:
 ;; CHECK-NEXT:   --fuzz-preserve-imports-exports               don't add imports and exports in
+;; CHECK-NEXT:                                                 -ttf mode
+;; CHECK-NEXT:
+;; CHECK-NEXT:   --fuzz-import                                 a module to use as an import in
 ;; CHECK-NEXT:                                                 -ttf mode
 ;; CHECK-NEXT:
 ;; CHECK-NEXT:   --emit-spec-wrapper,-esw                      Emit a wasm spec interpreter
