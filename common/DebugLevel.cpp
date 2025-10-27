@@ -15,4 +15,5 @@ static cli::Opt<bool> optimizeLevelOption{
 
 } // namespace warpo::common
 
-bool warpo::common::isEmitDebugLineInfo() { return optimizeLevelOption.get(); }
+bool warpo::common::isEmitDebugLine() { return optimizeLevelOption.get(); }
+bool warpo::common::isEmitDebugInfo() { return optimizeLevelOption.get(); }
