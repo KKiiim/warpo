@@ -46,7 +46,7 @@ BuildScriptRunner::BuildScriptRunner(std::filesystem::path const &buildScriptPat
   createConfig.exportRuntime = true;
   createConfig.exportTable = true;
   createConfig.exportStart = startFunctionName;
-  frontend::CompilationResult const result = frontend::compile(nullptr, {buildScriptPath}, createConfig);
+  frontend::CompilationResult const result = frontend::compile(nullptr, {buildScriptPath.string()}, createConfig);
   if (result.m.invalid()) {
     fmt::println("compilation failed");
     fmt::println("{}", result.errorMessage);

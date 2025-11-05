@@ -2,6 +2,7 @@
 // Copyright (C) 2025 wasm-ecosystem
 // SPDX-License-Identifier: Apache-2.0
 
+#include <algorithm>
 #include <cassert>
 #include <cstdint>
 #include <cstdlib>
@@ -37,6 +38,16 @@ namespace warpo::frontend {
 namespace {
 
 enum WasmFFIBool : uint32_t { WASM_FALSE = 0, WASM_TRUE = 1 };
+
+std::string normalizePathForPlatform(std::filesystem::path const &filePath) {
+  // NOLINTNEXTLINE(misc-const-correctness)
+  std::string relativeFilePath = std::filesystem::relative(filePath).string();
+#ifdef _WIN32
+  // Normalize path separators to forward slashes on Windows
+  std::ranges::replace(relativeFilePath, '\\', '/');
+#endif
+  return relativeFilePath;
+}
 
 } // namespace
 
@@ -189,7 +200,7 @@ warpo::frontend::CompilationResult FrontendCompiler::compile(std::vector<std::st
     parseLibStat.release();
 
     for (std::string const &filePath : entryFilePaths) {
-      std::string const relativeFilePath = std::filesystem::relative(filePath).string();
+      std::string const relativeFilePath = normalizePathForPlatform(filePath);
       parseFile(program, readTextFile(filePath), relativeFilePath, IsEntry::YES);
     }
     while (true) {
