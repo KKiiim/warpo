@@ -17,7 +17,9 @@ namespace {
 
 void createClass(uint32_t const classNamePtr, uint32_t const parentNamePtr, uint32_t const rtid,
                  vb::WasmModule const *const ctx) {
+  // NOLINTNEXTLINE(misc-const-correctness) intentional non-const to allow efficient move
   std::string className{WarpRunner::getString(ctx, classNamePtr)};
+  // NOLINTNEXTLINE(misc-const-correctness) intentional non-const to allow efficient move
   std::string parentName{WarpRunner::getString(ctx, parentNamePtr)};
 
   FrontendCompiler *const pCompiler = static_cast<FrontendCompiler *>(ctx->getContext());
@@ -40,11 +42,12 @@ void addTemplateType(uint32_t const classNamePtr, uint32_t const templateTypeNam
   pCompiler->asModule_.variableInfo_.addTemplateType(className, templateTypeName);
 }
 
-void addGlobal(uint32_t const variableNamePtr, uint32_t const typeNamePtr, vb::WasmModule const *const ctx) {
+void addGlobal(uint32_t const variableNamePtr, uint32_t const typeNamePtr, uint32_t const nullable,
+               vb::WasmModule const *const ctx) {
   std::string variableName = WarpRunner::getString(ctx, variableNamePtr);
   std::string const typeName = WarpRunner::getString(ctx, typeNamePtr);
   FrontendCompiler *const pCompiler = static_cast<FrontendCompiler *>(ctx->getContext());
-  pCompiler->asModule_.variableInfo_.addGlobalType(std::move(variableName), typeName);
+  pCompiler->asModule_.variableInfo_.addGlobalType(std::move(variableName), typeName, nullable);
 }
 
 void addSubProgram(uint32_t const subProgramNamePtr, uint32_t const belongClassNamePtr,

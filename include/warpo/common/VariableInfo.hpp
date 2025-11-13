@@ -32,16 +32,20 @@ namespace warpo {
 class VariableInfo final {
 public:
   using ClassRegistry = std::map<std::string_view, ClassInfo>;
-  using GlobalTypes = std::map<std::string, std::string_view>;
+  struct GlobalTypeInfo {
+    std::string_view typeName;
+    bool nullable;
+  };
+  using GlobalTypes = std::map<std::string, GlobalTypeInfo>;
 
-  void createClass(std::string className, std::string parentName, uint32_t const rtid);
+  void createClass(std::string_view className, std::string parentName, uint32_t const rtid);
 
   void addField(std::string_view const className, std::string fieldName, std::string typeName, uint32_t const offset,
                 uint32_t const nullable);
 
   void addTemplateType(std::string_view const className, std::string_view const templateTypeName);
 
-  void addGlobalType(std::string variableName, std::string_view const typeName);
+  void addGlobalType(std::string variableName, std::string_view const typeName, uint32_t const nullable);
 
   ClassRegistry const &getClassRegistry() const noexcept { return classRegistry_; }
 

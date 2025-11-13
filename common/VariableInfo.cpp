@@ -38,8 +38,8 @@ void VariableInfo::addField(std::string_view const className, std::string fieldN
   classIt->second.addMember(std::move(fieldName), internedTypeName, offset, nullable != 0);
 }
 
-void VariableInfo::createClass(std::string const className, std::string const parentName, uint32_t const rtid) {
-  std::string_view const internedClassName = stringPool_.internString(className);
+void VariableInfo::createClass(std::string_view const className, std::string const parentName, uint32_t const rtid) {
+  std::string_view const internedClassName = stringPool_.internString(TypeNameHelper::normalizeTypeName(className));
   std::string_view const internedParentName = stringPool_.internString(parentName);
   classRegistry_.emplace(internedClassName, ClassInfo{internedClassName, internedParentName, rtid});
 }
@@ -47,21 +47,19 @@ void VariableInfo::createClass(std::string const className, std::string const pa
 void VariableInfo::addTemplateType(std::string_view const className, std::string_view const templateTypeName) {
   ClassRegistry::iterator const classIt = classRegistry_.find(className);
   assert(classIt != classRegistry_.end());
-  std::string_view const normalizedTypeName = TypeNameHelper::normalizeTypeName(templateTypeName);
-  std::string_view const internedTypeName = stringPool_.internString(normalizedTypeName);
+  std::string_view const internedTypeName = stringPool_.internString(templateTypeName);
   classIt->second.addTemplateType(internedTypeName);
 }
 
-void VariableInfo::addGlobalType(std::string variableName, std::string_view const typeName) {
-  std::string_view const normalizedTypeName = TypeNameHelper::normalizeTypeName(typeName);
-  std::string_view const internedTypeName = stringPool_.internString(normalizedTypeName);
-  globalTypes_.emplace(std::move(variableName), internedTypeName);
+void VariableInfo::addGlobalType(std::string variableName, std::string_view const typeName, uint32_t const nullable) {
+  std::string_view const internedTypeName = stringPool_.internString(typeName);
+  globalTypes_.emplace(std::move(variableName), GlobalTypeInfo{internedTypeName, nullable != 0});
 }
 
 void VariableInfo::addSubProgram(std::string subProgramName, std::string_view const belongClassName) {
 
   if (!belongClassName.empty() && (belongClassName != "<<NULL>>")) {
-    auto classIt = classRegistry_.find(belongClassName);
+    auto classIt = classRegistry_.find(TypeNameHelper::normalizeTypeName(belongClassName));
     assert(classIt != classRegistry_.end() && "Class not found in registry");
     // NOLINTNEXTLINE(misc-const-correctness)
     SubProgramInfo &subProgramInfo = classIt->second.addSubProgram(std::move(subProgramName));
@@ -109,16 +107,16 @@ TEST(TestVariableInfo, TestCreateClass) {
   // 2. Add several members to each class
   // Person class members
   variableInfo.addField("Person", "name", "~lib/string/String", 0, 0);
-  variableInfo.addField("Person", "age", "~lib/number/I32", 8, 0);
+  variableInfo.addField("Person", "age", "i32", 8, 0);
   variableInfo.addField("Person", "email", "~lib/string/String", 12, 1); // nullable
 
   // Employee class members
   variableInfo.addField("Employee", "name", "~lib/string/String", 0, 0);
-  variableInfo.addField("Employee", "age", "~lib/number/I32", 8, 0);
+  variableInfo.addField("Employee", "age", "i32", 8, 0);
   variableInfo.addField("Employee", "email", "~lib/string/String", 12, 1);
-  variableInfo.addField("Employee", "employeeId", "~lib/number/I32", 16, 0);
+  variableInfo.addField("Employee", "employeeId", "i32", 16, 0);
   variableInfo.addField("Employee", "department", "~lib/string/String", 20, 0);
-  variableInfo.addField("Employee", "salary", "~lib/number/F64", 24, 0);
+  variableInfo.addField("Employee", "salary", "f64", 24, 0);
 
   // 3. Get the class registry
   const VariableInfo::ClassRegistry &classRegistry = variableInfo.getClassRegistry();
@@ -144,7 +142,7 @@ TEST(TestVariableInfo, TestCreateClass) {
   EXPECT_FALSE(personFields[0].isNullable());
 
   EXPECT_EQ(personFields[1].getName(), "age");
-  EXPECT_EQ(personFields[1].getType(), "~lib/number/I32");
+  EXPECT_EQ(personFields[1].getType(), "i32");
   EXPECT_EQ(personFields[1].getOffsetInClass(), 8);
   EXPECT_FALSE(personFields[1].isNullable());
 
@@ -169,7 +167,7 @@ TEST(TestVariableInfo, TestCreateClass) {
   EXPECT_EQ(employeeFields[0].getOffsetInClass(), 0);
 
   EXPECT_EQ(employeeFields[1].getName(), "age");
-  EXPECT_EQ(employeeFields[1].getType(), "~lib/number/I32");
+  EXPECT_EQ(employeeFields[1].getType(), "i32");
   EXPECT_EQ(employeeFields[1].getOffsetInClass(), 8);
 
   EXPECT_EQ(employeeFields[2].getName(), "email");
@@ -178,7 +176,7 @@ TEST(TestVariableInfo, TestCreateClass) {
   EXPECT_TRUE(employeeFields[2].isNullable());
 
   EXPECT_EQ(employeeFields[3].getName(), "employeeId");
-  EXPECT_EQ(employeeFields[3].getType(), "~lib/number/I32");
+  EXPECT_EQ(employeeFields[3].getType(), "i32");
   EXPECT_EQ(employeeFields[3].getOffsetInClass(), 16);
   EXPECT_FALSE(employeeFields[3].isNullable());
 
@@ -188,7 +186,7 @@ TEST(TestVariableInfo, TestCreateClass) {
   EXPECT_FALSE(employeeFields[4].isNullable());
 
   EXPECT_EQ(employeeFields[5].getName(), "salary");
-  EXPECT_EQ(employeeFields[5].getType(), "~lib/number/F64");
+  EXPECT_EQ(employeeFields[5].getType(), "f64");
   EXPECT_EQ(employeeFields[5].getOffsetInClass(), 24);
   EXPECT_FALSE(employeeFields[5].isNullable());
 }
@@ -215,8 +213,7 @@ TEST(TestVariableInfo, TestTemplateTypes) {
   const std::vector<std::string_view> &templateTypes = containerClass.getTemplateTypes();
   ASSERT_EQ(templateTypes.size(), 2);
 
-  // i32 should be normalized to ~lib/number/I32
-  EXPECT_EQ(templateTypes[0], "~lib/number/I32");
+  EXPECT_EQ(templateTypes[0], "i32");
 
   // ~lib/string/String should remain unchanged
   EXPECT_EQ(templateTypes[1], "~lib/string/String");
@@ -225,14 +222,16 @@ TEST(TestVariableInfo, TestTemplateTypes) {
 TEST(TestVariableInfo, TestGlobalTypes) {
   VariableInfo variableInfo;
 
-  variableInfo.addGlobalType("counter", "i32");
-  variableInfo.addGlobalType("message", "~lib/string/String");
+  variableInfo.addGlobalType("counter", "i32", 0);
+  variableInfo.addGlobalType("message", "~lib/string/String", 1);
 
   const VariableInfo::GlobalTypes &globalTypes = variableInfo.getGlobalTypes();
 
   ASSERT_EQ(globalTypes.size(), 2);
-  EXPECT_EQ(globalTypes.at("counter"), "~lib/number/I32");
-  EXPECT_EQ(globalTypes.at("message"), "~lib/string/String");
+  EXPECT_EQ(globalTypes.at("counter").typeName, "i32");
+  EXPECT_FALSE(globalTypes.at("counter").nullable);
+  EXPECT_EQ(globalTypes.at("message").typeName, "~lib/string/String");
+  EXPECT_TRUE(globalTypes.at("message").nullable);
 }
 
 TEST(TestVariableInfo, TestAddParameter) {
@@ -254,11 +253,11 @@ TEST(TestVariableInfo, TestAddParameter) {
   const std::vector<LocalInfo> &calcParams = calculateSum.getParameters();
   ASSERT_EQ(calcParams.size(), 2);
   EXPECT_EQ(calcParams[0].getName(), "a");
-  EXPECT_EQ(calcParams[0].getType(), "~lib/number/I32");
+  EXPECT_EQ(calcParams[0].getType(), "i32");
   EXPECT_EQ(calcParams[0].getIndex(), 0);
   EXPECT_FALSE(calcParams[0].isNullable());
   EXPECT_EQ(calcParams[1].getName(), "b");
-  EXPECT_EQ(calcParams[1].getType(), "~lib/number/I32");
+  EXPECT_EQ(calcParams[1].getType(), "i32");
   EXPECT_EQ(calcParams[1].getIndex(), 1);
   EXPECT_FALSE(calcParams[1].isNullable());
 
@@ -283,11 +282,11 @@ TEST(TestVariableInfo, TestAddParameter) {
   const std::vector<LocalInfo> &multiplyParams = multiply.getParameters();
   ASSERT_EQ(multiplyParams.size(), 2);
   EXPECT_EQ(multiplyParams[0].getName(), "x");
-  EXPECT_EQ(multiplyParams[0].getType(), "~lib/number/I32");
+  EXPECT_EQ(multiplyParams[0].getType(), "i32");
   EXPECT_EQ(multiplyParams[0].getIndex(), 0);
   EXPECT_FALSE(multiplyParams[0].isNullable());
   EXPECT_EQ(multiplyParams[1].getName(), "y");
-  EXPECT_EQ(multiplyParams[1].getType(), "~lib/number/I32");
+  EXPECT_EQ(multiplyParams[1].getType(), "i32");
   EXPECT_EQ(multiplyParams[1].getIndex(), 1);
   EXPECT_FALSE(multiplyParams[1].isNullable());
 }

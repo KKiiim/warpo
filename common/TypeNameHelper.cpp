@@ -18,12 +18,11 @@
 namespace warpo {
 
 const std::unordered_map<std::string_view, std::string_view> TypeNameHelper::basicTypeMap = {
-    {"i32", "~lib/number/I32"},   {"u32", "~lib/number/U32"},      {"i64", "~lib/number/I64"},
-    {"u64", "~lib/number/U64"},   {"f32", "~lib/number/F32"},      {"f64", "~lib/number/F64"},
-    {"i8", "~lib/number/I8"},     {"u8", "~lib/number/U8"},        {"i16", "~lib/number/I16"},
-    {"u16", "~lib/number/U16"},   {"isize", "~lib/number/Isize"},  {"usize", "~lib/number/Usize"},
-    {"bool", "~lib/number/Bool"}, {"boolean", "~lib/number/Bool"},
-};
+    {"~lib/number/I32", "i32"},  {"~lib/number/U32", "u32"},     {"~lib/number/I64", "i64"},
+    {"~lib/number/U64", "u64"},  {"~lib/number/F32", "f32"},     {"~lib/number/F64", "f64"},
+    {"~lib/number/I8", "i8"},    {"~lib/number/U8", "u8"},       {"~lib/number/I16", "i16"},
+    {"~lib/number/U16", "u16"},  {"~lib/number/Isize", "isize"}, {"~lib/number/Usize", "usize"},
+    {"~lib/number/Bool", "bool"}};
 
 std::string_view TypeNameHelper::normalizeTypeName(std::string_view const type) noexcept {
   auto const it = basicTypeMap.find(type);

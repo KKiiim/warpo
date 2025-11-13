@@ -1374,8 +1374,9 @@ export class Compiler extends DiagnosticEmitter {
       }
     }
 
-    let internalName = global.internalName;
-    addGlobal(internalName, type.toString());
+    const internalName = global.internalName;
+    const fullTypeName = type.toStringWithoutNullable();
+    addGlobal(internalName, fullTypeName, type.isNullableReference);
     if (initializeInStart) { // initialize to mutable zero and set the actual value in start
       if (isDeclaredInline) {
         this.error(
