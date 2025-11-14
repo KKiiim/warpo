@@ -8,6 +8,7 @@ callees
 ccache
 changetype
 choco
+cntvct
 copysign
 cplusplus
 cppcoreguidelines
@@ -39,9 +40,12 @@ Motoren
 msvc
 NOLINTNEXTLINE
 nontrapping
+pftrace
 popcnt
 popcntll
 popcountll
+protozero
+rdtsc
 refinalization
 refinalize
 RELWITHDEBINFO
