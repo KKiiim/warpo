@@ -8,21 +8,21 @@
   (rec
     ;; CHECK:      (rec
     ;; CHECK-NEXT:  (type $A (sub (struct)))
-    (type $A (sub (descriptor $A.desc (struct))))
+    (type $A (sub (descriptor $A.desc) (struct)))
     ;; CHECK:       (type $A.desc (sub (struct)))
-    (type $A.desc (sub (describes $A (struct))))
+    (type $A.desc (sub (describes $A) (struct)))
     ;; CHECK:       (type $B (sub (struct)))
-    (type $B (sub $A (descriptor $B.desc (struct))))
+    (type $B (sub $A (descriptor $B.desc) (struct)))
     ;; CHECK:       (type $B.desc (sub (struct)))
-    (type $B.desc (sub $A.desc (describes $B (struct))))
+    (type $B.desc (sub $A.desc (describes $B) (struct)))
   )
 
   ;; CHECK:      (global $A (ref null $A) (struct.new_default $A))
-  (global $A (ref null $A) (struct.new $A (struct.new $A.desc)))
+  (global $A (ref null $A) (struct.new_desc $A (struct.new $A.desc)))
   ;; CHECK:      (global $A.desc (ref null $A.desc) (struct.new_default $A.desc))
   (global $A.desc (ref null $A.desc) (struct.new $A.desc))
   ;; CHECK:      (global $B (ref null $B) (struct.new_default $B))
-  (global $B (ref null $B) (struct.new $B (struct.new $B.desc)))
+  (global $B (ref null $B) (struct.new_desc $B (struct.new $B.desc)))
   ;; CHECK:      (global $B.desc (ref null $B.desc) (struct.new_default $B.desc))
   (global $B.desc (ref null $B.desc) (struct.new $B.desc))
 )
@@ -31,18 +31,18 @@
 (module
   (rec
     ;; CHECK:      (rec
-    ;; CHECK-NEXT:  (type $A (sub (descriptor $A.desc (struct))))
-    (type $A (sub (descriptor $A.desc (struct))))
-    ;; CHECK:       (type $A.desc (sub (describes $A (struct))))
-    (type $A.desc (sub (describes $A (struct))))
+    ;; CHECK-NEXT:  (type $A (sub (descriptor $A.desc) (struct)))
+    (type $A (sub (descriptor $A.desc) (struct)))
+    ;; CHECK:       (type $A.desc (sub (describes $A) (struct)))
+    (type $A.desc (sub (describes $A) (struct)))
   )
 
   ;; CHECK:      (global $A.desc (ref null (exact $A.desc)) (struct.new_default $A.desc))
   (global $A.desc (ref null (exact $A.desc)) (struct.new $A.desc))
-  ;; CHECK:      (global $A (ref null $A) (struct.new_default $A
+  ;; CHECK:      (global $A (ref null $A) (struct.new_default_desc $A
   ;; CHECK-NEXT:  (global.get $A.desc)
   ;; CHECK-NEXT: ))
-  (global $A (ref null $A) (struct.new $A (global.get $A.desc)))
+  (global $A (ref null $A) (struct.new_desc $A (global.get $A.desc)))
 )
 
 ;; But traps on null descriptors inside a function can be fixed up, so they
@@ -51,9 +51,9 @@
   (rec
     ;; CHECK:      (rec
     ;; CHECK-NEXT:  (type $A (sub (struct)))
-    (type $A (sub (descriptor $A.desc (struct))))
+    (type $A (sub (descriptor $A.desc) (struct)))
     ;; CHECK:       (type $A.desc (sub (struct)))
-    (type $A.desc (sub (describes $A (struct))))
+    (type $A.desc (sub (describes $A) (struct)))
   )
 
   ;; CHECK:       (type $2 (func (param (ref null (exact $A.desc)))))
@@ -73,7 +73,7 @@
   ;; CHECK-NEXT: )
   (func $nullable-desc (param $A.desc (ref null (exact $A.desc)))
     (drop
-      (struct.new $A
+      (struct.new_desc $A
         (local.get $A.desc)
       )
     )
@@ -85,9 +85,9 @@
   (rec
     ;; CHECK:      (rec
     ;; CHECK-NEXT:  (type $A (sub (struct)))
-    (type $A (sub (descriptor $A.desc (struct))))
+    (type $A (sub (descriptor $A.desc) (struct)))
     ;; CHECK:       (type $A.desc (sub (struct)))
-    (type $A.desc (sub (describes $A (struct))))
+    (type $A.desc (sub (describes $A) (struct)))
   )
   ;; CHECK:       (type $2 (func (param (ref (exact $A.desc)))))
 
@@ -101,7 +101,7 @@
   (func $nonnullable-desc (param $A.desc (ref (exact $A.desc)))
     (drop
       ;; Now the descriptor is non-null.
-      (struct.new $A
+      (struct.new_desc $A
         (local.get $A.desc)
       )
     )
@@ -113,14 +113,14 @@
 (module
   (rec
     ;; CHECK:      (rec
-    ;; CHECK-NEXT:  (type $A (sub (descriptor $A.desc (struct))))
-    (type $A (sub (descriptor $A.desc (struct))))
-    ;; CHECK:       (type $A.desc (sub (describes $A (struct))))
-    (type $A.desc (sub (describes $A (struct))))
-    ;; CHECK:       (type $B (sub (descriptor $B.desc (struct))))
-    (type $B (sub $A (descriptor $B.desc (struct))))
-    ;; CHECK:       (type $B.desc (sub (describes $B (struct))))
-    (type $B.desc (sub $A.desc (describes $B (struct))))
+    ;; CHECK-NEXT:  (type $A (sub (descriptor $A.desc) (struct)))
+    (type $A (sub (descriptor $A.desc) (struct)))
+    ;; CHECK:       (type $A.desc (sub (describes $A) (struct)))
+    (type $A.desc (sub (describes $A) (struct)))
+    ;; CHECK:       (type $B (sub (descriptor $B.desc) (struct)))
+    (type $B (sub $A (descriptor $B.desc) (struct)))
+    ;; CHECK:       (type $B.desc (sub (describes $B) (struct)))
+    (type $B.desc (sub $A.desc (describes $B) (struct)))
   )
 
   ;; CHECK:       (type $4 (func (param (ref $A) (ref $B))))
@@ -166,17 +166,17 @@
   (rec
     ;; CHECK:      (rec
     ;; CHECK-NEXT:  (type $A (sub (struct)))
-    (type $A (sub (descriptor $A.desc (struct))))
+    (type $A (sub (descriptor $A.desc) (struct)))
     ;; CHECK:       (type $A.desc (sub (struct)))
-    (type $A.desc (sub (describes $A (struct))))
+    (type $A.desc (sub (describes $A) (struct)))
     ;; CHECK:       (type $B (sub $A (struct)))
-    (type $B (sub $A (descriptor $B.desc (struct))))
+    (type $B (sub $A (descriptor $B.desc) (struct)))
     ;; CHECK:       (type $B.desc (sub (struct)))
-    (type $B.desc (sub $A.desc (describes $B (struct))))
+    (type $B.desc (sub $A.desc (describes $B) (struct)))
   )
 
   ;; CHECK:      (global $B (ref null $B) (struct.new_default $B))
-  (global $B (ref null $B) (struct.new $B (struct.new $B.desc)))
+  (global $B (ref null $B) (struct.new_desc $B (struct.new $B.desc)))
   ;; CHECK:      (global $A (ref null $A) (global.get $B))
   (global $A (ref null $A) (global.get $B))
   ;; CHECK:      (global $A.desc (ref null $A.desc) (ref.null none))
@@ -191,22 +191,22 @@
 (module
   (rec
     ;; CHECK:      (rec
-    ;; CHECK-NEXT:  (type $A (sub (descriptor $A.desc (struct))))
-    (type $A (sub (descriptor $A.desc (struct))))
-    ;; CHECK:       (type $A.desc (sub (describes $A (struct))))
-    (type $A.desc (sub (describes $A (struct))))
-    ;; CHECK:       (type $B (sub $A (descriptor $B.desc (struct))))
-    (type $B (sub $A (descriptor $B.desc (struct))))
-    ;; CHECK:       (type $B.desc (sub $A.desc (describes $B (struct))))
-    (type $B.desc (sub $A.desc (describes $B (struct))))
+    ;; CHECK-NEXT:  (type $A (sub (descriptor $A.desc) (struct)))
+    (type $A (sub (descriptor $A.desc) (struct)))
+    ;; CHECK:       (type $A.desc (sub (describes $A) (struct)))
+    (type $A.desc (sub (describes $A) (struct)))
+    ;; CHECK:       (type $B (sub $A (descriptor $B.desc) (struct)))
+    (type $B (sub $A (descriptor $B.desc) (struct)))
+    ;; CHECK:       (type $B.desc (sub $A.desc (describes $B) (struct)))
+    (type $B.desc (sub $A.desc (describes $B) (struct)))
   )
 
   ;; CHECK:       (type $4 (func (param (ref $A))))
 
-  ;; CHECK:      (global $B (ref null $B) (struct.new_default $B
+  ;; CHECK:      (global $B (ref null $B) (struct.new_default_desc $B
   ;; CHECK-NEXT:  (struct.new_default $B.desc)
   ;; CHECK-NEXT: ))
-  (global $B (ref null $B) (struct.new $B (struct.new $B.desc)))
+  (global $B (ref null $B) (struct.new_desc $B (struct.new $B.desc)))
   ;; CHECK:      (global $A (ref null $A) (global.get $B))
   (global $A (ref null $A) (global.get $B))
   ;; CHECK:      (global $A.desc (ref null $A.desc) (ref.null none))
@@ -237,21 +237,21 @@
   (rec
     ;; CHECK:      (rec
     ;; CHECK-NEXT:  (type $A (sub (struct)))
-    (type $A (sub (descriptor $A.desc (struct))))
+    (type $A (sub (descriptor $A.desc) (struct)))
     ;; CHECK:       (type $A.desc (sub (struct)))
-    (type $A.desc (sub (describes $A (struct))))
-    ;; CHECK:       (type $B (sub $A (descriptor $B.desc (struct))))
-    (type $B (sub $A (descriptor $B.desc (struct))))
-    ;; CHECK:       (type $B.desc (sub (describes $B (struct))))
-    (type $B.desc (sub $A.desc (describes $B (struct))))
+    (type $A.desc (sub (describes $A) (struct)))
+    ;; CHECK:       (type $B (sub $A (descriptor $B.desc) (struct)))
+    (type $B (sub $A (descriptor $B.desc) (struct)))
+    ;; CHECK:       (type $B.desc (sub (describes $B) (struct)))
+    (type $B.desc (sub $A.desc (describes $B) (struct)))
   )
 
   ;; CHECK:       (type $4 (func (param (ref $B))))
 
-  ;; CHECK:      (global $B (ref null $B) (struct.new_default $B
+  ;; CHECK:      (global $B (ref null $B) (struct.new_default_desc $B
   ;; CHECK-NEXT:  (struct.new_default $B.desc)
   ;; CHECK-NEXT: ))
-  (global $B (ref null $B) (struct.new $B (struct.new $B.desc)))
+  (global $B (ref null $B) (struct.new_desc $B (struct.new $B.desc)))
   ;; CHECK:      (global $A (ref null $A) (global.get $B))
   (global $A (ref null $A) (global.get $B))
   ;; CHECK:      (global $A.desc (ref null $A.desc) (ref.null none))
@@ -282,13 +282,13 @@
   (rec
     ;; CHECK:      (rec
     ;; CHECK-NEXT:  (type $A (sub (struct)))
-    (type $A (sub (descriptor $A.desc (struct))))
+    (type $A (sub (descriptor $A.desc) (struct)))
     ;; CHECK:       (type $A.desc (sub (struct)))
-    (type $A.desc (sub (describes $A (struct))))
+    (type $A.desc (sub (describes $A) (struct)))
     ;; CHECK:       (type $B (sub (struct)))
-    (type $B (sub $A (descriptor $B.desc (struct))))
+    (type $B (sub $A (descriptor $B.desc) (struct)))
     ;; CHECK:       (type $B.desc (sub $A.desc (struct)))
-    (type $B.desc (sub $A.desc (describes $B (struct))))
+    (type $B.desc (sub $A.desc (describes $B) (struct)))
   )
 
   ;; CHECK:      (global $B.desc (ref null $B.desc) (ref.null none))
@@ -307,14 +307,14 @@
 (module
   (rec
     ;; CHECK:      (rec
-    ;; CHECK-NEXT:  (type $A (sub (descriptor $A.desc (struct))))
-    (type $A (sub (descriptor $A.desc (struct))))
-    ;; CHECK:       (type $A.desc (sub (describes $A (struct))))
-    (type $A.desc (sub (describes $A (struct))))
-    ;; CHECK:       (type $B (sub $A (descriptor $B.desc (struct))))
-    (type $B (sub $A (descriptor $B.desc (struct))))
-    ;; CHECK:       (type $B.desc (sub $A.desc (describes $B (struct))))
-    (type $B.desc (sub $A.desc (describes $B (struct))))
+    ;; CHECK-NEXT:  (type $A (sub (descriptor $A.desc) (struct)))
+    (type $A (sub (descriptor $A.desc) (struct)))
+    ;; CHECK:       (type $A.desc (sub (describes $A) (struct)))
+    (type $A.desc (sub (describes $A) (struct)))
+    ;; CHECK:       (type $B (sub $A (descriptor $B.desc) (struct)))
+    (type $B (sub $A (descriptor $B.desc) (struct)))
+    ;; CHECK:       (type $B.desc (sub $A.desc (describes $B) (struct)))
+    (type $B.desc (sub $A.desc (describes $B) (struct)))
   )
   ;; CHECK:       (type $4 (func (param (ref $A))))
 
@@ -349,14 +349,14 @@
 (module
   (rec
     ;; CHECK:      (rec
-    ;; CHECK-NEXT:  (type $A (sub (descriptor $A.desc (struct))))
-    (type $A (sub (descriptor $A.desc (struct))))
-    ;; CHECK:       (type $A.desc (sub (describes $A (struct))))
-    (type $A.desc (sub (describes $A (struct))))
-    ;; CHECK:       (type $B (sub $A (descriptor $B.desc (struct))))
-    (type $B (sub $A (descriptor $B.desc (struct))))
-    ;; CHECK:       (type $B.desc (sub $A.desc (describes $B (struct))))
-    (type $B.desc (sub $A.desc (describes $B (struct))))
+    ;; CHECK-NEXT:  (type $A (sub (descriptor $A.desc) (struct)))
+    (type $A (sub (descriptor $A.desc) (struct)))
+    ;; CHECK:       (type $A.desc (sub (describes $A) (struct)))
+    (type $A.desc (sub (describes $A) (struct)))
+    ;; CHECK:       (type $B (sub $A (descriptor $B.desc) (struct)))
+    (type $B (sub $A (descriptor $B.desc) (struct)))
+    ;; CHECK:       (type $B.desc (sub $A.desc (describes $B) (struct)))
+    (type $B.desc (sub $A.desc (describes $B) (struct)))
   )
   ;; CHECK:       (type $4 (func (param (ref $B))))
 
@@ -390,22 +390,22 @@
 (module
   (rec
     ;; CHECK:      (rec
-    ;; CHECK-NEXT:  (type $top (sub (descriptor $top.desc (struct))))
-    (type $top (sub (descriptor $top.desc (struct))))
-    ;; CHECK:       (type $bot (sub $top (descriptor $bot.desc (struct))))
-    (type $bot (sub $top (descriptor $bot.desc (struct))))
-    ;; CHECK:       (type $top.desc (sub (describes $top (struct))))
-    (type $top.desc (sub (describes $top (struct))))
-    ;; CHECK:       (type $bot.desc (sub $top.desc (describes $bot (struct))))
-    (type $bot.desc (sub $top.desc (describes $bot (struct))))
+    ;; CHECK-NEXT:  (type $top (sub (descriptor $top.desc) (struct)))
+    (type $top (sub (descriptor $top.desc) (struct)))
+    ;; CHECK:       (type $bot (sub $top (descriptor $bot.desc) (struct)))
+    (type $bot (sub $top (descriptor $bot.desc) (struct)))
+    ;; CHECK:       (type $top.desc (sub (describes $top) (struct)))
+    (type $top.desc (sub (describes $top) (struct)))
+    ;; CHECK:       (type $bot.desc (sub $top.desc (describes $bot) (struct)))
+    (type $bot.desc (sub $top.desc (describes $bot) (struct)))
   )
 
   ;; CHECK:       (type $4 (func (param anyref (ref $top.desc))))
 
-  ;; CHECK:      (global $bot-sub-any anyref (struct.new_default $bot
+  ;; CHECK:      (global $bot-sub-any anyref (struct.new_default_desc $bot
   ;; CHECK-NEXT:  (struct.new_default $bot.desc)
   ;; CHECK-NEXT: ))
-  (global $bot-sub-any anyref (struct.new $bot (struct.new $bot.desc)))
+  (global $bot-sub-any anyref (struct.new_desc $bot (struct.new $bot.desc)))
 
   ;; CHECK:      (func $ref.cast_desc (type $4) (param $any anyref) (param $top.desc (ref $top.desc))
   ;; CHECK-NEXT:  (drop
@@ -431,19 +431,19 @@
 (module
   (rec
     ;; CHECK:      (rec
-    ;; CHECK-NEXT:  (type $top (sub (descriptor $top.desc (struct))))
-    (type $top (sub (descriptor $top.desc (struct))))
+    ;; CHECK-NEXT:  (type $top (sub (descriptor $top.desc) (struct)))
+    (type $top (sub (descriptor $top.desc) (struct)))
     ;; CHECK:       (type $bot (sub (struct)))
-    (type $bot (sub $top (descriptor $bot.desc (struct))))
-    ;; CHECK:       (type $top.desc (sub (describes $top (struct))))
-    (type $top.desc (sub (describes $top (struct))))
-    (type $bot.desc (sub $top.desc (describes $bot (struct))))
+    (type $bot (sub $top (descriptor $bot.desc) (struct)))
+    ;; CHECK:       (type $top.desc (sub (describes $top) (struct)))
+    (type $top.desc (sub (describes $top) (struct)))
+    (type $bot.desc (sub $top.desc (describes $bot) (struct)))
   )
 
   ;; CHECK:       (type $3 (func (param anyref (ref (exact $top.desc)))))
 
   ;; CHECK:      (global $bot-sub-any anyref (struct.new_default $bot))
-  (global $bot-sub-any anyref (struct.new $bot (struct.new $bot.desc)))
+  (global $bot-sub-any anyref (struct.new_desc $bot (struct.new $bot.desc)))
 
   ;; CHECK:      (func $ref.cast_desc (type $3) (param $any anyref) (param $top.desc (ref (exact $top.desc)))
   ;; CHECK-NEXT:  (drop
@@ -469,22 +469,22 @@
 (module
   (rec
     ;; CHECK:      (rec
-    ;; CHECK-NEXT:  (type $top (sub (descriptor $top.desc (struct))))
-    (type $top (sub (descriptor $top.desc (struct))))
-    ;; CHECK:       (type $bot (sub $top (descriptor $bot.desc (struct))))
-    (type $bot (sub $top (descriptor $bot.desc (struct))))
-    ;; CHECK:       (type $top.desc (sub (describes $top (struct))))
-    (type $top.desc (sub (describes $top (struct))))
-    ;; CHECK:       (type $bot.desc (sub $top.desc (describes $bot (struct))))
-    (type $bot.desc (sub $top.desc (describes $bot (struct))))
+    ;; CHECK-NEXT:  (type $top (sub (descriptor $top.desc) (struct)))
+    (type $top (sub (descriptor $top.desc) (struct)))
+    ;; CHECK:       (type $bot (sub $top (descriptor $bot.desc) (struct)))
+    (type $bot (sub $top (descriptor $bot.desc) (struct)))
+    ;; CHECK:       (type $top.desc (sub (describes $top) (struct)))
+    (type $top.desc (sub (describes $top) (struct)))
+    ;; CHECK:       (type $bot.desc (sub $top.desc (describes $bot) (struct)))
+    (type $bot.desc (sub $top.desc (describes $bot) (struct)))
   )
 
   ;; CHECK:       (type $4 (func (param anyref (ref $top.desc))))
 
-  ;; CHECK:      (global $bot-sub-any anyref (struct.new_default $bot
+  ;; CHECK:      (global $bot-sub-any anyref (struct.new_default_desc $bot
   ;; CHECK-NEXT:  (struct.new_default $bot.desc)
   ;; CHECK-NEXT: ))
-  (global $bot-sub-any anyref (struct.new $bot (struct.new $bot.desc)))
+  (global $bot-sub-any anyref (struct.new_desc $bot (struct.new $bot.desc)))
 
   ;; CHECK:      (func $br_on_cast_desc (type $4) (param $any anyref) (param $top.desc (ref $top.desc))
   ;; CHECK-NEXT:  (drop
@@ -514,19 +514,19 @@
 (module
   (rec
     ;; CHECK:      (rec
-    ;; CHECK-NEXT:  (type $top (sub (descriptor $top.desc (struct))))
-    (type $top (sub (descriptor $top.desc (struct))))
+    ;; CHECK-NEXT:  (type $top (sub (descriptor $top.desc) (struct)))
+    (type $top (sub (descriptor $top.desc) (struct)))
     ;; CHECK:       (type $bot (sub (struct)))
-    (type $bot (sub $top (descriptor $bot.desc (struct))))
-    ;; CHECK:       (type $top.desc (sub (describes $top (struct))))
-    (type $top.desc (sub (describes $top (struct))))
-    (type $bot.desc (sub $top.desc (describes $bot (struct))))
+    (type $bot (sub $top (descriptor $bot.desc) (struct)))
+    ;; CHECK:       (type $top.desc (sub (describes $top) (struct)))
+    (type $top.desc (sub (describes $top) (struct)))
+    (type $bot.desc (sub $top.desc (describes $bot) (struct)))
   )
 
   ;; CHECK:       (type $3 (func (param anyref (ref (exact $top.desc)))))
 
   ;; CHECK:      (global $bot-sub-any anyref (struct.new_default $bot))
-  (global $bot-sub-any anyref (struct.new $bot (struct.new $bot.desc)))
+  (global $bot-sub-any anyref (struct.new_desc $bot (struct.new $bot.desc)))
 
   ;; CHECK:      (func $br_on_cast_desc (type $3) (param $any anyref) (param $top.desc (ref (exact $top.desc)))
   ;; CHECK-NEXT:  (drop
@@ -556,22 +556,22 @@
 (module
   (rec
     ;; CHECK:      (rec
-    ;; CHECK-NEXT:  (type $top (sub (descriptor $top.desc (struct))))
-    (type $top (sub (descriptor $top.desc (struct))))
-    ;; CHECK:       (type $bot (sub $top (descriptor $bot.desc (struct))))
-    (type $bot (sub $top (descriptor $bot.desc (struct))))
-    ;; CHECK:       (type $top.desc (sub (describes $top (struct))))
-    (type $top.desc (sub (describes $top (struct))))
-    ;; CHECK:       (type $bot.desc (sub $top.desc (describes $bot (struct))))
-    (type $bot.desc (sub $top.desc (describes $bot (struct))))
+    ;; CHECK-NEXT:  (type $top (sub (descriptor $top.desc) (struct)))
+    (type $top (sub (descriptor $top.desc) (struct)))
+    ;; CHECK:       (type $bot (sub $top (descriptor $bot.desc) (struct)))
+    (type $bot (sub $top (descriptor $bot.desc) (struct)))
+    ;; CHECK:       (type $top.desc (sub (describes $top) (struct)))
+    (type $top.desc (sub (describes $top) (struct)))
+    ;; CHECK:       (type $bot.desc (sub $top.desc (describes $bot) (struct)))
+    (type $bot.desc (sub $top.desc (describes $bot) (struct)))
   )
 
   ;; CHECK:       (type $4 (func (param anyref (ref $top.desc))))
 
-  ;; CHECK:      (global $bot-sub-any anyref (struct.new_default $bot
+  ;; CHECK:      (global $bot-sub-any anyref (struct.new_default_desc $bot
   ;; CHECK-NEXT:  (struct.new_default $bot.desc)
   ;; CHECK-NEXT: ))
-  (global $bot-sub-any anyref (struct.new $bot (struct.new $bot.desc)))
+  (global $bot-sub-any anyref (struct.new_desc $bot (struct.new $bot.desc)))
 
   ;; CHECK:      (func $br_on_cast_desc_fail (type $4) (param $any anyref) (param $top.desc (ref $top.desc))
   ;; CHECK-NEXT:  (drop
@@ -601,19 +601,19 @@
 (module
   (rec
     ;; CHECK:      (rec
-    ;; CHECK-NEXT:  (type $top (sub (descriptor $top.desc (struct))))
-    (type $top (sub (descriptor $top.desc (struct))))
+    ;; CHECK-NEXT:  (type $top (sub (descriptor $top.desc) (struct)))
+    (type $top (sub (descriptor $top.desc) (struct)))
     ;; CHECK:       (type $bot (sub (struct)))
-    (type $bot (sub $top (descriptor $bot.desc (struct))))
-    ;; CHECK:       (type $top.desc (sub (describes $top (struct))))
-    (type $top.desc (sub (describes $top (struct))))
-    (type $bot.desc (sub $top.desc (describes $bot (struct))))
+    (type $bot (sub $top (descriptor $bot.desc) (struct)))
+    ;; CHECK:       (type $top.desc (sub (describes $top) (struct)))
+    (type $top.desc (sub (describes $top) (struct)))
+    (type $bot.desc (sub $top.desc (describes $bot) (struct)))
   )
 
   ;; CHECK:       (type $3 (func (param anyref (ref (exact $top.desc)))))
 
   ;; CHECK:      (global $bot-sub-any anyref (struct.new_default $bot))
-  (global $bot-sub-any anyref (struct.new $bot (struct.new $bot.desc)))
+  (global $bot-sub-any anyref (struct.new_desc $bot (struct.new $bot.desc)))
 
   ;; CHECK:      (func $br_on_cast_desc_fail (type $3) (param $any anyref) (param $top.desc (ref (exact $top.desc)))
   ;; CHECK-NEXT:  (drop
@@ -650,27 +650,27 @@
 (module
   (rec
     ;; CHECK:      (rec
-    ;; CHECK-NEXT:  (type $top (sub (descriptor $top.desc (struct))))
-    (type $top (sub (descriptor $top.desc (struct))))
-    ;; CHECK:       (type $mid (sub $top (descriptor $mid.desc (struct))))
-    (type $mid (sub $top (descriptor $mid.desc (struct))))
-    ;; CHECK:       (type $bot (sub $mid (descriptor $bot.desc (struct))))
-    (type $bot (sub $mid (descriptor $bot.desc (struct))))
-    ;; CHECK:       (type $top.desc (sub (describes $top (struct))))
-    (type $top.desc (sub (describes $top (struct))))
-    ;; CHECK:       (type $mid.desc (sub $top.desc (describes $mid (struct))))
-    (type $mid.desc (sub $top.desc (describes $mid (struct))))
-    ;; CHECK:       (type $bot.desc (sub $mid.desc (describes $bot (struct))))
-    (type $bot.desc (sub $mid.desc (describes $bot (struct))))
+    ;; CHECK-NEXT:  (type $top (sub (descriptor $top.desc) (struct)))
+    (type $top (sub (descriptor $top.desc) (struct)))
+    ;; CHECK:       (type $mid (sub $top (descriptor $mid.desc) (struct)))
+    (type $mid (sub $top (descriptor $mid.desc) (struct)))
+    ;; CHECK:       (type $bot (sub $mid (descriptor $bot.desc) (struct)))
+    (type $bot (sub $mid (descriptor $bot.desc) (struct)))
+    ;; CHECK:       (type $top.desc (sub (describes $top) (struct)))
+    (type $top.desc (sub (describes $top) (struct)))
+    ;; CHECK:       (type $mid.desc (sub $top.desc (describes $mid) (struct)))
+    (type $mid.desc (sub $top.desc (describes $mid) (struct)))
+    ;; CHECK:       (type $bot.desc (sub $mid.desc (describes $bot) (struct)))
+    (type $bot.desc (sub $mid.desc (describes $bot) (struct)))
   )
   ;; CHECK:       (type $6 (func (param (ref $top))))
 
   ;; CHECK:      (global $bot-mid-desc (ref null $mid.desc) (struct.new_default $bot.desc))
   (global $bot-mid-desc (ref null $mid.desc) (struct.new $bot.desc))
-  ;; CHECK:      (global $bot-top (ref null $top) (struct.new_default $bot
+  ;; CHECK:      (global $bot-top (ref null $top) (struct.new_default_desc $bot
   ;; CHECK-NEXT:  (ref.null none)
   ;; CHECK-NEXT: ))
-  (global $bot-top (ref null $top) (struct.new $bot (ref.null none)))
+  (global $bot-top (ref null $top) (struct.new_desc $bot (ref.null none)))
 
   ;; CHECK:      (func $require-desc (type $6) (param $top (ref $top))
   ;; CHECK-NEXT:  (drop
@@ -703,25 +703,25 @@
 (module
   (rec
     ;; CHECK:      (rec
-    ;; CHECK-NEXT:  (type $top (sub (descriptor $top.desc (struct))))
-    (type $top (sub (descriptor $top.desc (struct))))
-    ;; CHECK:       (type $mid (sub $top (descriptor $mid.desc (struct))))
-    (type $mid (sub $top (descriptor $mid.desc (struct))))
-    ;; CHECK:       (type $bot (sub $mid (descriptor $bot.desc (struct))))
-    (type $bot (sub $mid (descriptor $bot.desc (struct))))
-    ;; CHECK:       (type $top.desc (sub (describes $top (struct))))
-    (type $top.desc (sub (describes $top (struct))))
-    ;; CHECK:       (type $mid.desc (sub $top.desc (describes $mid (struct))))
-    (type $mid.desc (sub $top.desc (describes $mid (struct))))
-    ;; CHECK:       (type $bot.desc (sub $mid.desc (describes $bot (struct))))
-    (type $bot.desc (sub $mid.desc (describes $bot (struct))))
+    ;; CHECK-NEXT:  (type $top (sub (descriptor $top.desc) (struct)))
+    (type $top (sub (descriptor $top.desc) (struct)))
+    ;; CHECK:       (type $mid (sub $top (descriptor $mid.desc) (struct)))
+    (type $mid (sub $top (descriptor $mid.desc) (struct)))
+    ;; CHECK:       (type $bot (sub $mid (descriptor $bot.desc) (struct)))
+    (type $bot (sub $mid (descriptor $bot.desc) (struct)))
+    ;; CHECK:       (type $top.desc (sub (describes $top) (struct)))
+    (type $top.desc (sub (describes $top) (struct)))
+    ;; CHECK:       (type $mid.desc (sub $top.desc (describes $mid) (struct)))
+    (type $mid.desc (sub $top.desc (describes $mid) (struct)))
+    ;; CHECK:       (type $bot.desc (sub $mid.desc (describes $bot) (struct)))
+    (type $bot.desc (sub $mid.desc (describes $bot) (struct)))
   )
   ;; CHECK:       (type $6 (func (param (ref $top))))
 
-  ;; CHECK:      (global $bot-top (ref null $top) (struct.new_default $bot
+  ;; CHECK:      (global $bot-top (ref null $top) (struct.new_default_desc $bot
   ;; CHECK-NEXT:  (ref.null none)
   ;; CHECK-NEXT: ))
-  (global $bot-top (ref null $top) (struct.new $bot (ref.null none)))
+  (global $bot-top (ref null $top) (struct.new_desc $bot (ref.null none)))
   ;; CHECK:      (global $bot-mid-desc (ref null $mid.desc) (struct.new_default $bot.desc))
   (global $bot-mid-desc (ref null $mid.desc) (struct.new $bot.desc))
 
@@ -756,24 +756,24 @@
   (rec
     ;; CHECK:      (rec
     ;; CHECK-NEXT:  (type $top (sub (struct)))
-    (type $top (sub (descriptor $top.desc (struct))))
-    ;; CHECK:       (type $mid (sub $top (descriptor $mid.desc (struct))))
-    (type $mid (sub $top (descriptor $mid.desc (struct))))
-    ;; CHECK:       (type $bot (sub $mid (descriptor $bot.desc (struct))))
-    (type $bot (sub $mid (descriptor $bot.desc (struct))))
+    (type $top (sub (descriptor $top.desc) (struct)))
+    ;; CHECK:       (type $mid (sub $top (descriptor $mid.desc) (struct)))
+    (type $mid (sub $top (descriptor $mid.desc) (struct)))
+    ;; CHECK:       (type $bot (sub $mid (descriptor $bot.desc) (struct)))
+    (type $bot (sub $mid (descriptor $bot.desc) (struct)))
     ;; CHECK:       (type $top.desc (sub (struct)))
-    (type $top.desc (sub (describes $top (struct))))
-    ;; CHECK:       (type $mid.desc (sub (describes $mid (struct))))
-    (type $mid.desc (sub $top.desc (describes $mid (struct))))
-    ;; CHECK:       (type $bot.desc (sub $mid.desc (describes $bot (struct))))
-    (type $bot.desc (sub $mid.desc (describes $bot (struct))))
+    (type $top.desc (sub (describes $top) (struct)))
+    ;; CHECK:       (type $mid.desc (sub (describes $mid) (struct)))
+    (type $mid.desc (sub $top.desc (describes $mid) (struct)))
+    ;; CHECK:       (type $bot.desc (sub $mid.desc (describes $bot) (struct)))
+    (type $bot.desc (sub $mid.desc (describes $bot) (struct)))
   )
   ;; CHECK:       (type $6 (func (param (ref $bot))))
 
-  ;; CHECK:      (global $bot-top (ref null $top) (struct.new_default $bot
+  ;; CHECK:      (global $bot-top (ref null $top) (struct.new_default_desc $bot
   ;; CHECK-NEXT:  (ref.null none)
   ;; CHECK-NEXT: ))
-  (global $bot-top (ref null $top) (struct.new $bot (ref.null none)))
+  (global $bot-top (ref null $top) (struct.new_desc $bot (ref.null none)))
   ;; CHECK:      (global $bot-mid-desc (ref null $mid.desc) (struct.new_default $bot.desc))
   (global $bot-mid-desc (ref null $mid.desc) (struct.new $bot.desc))
 
@@ -810,26 +810,26 @@
 (module
   (rec
     ;; CHECK:      (rec
-    ;; CHECK-NEXT:  (type $top (sub (descriptor $top.desc (struct))))
-    (type $top (sub (descriptor $top.desc (struct))))
-    ;; CHECK:       (type $mid (sub $top (descriptor $mid.desc (struct))))
-    (type $mid (sub $top (descriptor $mid.desc (struct))))
-    ;; CHECK:       (type $bot (sub $mid (descriptor $bot.desc (struct))))
-    (type $bot (sub $mid (descriptor $bot.desc (struct))))
-    ;; CHECK:       (type $top.desc (sub (describes $top (struct))))
-    (type $top.desc (sub (describes $top (struct))))
-    ;; CHECK:       (type $mid.desc (sub $top.desc (describes $mid (struct))))
-    (type $mid.desc (sub $top.desc (describes $mid (struct))))
-    ;; CHECK:       (type $bot.desc (sub $mid.desc (describes $bot (struct))))
-    (type $bot.desc (sub $mid.desc (describes $bot (struct))))
+    ;; CHECK-NEXT:  (type $top (sub (descriptor $top.desc) (struct)))
+    (type $top (sub (descriptor $top.desc) (struct)))
+    ;; CHECK:       (type $mid (sub $top (descriptor $mid.desc) (struct)))
+    (type $mid (sub $top (descriptor $mid.desc) (struct)))
+    ;; CHECK:       (type $bot (sub $mid (descriptor $bot.desc) (struct)))
+    (type $bot (sub $mid (descriptor $bot.desc) (struct)))
+    ;; CHECK:       (type $top.desc (sub (describes $top) (struct)))
+    (type $top.desc (sub (describes $top) (struct)))
+    ;; CHECK:       (type $mid.desc (sub $top.desc (describes $mid) (struct)))
+    (type $mid.desc (sub $top.desc (describes $mid) (struct)))
+    ;; CHECK:       (type $bot.desc (sub $mid.desc (describes $bot) (struct)))
+    (type $bot.desc (sub $mid.desc (describes $bot) (struct)))
   )
 
   ;; CHECK:       (type $6 (func (param (ref $top))))
 
-  ;; CHECK:      (global $bot-mid (ref null $mid) (struct.new_default $bot
+  ;; CHECK:      (global $bot-mid (ref null $mid) (struct.new_default_desc $bot
   ;; CHECK-NEXT:  (ref.null none)
   ;; CHECK-NEXT: ))
-  (global $bot-mid (ref null $mid) (struct.new $bot (ref.null none)))
+  (global $bot-mid (ref null $mid) (struct.new_desc $bot (ref.null none)))
   ;; CHECK:      (global $bot-top-desc (ref null $top.desc) (struct.new_default $bot.desc))
   (global $bot-top-desc (ref null $top.desc) (struct.new $bot.desc))
 
@@ -864,28 +864,28 @@
 (module
   (rec
     ;; CHECK:      (rec
-    ;; CHECK-NEXT:  (type $top (sub (descriptor $top.desc (struct))))
-    (type $top (sub (descriptor $top.desc (struct))))
-    ;; CHECK:       (type $mid (sub $top (descriptor $mid.desc (struct))))
-    (type $mid (sub $top (descriptor $mid.desc (struct))))
-    ;; CHECK:       (type $bot (sub $mid (descriptor $bot.desc (struct))))
-    (type $bot (sub $mid (descriptor $bot.desc (struct))))
-    ;; CHECK:       (type $top.desc (sub (describes $top (struct))))
-    (type $top.desc (sub (describes $top (struct))))
-    ;; CHECK:       (type $mid.desc (sub $top.desc (describes $mid (struct))))
-    (type $mid.desc (sub $top.desc (describes $mid (struct))))
-    ;; CHECK:       (type $bot.desc (sub $mid.desc (describes $bot (struct))))
-    (type $bot.desc (sub $mid.desc (describes $bot (struct))))
+    ;; CHECK-NEXT:  (type $top (sub (descriptor $top.desc) (struct)))
+    (type $top (sub (descriptor $top.desc) (struct)))
+    ;; CHECK:       (type $mid (sub $top (descriptor $mid.desc) (struct)))
+    (type $mid (sub $top (descriptor $mid.desc) (struct)))
+    ;; CHECK:       (type $bot (sub $mid (descriptor $bot.desc) (struct)))
+    (type $bot (sub $mid (descriptor $bot.desc) (struct)))
+    ;; CHECK:       (type $top.desc (sub (describes $top) (struct)))
+    (type $top.desc (sub (describes $top) (struct)))
+    ;; CHECK:       (type $mid.desc (sub $top.desc (describes $mid) (struct)))
+    (type $mid.desc (sub $top.desc (describes $mid) (struct)))
+    ;; CHECK:       (type $bot.desc (sub $mid.desc (describes $bot) (struct)))
+    (type $bot.desc (sub $mid.desc (describes $bot) (struct)))
   )
 
   ;; CHECK:       (type $6 (func (param (ref $top))))
 
   ;; CHECK:      (global $bot-top-desc (ref null $top.desc) (struct.new_default $bot.desc))
   (global $bot-top-desc (ref null $top.desc) (struct.new $bot.desc))
-  ;; CHECK:      (global $bot-mid (ref null $mid) (struct.new_default $bot
+  ;; CHECK:      (global $bot-mid (ref null $mid) (struct.new_default_desc $bot
   ;; CHECK-NEXT:  (ref.null none)
   ;; CHECK-NEXT: ))
-  (global $bot-mid (ref null $mid) (struct.new $bot (ref.null none)))
+  (global $bot-mid (ref null $mid) (struct.new_desc $bot (ref.null none)))
 
   ;; CHECK:      (func $require-desc (type $6) (param $top (ref $top))
   ;; CHECK-NEXT:  (drop
@@ -916,28 +916,28 @@
 (module
   (rec
     ;; CHECK:      (rec
-    ;; CHECK-NEXT:  (type $top (sub (descriptor $top.desc (struct))))
-    (type $top (sub (descriptor $top.desc (struct))))
-    ;; CHECK:       (type $mid (sub $top (descriptor $mid.desc (struct))))
-    (type $mid (sub $top (descriptor $mid.desc (struct))))
-    ;; CHECK:       (type $bot (sub $mid (descriptor $bot.desc (struct))))
-    (type $bot (sub $mid (descriptor $bot.desc (struct))))
-    ;; CHECK:       (type $top.desc (sub (describes $top (struct))))
-    (type $top.desc (sub (describes $top (struct))))
-    ;; CHECK:       (type $mid.desc (sub $top.desc (describes $mid (struct))))
-    (type $mid.desc (sub $top.desc (describes $mid (struct))))
-    ;; CHECK:       (type $bot.desc (sub $mid.desc (describes $bot (struct))))
-    (type $bot.desc (sub $mid.desc (describes $bot (struct))))
+    ;; CHECK-NEXT:  (type $top (sub (descriptor $top.desc) (struct)))
+    (type $top (sub (descriptor $top.desc) (struct)))
+    ;; CHECK:       (type $mid (sub $top (descriptor $mid.desc) (struct)))
+    (type $mid (sub $top (descriptor $mid.desc) (struct)))
+    ;; CHECK:       (type $bot (sub $mid (descriptor $bot.desc) (struct)))
+    (type $bot (sub $mid (descriptor $bot.desc) (struct)))
+    ;; CHECK:       (type $top.desc (sub (describes $top) (struct)))
+    (type $top.desc (sub (describes $top) (struct)))
+    ;; CHECK:       (type $mid.desc (sub $top.desc (describes $mid) (struct)))
+    (type $mid.desc (sub $top.desc (describes $mid) (struct)))
+    ;; CHECK:       (type $bot.desc (sub $mid.desc (describes $bot) (struct)))
+    (type $bot.desc (sub $mid.desc (describes $bot) (struct)))
   )
 
   ;; CHECK:       (type $6 (func (param (ref $bot))))
 
   ;; CHECK:      (global $bot-top-desc (ref null $top.desc) (struct.new_default $bot.desc))
   (global $bot-top-desc (ref null $top.desc) (struct.new $bot.desc))
-  ;; CHECK:      (global $bot-mid (ref null $mid) (struct.new_default $bot
+  ;; CHECK:      (global $bot-mid (ref null $mid) (struct.new_default_desc $bot
   ;; CHECK-NEXT:  (ref.null none)
   ;; CHECK-NEXT: ))
-  (global $bot-mid (ref null $mid) (struct.new $bot (ref.null none)))
+  (global $bot-mid (ref null $mid) (struct.new_desc $bot (ref.null none)))
 
   ;; CHECK:      (func $require-desc (type $6) (param $bot (ref $bot))
   ;; CHECK-NEXT:  (drop
@@ -972,18 +972,18 @@
 (module
   (rec
     ;; CHECK:      (rec
-    ;; CHECK-NEXT:  (type $top (sub (descriptor $top.desc (struct))))
-    (type $top (sub (descriptor $top.desc (struct))))
-    ;; CHECK:       (type $mid (sub $top (descriptor $mid.desc (struct))))
-    (type $mid (sub $top (descriptor $mid.desc (struct))))
-    ;; CHECK:       (type $bot (sub $mid (descriptor $bot.desc (struct))))
-    (type $bot (sub $mid (descriptor $bot.desc (struct))))
-    ;; CHECK:       (type $top.desc (sub (describes $top (struct))))
-    (type $top.desc (sub (describes $top (struct))))
-    ;; CHECK:       (type $mid.desc (sub $top.desc (describes $mid (struct))))
-    (type $mid.desc (sub $top.desc (describes $mid (struct))))
-    ;; CHECK:       (type $bot.desc (sub $mid.desc (describes $bot (struct))))
-    (type $bot.desc (sub $mid.desc (describes $bot (struct))))
+    ;; CHECK-NEXT:  (type $top (sub (descriptor $top.desc) (struct)))
+    (type $top (sub (descriptor $top.desc) (struct)))
+    ;; CHECK:       (type $mid (sub $top (descriptor $mid.desc) (struct)))
+    (type $mid (sub $top (descriptor $mid.desc) (struct)))
+    ;; CHECK:       (type $bot (sub $mid (descriptor $bot.desc) (struct)))
+    (type $bot (sub $mid (descriptor $bot.desc) (struct)))
+    ;; CHECK:       (type $top.desc (sub (describes $top) (struct)))
+    (type $top.desc (sub (describes $top) (struct)))
+    ;; CHECK:       (type $mid.desc (sub $top.desc (describes $mid) (struct)))
+    (type $mid.desc (sub $top.desc (describes $mid) (struct)))
+    ;; CHECK:       (type $bot.desc (sub $mid.desc (describes $bot) (struct)))
+    (type $bot.desc (sub $mid.desc (describes $bot) (struct)))
     ;; CHECK:       (type $X (sub (struct (field (ref null $mid.desc)))))
     (type $X (sub (struct (field (ref null $mid.desc)))))
     ;; CHECK:       (type $Y (sub $X (struct (field (ref null $bot.desc)))))
@@ -1006,7 +1006,7 @@
   ;; CHECK:      (func $require-desc (type $8)
   ;; CHECK-NEXT:  (drop
   ;; CHECK-NEXT:   (ref.get_desc $bot
-  ;; CHECK-NEXT:    (struct.new_default $bot
+  ;; CHECK-NEXT:    (struct.new_default_desc $bot
   ;; CHECK-NEXT:     (struct.new_default $bot.desc)
   ;; CHECK-NEXT:    )
   ;; CHECK-NEXT:   )
@@ -1016,7 +1016,7 @@
     ;; Require bot described-by bot.desc.
     (drop
       (ref.get_desc $bot
-        (struct.new $bot
+        (struct.new_desc $bot
           (struct.new $bot.desc)
         )
       )
@@ -1029,9 +1029,9 @@
   (rec
     ;; CHECK:      (rec
     ;; CHECK-NEXT:  (type $struct (struct))
-    (type $struct (descriptor $desc (struct)))
+    (type $struct (descriptor $desc) (struct))
     ;; CHECK:       (type $desc (struct))
-    (type $desc (describes $struct (struct)))
+    (type $desc (describes $struct) (struct))
   )
 
   ;; CHECK:      (type $2 (func))
@@ -1040,7 +1040,7 @@
   (import "" "" (func $effect))
 
   ;; CHECK:      (global $global (ref null $struct) (struct.new_default $struct))
-  (global $global (ref null $struct) (struct.new $struct (struct.new $desc)))
+  (global $global (ref null $struct) (struct.new_desc $struct (struct.new $desc)))
 
   ;; CHECK:      (func $func (type $2)
   ;; CHECK-NEXT:  (drop
@@ -1051,7 +1051,7 @@
   ;; CHECK-NEXT: )
   (func $func
     (drop
-      (struct.new $struct
+      (struct.new_desc $struct
         (struct.new $desc)
       )
     )
@@ -1073,7 +1073,7 @@
   ;; CHECK-NEXT: )
   (func $func-effect
     (drop
-      (struct.new $struct
+      (struct.new_desc $struct
         (block (result (ref (exact $desc)))
           (call $effect)
           (struct.new $desc)
@@ -1097,7 +1097,7 @@
   ;; CHECK-NEXT: )
   (func $func-null
     (drop
-      (struct.new $struct
+      (struct.new_desc $struct
         (ref.null none)
       )
     )
@@ -1115,7 +1115,7 @@
   ;; CHECK-NEXT: )
   (func $func-unreachable
     (drop
-      (struct.new $struct
+      (struct.new_desc $struct
         (unreachable)
       )
     )
@@ -1125,10 +1125,10 @@
 (module
   (rec
     ;; CHECK:      (rec
-    ;; CHECK-NEXT:  (type $struct (descriptor $desc (struct)))
-    (type $struct (descriptor $desc (struct)))
-    ;; CHECK:       (type $desc (describes $struct (struct)))
-    (type $desc (describes $struct (struct)))
+    ;; CHECK-NEXT:  (type $struct (descriptor $desc) (struct))
+    (type $struct (descriptor $desc) (struct))
+    ;; CHECK:       (type $desc (describes $struct) (struct))
+    (type $desc (describes $struct) (struct))
   )
   ;; CHECK:       (type $2 (func))
 
@@ -1140,7 +1140,7 @@
   ;; CHECK-NEXT:  )
   ;; CHECK-NEXT:  (drop
   ;; CHECK-NEXT:   (ref.get_desc $struct
-  ;; CHECK-NEXT:    (struct.new_default $struct
+  ;; CHECK-NEXT:    (struct.new_default_desc $struct
   ;; CHECK-NEXT:     (struct.new_default $desc)
   ;; CHECK-NEXT:    )
   ;; CHECK-NEXT:   )
@@ -1157,7 +1157,7 @@
     )
     (drop
       (ref.get_desc $struct
-        (struct.new_default $struct
+        (struct.new_default_desc $struct
           (struct.new_default $desc)
         )
       )
@@ -1171,18 +1171,18 @@
   (rec
     ;; CHECK:      (rec
     ;; CHECK-NEXT:  (type $struct (sub (struct)))
-    (type $struct (sub (descriptor $desc (struct))))
-    ;; CHECK:       (type $desc (sub (descriptor $meta (struct))))
-    (type $desc (sub (describes $struct (descriptor $meta (struct)))))
-    ;; CHECK:       (type $meta (sub (describes $desc (struct))))
-    (type $meta (sub (describes $desc (struct))))
+    (type $struct (sub (descriptor $desc) (struct)))
+    ;; CHECK:       (type $desc (sub (descriptor $meta) (struct)))
+    (type $desc (sub (describes $struct) (descriptor $meta) (struct)))
+    ;; CHECK:       (type $meta (sub (describes $desc) (struct)))
+    (type $meta (sub (describes $desc) (struct)))
   )
 
   ;; CHECK:      (global $g (ref $struct) (struct.new_default $struct))
-  (global $g (ref $struct) (struct.new $struct (struct.new $desc (ref.null none))))
+  (global $g (ref $struct) (struct.new_desc $struct (struct.new_desc $desc (ref.null none))))
 )
 
-;; CHECK:      (global $unsubtyping-removed-0 (ref (exact $desc)) (struct.new_default $desc
+;; CHECK:      (global $unsubtyping-removed-0 (ref (exact $desc)) (struct.new_default_desc $desc
 ;; CHECK-NEXT:  (ref.null none)
 ;; CHECK-NEXT: ))
 (module
@@ -1192,20 +1192,20 @@
     ;; CHECK-NEXT:  (type $A (sub (struct (field (ref $struct)))))
     (type $A (sub (struct (field (ref $struct)))))
     ;; CHECK:       (type $struct (sub (struct)))
-    (type $struct (sub (descriptor $desc (struct))))
-    ;; CHECK:       (type $desc (sub (descriptor $meta (struct))))
-    (type $desc (sub (describes $struct (descriptor $meta (struct)))))
-    ;; CHECK:       (type $meta (sub (describes $desc (struct))))
-    (type $meta (sub (describes $desc (struct))))
+    (type $struct (sub (descriptor $desc) (struct)))
+    ;; CHECK:       (type $desc (sub (descriptor $meta) (struct)))
+    (type $desc (sub (describes $struct) (descriptor $meta) (struct)))
+    ;; CHECK:       (type $meta (sub (describes $desc) (struct)))
+    (type $meta (sub (describes $desc) (struct)))
   )
 
   ;; CHECK:      (global $g (ref $A) (struct.new $A
   ;; CHECK-NEXT:  (struct.new_default $struct)
   ;; CHECK-NEXT: ))
-  (global $g (ref $A) (struct.new $A (struct.new $struct (struct.new $desc (ref.null none)))))
+  (global $g (ref $A) (struct.new $A (struct.new_desc $struct (struct.new_desc $desc (ref.null none)))))
 )
 
-;; CHECK:      (global $unsubtyping-removed-0 (ref (exact $desc)) (struct.new_default $desc
+;; CHECK:      (global $unsubtyping-removed-0 (ref (exact $desc)) (struct.new_default_desc $desc
 ;; CHECK-NEXT:  (ref.null none)
 ;; CHECK-NEXT: ))
 (module
@@ -1214,10 +1214,10 @@
   ;; unreachable code first.
   (rec
     ;; CHECK:      (rec
-    ;; CHECK-NEXT:  (type $struct (sub (descriptor $desc (struct))))
-    (type $struct (sub (descriptor $desc (struct))))
-    ;; CHECK:       (type $desc (sub (describes $struct (struct))))
-    (type $desc (sub (describes $struct (struct))))
+    ;; CHECK-NEXT:  (type $struct (sub (descriptor $desc) (struct)))
+    (type $struct (sub (descriptor $desc) (struct)))
+    ;; CHECK:       (type $desc (sub (describes $struct) (struct)))
+    (type $desc (sub (describes $struct) (struct)))
   )
   ;; CHECK:       (type $2 (func))
 

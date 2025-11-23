@@ -34,6 +34,7 @@
 // watch for here).
 //
 
+#include <algorithm>
 #include <unordered_map>
 #include <unordered_set>
 
@@ -218,6 +219,20 @@ struct DAE : public Pass {
     }
   }
 
+  // For each function, the set of callers. This is used to propagate changes,
+  // e.g. if we remove a return value from a function, the calls might benefit
+  // from optimization. It is ok if this is an over-approximation, that is, if
+  // we think there are more callers than there are, as it would just lead to
+  // unneeded extra scanning of calling functions (in the example just given, if
+  // a caller did not actually call, they would not benefit from the extra
+  // optimization, but no harm is done, and no optimization missed). Such over-
+  // approximation can happen in later optimization iterations: We may manage to
+  // remove a call from a function to another (say, after applying a constant
+  // param, we see the call is not reached). This is somewhat rare, and the cost
+  // of computing this map is significant, so we compute it once at the start
+  // and then use that possibly-over-approximating data.
+  std::vector<std::vector<Name>> callers;
+
   bool iteration(Module* module, DAEFunctionInfoMap& infoMap) {
     allDroppedCalls.clear();
 
@@ -240,26 +255,16 @@ struct DAE : public Pass {
     scanner.walkModuleCode(module);
     // Scan all the functions.
     scanner.run(getPassRunner(), module);
-    // Combine all the info.
-    struct CallContext {
-      Call* call;
-      Function* func;
-    };
 
+    // Combine all the info from the scan.
     std::vector<std::vector<Call*>> allCalls(numFunctions);
     std::vector<bool> tailCallees(numFunctions);
     std::vector<bool> hasUnseenCalls(numFunctions);
 
-    // Track the function in which relevant expressions exist. When we modify
-    // those expressions we will need to mark the function's info as stale.
-    std::unordered_map<Expression*, Name> expressionFuncs;
     for (auto& [func, info] : infoMap) {
       for (auto& [name, calls] : info.calls) {
         auto& allCallsToName = allCalls[indexes[name]];
         allCallsToName.insert(allCallsToName.end(), calls.begin(), calls.end());
-        for (auto* call : calls) {
-          expressionFuncs[call] = func;
-        }
       }
       for (auto& callee : info.tailCallees) {
         tailCallees[indexes[callee]] = true;
@@ -275,6 +280,23 @@ struct DAE : public Pass {
     for (auto& curr : module->exports) {
       if (curr->kind == ExternalKind::Function) {
         hasUnseenCalls[indexes[*curr->getInternalName()]] = true;
+      }
+    }
+
+    // See comment above, we compute callers once and never again.
+    if (callers.empty()) {
+      // Compute first as sets, to deduplicate.
+      std::vector<std::unordered_set<Name>> callersSets(numFunctions);
+      for (auto& [func, info] : infoMap) {
+        for (auto& [name, calls] : info.calls) {
+          callersSets[indexes[name]].insert(func);
+        }
+      }
+      // Copy into efficient vectors.
+      callers.resize(numFunctions);
+      for (Index i = 0; i < numFunctions; ++i) {
+        auto& set = callersSets[i];
+        callers[i] = std::vector<Name>(set.begin(), set.end());
       }
     }
 
@@ -305,9 +327,9 @@ struct DAE : public Pass {
       assert(func.is());
       infoMap[func].markStale();
     };
-    auto markCallersStale = [&](const std::vector<Call*>& calls) {
-      for (auto* call : calls) {
-        markStale(expressionFuncs[call]);
+    auto markCallersStale = [&](Index index) {
+      for (auto caller : callers[index]) {
+        markStale(caller);
       }
     };
 
@@ -339,7 +361,7 @@ struct DAE : public Pass {
       if (refineReturnTypes(func, calls, module)) {
         refinedReturnTypes = true;
         markStale(name);
-        markCallersStale(calls);
+        markCallersStale(index);
       }
       auto optimizedIndexes =
         ParamUtils::applyConstantValues({func}, calls, {}, module);
@@ -382,7 +404,7 @@ struct DAE : public Pass {
         // Success!
         worthOptimizing.insert(func);
         markStale(name);
-        markCallersStale(calls);
+        markCallersStale(index);
       }
       if (outcome == ParamUtils::RemovalOutcome::Failure) {
         callTargetsToLocalize.insert(name);
@@ -424,15 +446,15 @@ struct DAE : public Pass {
         }
         if (removeReturnValue(func.get(), calls, module)) {
           // We should optimize the callers.
-          for (auto* call : calls) {
-            worthOptimizing.insert(module->getFunction(expressionFuncs[call]));
+          for (auto caller : callers[index]) {
+            worthOptimizing.insert(module->getFunction(caller));
           }
         }
         // TODO Removing a drop may also open optimization opportunities in the
         // callers.
         worthOptimizing.insert(func.get());
         markStale(name);
-        markCallersStale(calls);
+        markCallersStale(index);
       }
     }
     if (!callTargetsToLocalize.empty()) {

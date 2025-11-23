@@ -6,30 +6,30 @@
 (module
   (rec
     ;; CHECK:      (rec
-    ;; CHECK-NEXT:  (type $described (descriptor $descriptor (struct (field i32))))
-    (type $described (descriptor $descriptor (struct (field i32))))
-    ;; CHECK:       (type $descriptor (describes $described (struct (field i64))))
-    (type $descriptor (describes $described (struct (field i64))))
+    ;; CHECK-NEXT:  (type $described (descriptor $descriptor) (struct (field i32)))
+    (type $described (descriptor $descriptor) (struct (field i32)))
+    ;; CHECK:       (type $descriptor (describes $described) (struct (field i64)))
+    (type $descriptor (describes $described) (struct (field i64)))
 
-    ;; CHECK:       (type $super (sub (descriptor $super.desc (struct))))
-    (type $super (sub (descriptor $super.desc (struct))))
-    ;; CHECK:       (type $super.desc (sub (describes $super (struct))))
-    (type $super.desc (sub (describes $super (struct))))
+    ;; CHECK:       (type $super (sub (descriptor $super.desc) (struct)))
+    (type $super (sub (descriptor $super.desc) (struct)))
+    ;; CHECK:       (type $super.desc (sub (describes $super) (struct)))
+    (type $super.desc (sub (describes $super) (struct)))
 
-    ;; CHECK:       (type $sub (sub $super (descriptor $sub.desc (struct))))
-    (type $sub (sub $super (descriptor $sub.desc (struct))))
-    ;; CHECK:       (type $sub.desc (sub $super.desc (describes $sub (struct))))
-    (type $sub.desc (sub $super.desc (describes $sub (struct))))
+    ;; CHECK:       (type $sub (sub $super (descriptor $sub.desc) (struct)))
+    (type $sub (sub $super (descriptor $sub.desc) (struct)))
+    ;; CHECK:       (type $sub.desc (sub $super.desc (describes $sub) (struct)))
+    (type $sub.desc (sub $super.desc (describes $sub) (struct)))
 
     ;; CHECK:       (type $no-desc (struct))
     (type $no-desc (struct))
 
-    ;; CHECK:       (type $chain-described (descriptor $chain-middle (struct)))
-    (type $chain-described (descriptor $chain-middle (struct)))
-    ;; CHECK:       (type $chain-middle (describes $chain-described (descriptor $chain-descriptor (struct))))
-    (type $chain-middle (describes $chain-described (descriptor $chain-descriptor (struct))))
-    ;; CHECK:       (type $chain-descriptor (describes $chain-middle (struct)))
-    (type $chain-descriptor (describes $chain-middle (struct)))
+    ;; CHECK:       (type $chain-described (descriptor $chain-middle) (struct))
+    (type $chain-described (descriptor $chain-middle) (struct))
+    ;; CHECK:       (type $chain-middle (describes $chain-described) (descriptor $chain-descriptor) (struct))
+    (type $chain-middle (describes $chain-described) (descriptor $chain-descriptor) (struct))
+    ;; CHECK:       (type $chain-descriptor (describes $chain-middle) (struct))
+    (type $chain-descriptor (describes $chain-middle) (struct))
   )
 
   ;; CHECK:      (type $10 (func))
@@ -79,7 +79,7 @@
   ;; CHECK-NEXT: )
   (func $dropped
     (drop
-      (struct.new $described
+      (struct.new_desc $described
         (i32.const 1)
         (global.get $desc)
       )
@@ -109,7 +109,7 @@
   ;; CHECK-NEXT: )
   (func $dropped-default
     (drop
-      (struct.new_default $described
+      (struct.new_default_desc $described
         (global.get $desc)
       )
     )
@@ -142,7 +142,7 @@
   ;; CHECK-NEXT: )
   (func $dropped-alloc-desc
     (drop
-      (struct.new $described
+      (struct.new_desc $described
         (i32.const 1)
         (struct.new $descriptor
           (i64.const 2)
@@ -174,7 +174,7 @@
   ;; CHECK-NEXT: )
   (func $dropped-default-alloc-desc
     (drop
-      (struct.new_default $described
+      (struct.new_default_desc $described
         (struct.new $descriptor
           (i64.const 2)
         )
@@ -200,7 +200,7 @@
   ;; CHECK-NEXT: )
   (func $get-desc (result (ref null $super.desc))
     (ref.get_desc $super
-      (struct.new $super
+      (struct.new_desc $super
         (struct.new $super.desc)
       )
     )
@@ -231,7 +231,7 @@
     (block (result (ref null $super.desc))
       (ref.get_desc $super
         (block (result (ref null $super))
-          (struct.new $sub
+          (struct.new_desc $sub
             (struct.new $sub.desc)
           )
         )
@@ -283,7 +283,7 @@
     )
     (drop
       (ref.cast_desc (ref (exact $super))
-        (struct.new $super
+        (struct.new_desc $super
           (local.get $desc)
         )
         (local.get $desc)
@@ -325,7 +325,7 @@
   (func $cast-desc-fail (param $desc (ref null (exact $super.desc)))
     (drop
       (ref.cast_desc (ref (exact $super))
-        (struct.new $super
+        (struct.new_desc $super
           (struct.new $super.desc)
         )
         (local.get $desc)
@@ -372,7 +372,7 @@
     ;; Same as above, but change where the parameter is used.
     (drop
       (ref.cast_desc (ref (exact $super))
-        (struct.new $super
+        (struct.new_desc $super
           (local.get $desc)
         )
         (struct.new $super.desc)
@@ -673,7 +673,7 @@
     ;; logic as the previous test.
     (local $middle (ref null (exact $chain-middle)))
     (local.set $middle
-      (struct.new $chain-middle
+      (struct.new_desc $chain-middle
         (local.get $desc)
       )
     )
@@ -718,7 +718,7 @@
     ;; Same, but now the cast allows nulls. It should still trap.
     (local $middle (ref null (exact $chain-middle)))
     (local.set $middle
-      (struct.new $chain-middle
+      (struct.new_desc $chain-middle
         (local.get $desc)
       )
     )
@@ -860,10 +860,10 @@
 (module
   (rec
     ;; CHECK:      (rec
-    ;; CHECK-NEXT:  (type $struct (sub (descriptor $desc (struct))))
-    (type $struct (sub (descriptor $desc (struct))))
-    ;; CHECK:       (type $desc (describes $struct (struct)))
-    (type $desc (describes $struct (struct)))
+    ;; CHECK-NEXT:  (type $struct (sub (descriptor $desc) (struct)))
+    (type $struct (sub (descriptor $desc) (struct)))
+    ;; CHECK:       (type $desc (describes $struct) (struct))
+    (type $desc (describes $struct) (struct))
   )
 
   ;; CHECK:      (type $2 (func (result (ref (exact $desc)))))
@@ -893,7 +893,7 @@
     ;; not end up with a (ref (exact $desc)) here, since this will trap, so we
     ;; emit an unreachable.
     (ref.get_desc $struct
-      (struct.new_default $struct
+      (struct.new_default_desc $struct
         (ref.null none)
       )
     )
@@ -920,7 +920,7 @@
   (func $nullable-param (param $desc (ref null (exact $desc))) (result (ref (exact $desc)))
     ;; Read a null descriptor from a nullable param.
     (ref.get_desc $struct
-      (struct.new_default $struct
+      (struct.new_default_desc $struct
         (local.get $desc)
       )
     )
@@ -949,7 +949,7 @@
     (local $desc (ref null (exact $desc)))
     ;; Read a null descriptor from a nullable local.
     (ref.get_desc $struct
-      (struct.new_default $struct
+      (struct.new_default_desc $struct
         (local.get $desc)
       )
     )
@@ -961,15 +961,15 @@
 (module
   (rec
     ;; CHECK:      (rec
-    ;; CHECK-NEXT:  (type $A (descriptor $B (struct)))
-    (type $A (descriptor $B (struct)))
-    ;; CHECK:       (type $B (describes $A (struct)))
-    (type $B (describes $A (struct)))
+    ;; CHECK-NEXT:  (type $A (descriptor $B) (struct))
+    (type $A (descriptor $B) (struct))
+    ;; CHECK:       (type $B (describes $A) (struct))
+    (type $B (describes $A) (struct))
 
-    ;; CHECK:       (type $A2 (descriptor $B2 (struct)))
-    (type $A2 (descriptor $B2 (struct)))
-    ;; CHECK:       (type $B2 (describes $A2 (struct)))
-    (type $B2 (describes $A2 (struct)))
+    ;; CHECK:       (type $A2 (descriptor $B2) (struct))
+    (type $A2 (descriptor $B2) (struct))
+    ;; CHECK:       (type $B2 (describes $A2) (struct))
+    (type $B2 (describes $A2) (struct))
   )
 
   ;; CHECK:      (type $4 (func (result (ref $A))))
@@ -997,7 +997,7 @@
   ;; CHECK-NEXT: )
   (func $A (result (ref $A))
     (ref.cast_desc (ref $A)
-      (struct.new_default $A2
+      (struct.new_default_desc $A2
         (struct.new_default $B2)
       )
       (struct.new_default $B)
@@ -1007,8 +1007,8 @@
 
 (module
   (rec
-    (type $A (descriptor $B (struct)))
-    (type $B (sub (describes $A (struct))))
+    (type $A (descriptor $B) (struct))
+    (type $B (sub (describes $A) (struct)))
   )
   ;; CHECK:      (type $0 (func))
 
@@ -1046,7 +1046,7 @@
       (drop
         (br_on_null $block
           (ref.get_desc $A
-            (struct.new_default $A
+            (struct.new_default_desc $A
               (ref.null none)
             )
           )
@@ -1060,10 +1060,10 @@
 (module
   (rec
     ;; CHECK:      (rec
-    ;; CHECK-NEXT:  (type $A (descriptor $B (struct (field v128))))
-    (type $A (descriptor $B (struct (field v128))))
-    ;; CHECK:       (type $B (describes $A (struct)))
-    (type $B (describes $A (struct)))
+    ;; CHECK-NEXT:  (type $A (descriptor $B) (struct (field v128)))
+    (type $A (descriptor $B) (struct (field v128)))
+    ;; CHECK:       (type $B (describes $A) (struct))
+    (type $B (describes $A) (struct))
   )
 
   ;; CHECK:      (type $2 (func))
@@ -1130,7 +1130,7 @@
     (local.set $v
       (struct.get $A 0
         (ref.cast_desc (ref $A)
-          (struct.new_default $A
+          (struct.new_default_desc $A
             (ref.as_non_null
               (ref.null none)
             )
@@ -1148,12 +1148,12 @@
 (module
   (rec
     ;; CHECK:      (rec
-    ;; CHECK-NEXT:  (type $A (shared (descriptor $B (struct))))
-    (type $A (shared (descriptor $B (struct))))
-    ;; CHECK:       (type $B (sub (shared (describes $A (descriptor $C (struct))))))
-    (type $B (sub (shared (describes $A (descriptor $C (struct))))))
-    ;; CHECK:       (type $C (sub (shared (describes $B (struct)))))
-    (type $C (sub (shared (describes $B (struct)))))
+    ;; CHECK-NEXT:  (type $A (shared (descriptor $B) (struct)))
+    (type $A (shared (descriptor $B) (struct)))
+    ;; CHECK:       (type $B (sub (shared (describes $A) (descriptor $C) (struct))))
+    (type $B (sub (shared (describes $A) (descriptor $C) (struct))))
+    ;; CHECK:       (type $C (sub (shared (describes $B) (struct))))
+    (type $C (sub (shared (describes $B) (struct))))
   )
 
   ;; CHECK:      (type $3 (func (result (ref (shared any)))))
@@ -1208,7 +1208,7 @@
     )
     (ref.cast_desc (ref $B)
       (ref.cast_desc (ref $B)
-        (struct.new_default $B
+        (struct.new_default_desc $B
           (ref.null (shared none))
         )
         (local.get $temp)
@@ -1218,3 +1218,64 @@
   )
 )
 
+(module
+  (rec
+   ;; CHECK:      (rec
+   ;; CHECK-NEXT:  (type $struct (sub (descriptor $desc) (struct)))
+   (type $struct (sub (descriptor $desc) (struct)))
+   ;; CHECK:       (type $desc (describes $struct) (struct))
+   (type $desc (sub final (describes $struct) (struct)))
+  )
+
+  ;; CHECK:      (type $2 (func (result i32)))
+
+  ;; CHECK:      (func $test (type $2) (result i32)
+  ;; CHECK-NEXT:  (local $desc (ref $desc))
+  ;; CHECK-NEXT:  (local $1 (ref (exact $desc)))
+  ;; CHECK-NEXT:  (local $2 (ref (exact $desc)))
+  ;; CHECK-NEXT:  (drop
+  ;; CHECK-NEXT:   (block (result nullref)
+  ;; CHECK-NEXT:    (ref.null none)
+  ;; CHECK-NEXT:   )
+  ;; CHECK-NEXT:  )
+  ;; CHECK-NEXT:  (ref.is_null
+  ;; CHECK-NEXT:   (block
+  ;; CHECK-NEXT:    (drop
+  ;; CHECK-NEXT:     (block (result nullref)
+  ;; CHECK-NEXT:      (local.set $2
+  ;; CHECK-NEXT:       (struct.new_default $desc)
+  ;; CHECK-NEXT:      )
+  ;; CHECK-NEXT:      (local.set $1
+  ;; CHECK-NEXT:       (local.get $2)
+  ;; CHECK-NEXT:      )
+  ;; CHECK-NEXT:      (ref.null none)
+  ;; CHECK-NEXT:     )
+  ;; CHECK-NEXT:    )
+  ;; CHECK-NEXT:    (drop
+  ;; CHECK-NEXT:     (ref.null none)
+  ;; CHECK-NEXT:    )
+  ;; CHECK-NEXT:    (unreachable)
+  ;; CHECK-NEXT:   )
+  ;; CHECK-NEXT:  )
+  ;; CHECK-NEXT: )
+  (func $test (result i32)
+    (local $desc (ref $desc))
+    (local.set $desc
+      (struct.new_default $desc)
+    )
+    ;; After we optimize the struct.new above, the local.get below will get
+    ;; removed, and we will see that the ref.cast_desc traps (the input
+    ;; descriptor differs from the one we test, the allocation we just
+    ;; removed). When optimizing that, we should not emit invalid IR for the
+    ;; ref.is_null: It has an i32 result normally, but in unreachable code it
+    ;; must remain unreachable.
+    (ref.is_null
+      (ref.cast_desc (ref $struct)
+        (struct.new_default_desc $struct
+          (struct.new_default $desc)
+        )
+        (local.get $desc)
+      )
+    )
+  )
+)

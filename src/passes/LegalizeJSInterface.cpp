@@ -148,7 +148,7 @@ struct LegalizeJSInterface : public Pass {
           }
 
           curr->func = iter->second->name;
-          curr->finalize(iter->second->type.getHeapType(), *getModule());
+          curr->finalize(*getModule());
         }
       };
 
@@ -412,6 +412,7 @@ struct LegalizeAndPruneJSInterface : public LegalizeJSInterface {
 
     // RefFunc types etc. need updating.
     ReFinalize().run(getPassRunner(), module);
+    ReFinalize().runOnModuleCode(getPassRunner(), module);
 
     // TODO: globals etc.
   }

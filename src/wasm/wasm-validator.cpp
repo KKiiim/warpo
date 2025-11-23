@@ -4161,7 +4161,9 @@ void FunctionValidator::visitFunction(Function* curr) {
 
   if (curr->imported()) {
     shouldBeTrue(
-      !curr->type.isExact(), curr->name, "imported function should be inexact");
+      curr->type.isInexact() || getModule()->features.hasCustomDescriptors(),
+      curr->name,
+      "exact imports require custom descriptors [--enable-custom-descriptors]");
   } else {
     shouldBeTrue(
       curr->type.isExact(), curr->name, "defined function should be exact");
