@@ -356,6 +356,8 @@ enum BrOnCastFlag {
   OutputNullable = 1 << 1,
 };
 
+constexpr uint32_t ExactImport = 1 << 5;
+
 enum EncodedType {
   // value types
   i32 = -0x1,  // 0x7f
@@ -1153,6 +1155,8 @@ enum ASTNodes {
 
   StructNew = 0x00,
   StructNewDefault = 0x01,
+  StructNewDesc = 0x20,
+  StructNewDefaultDesc = 0x21,
   StructGet = 0x02,
   StructGetS = 0x03,
   StructGetU = 0x04,

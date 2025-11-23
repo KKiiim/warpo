@@ -8,15 +8,15 @@
   (rec
     ;; CHECK:      (rec
     ;; CHECK-NEXT:  (type $A (sub (struct)))
-    (type $A (sub (descriptor $A.desc (struct))))
+    (type $A (sub (descriptor $A.desc) (struct)))
     ;; CHECK:       (type $A.desc (sub (struct)))
-    (type $A.desc (sub (describes $A (struct))))
+    (type $A.desc (sub (describes $A) (struct)))
   )
 
   ;; CHECK:      (global $A.desc (ref null (exact $A.desc)) (struct.new_default $A.desc))
   (global $A.desc (ref null (exact $A.desc)) (struct.new $A.desc))
   ;; CHECK:      (global $A (ref null $A) (struct.new_default $A))
-  (global $A (ref null $A) (struct.new $A (global.get $A.desc)))
+  (global $A (ref null $A) (struct.new_desc $A (global.get $A.desc)))
 )
 
 ;; Because we assume traps never happen, we do not need a ref.as_non_null to
@@ -25,9 +25,9 @@
   (rec
     ;; CHECK:      (rec
     ;; CHECK-NEXT:  (type $A (sub (struct)))
-    (type $A (sub (descriptor $A.desc (struct))))
+    (type $A (sub (descriptor $A.desc) (struct)))
     ;; CHECK:       (type $A.desc (sub (struct)))
-    (type $A.desc (sub (describes $A (struct))))
+    (type $A.desc (sub (describes $A) (struct)))
   )
 
   ;; CHECK:       (type $2 (func (param (ref null (exact $A.desc)))))
@@ -41,7 +41,7 @@
   ;; CHECK-NEXT: )
   (func $nullable-descs (param $A.desc (ref null (exact $A.desc)))
     (drop
-      (struct.new $A
+      (struct.new_desc $A
         (local.get $A.desc)
       )
     )
@@ -53,13 +53,13 @@
 (module
   (rec
     ;; CHECK:      (type $struct (sub (struct)))
-    (type $struct (sub (descriptor $desc (struct))))
-    (type $desc (sub (describes $struct (descriptor $meta (struct)))))
-    (type $meta (sub (describes $desc (struct))))
+    (type $struct (sub (descriptor $desc) (struct)))
+    (type $desc (sub (describes $struct) (descriptor $meta) (struct)))
+    (type $meta (sub (describes $desc) (struct)))
   )
 
   ;; CHECK:      (global $g (ref $struct) (struct.new_default $struct))
-  (global $g (ref $struct) (struct.new $struct (struct.new $desc (ref.null none))))
+  (global $g (ref $struct) (struct.new_desc $struct (struct.new_desc $desc (ref.null none))))
 )
 
 ;; Same, but now the nesting is under a non-descriptor field.
@@ -69,13 +69,13 @@
     ;; CHECK-NEXT:  (type $A (sub (struct (field (ref $struct)))))
     (type $A (sub (struct (field (ref $struct)))))
     ;; CHECK:       (type $struct (sub (struct)))
-    (type $struct (sub (descriptor $desc (struct))))
-    (type $desc (sub (describes $struct (descriptor $meta (struct)))))
-    (type $meta (sub (describes $desc (struct))))
+    (type $struct (sub (descriptor $desc) (struct)))
+    (type $desc (sub (describes $struct) (descriptor $meta) (struct)))
+    (type $meta (sub (describes $desc) (struct)))
   )
 
   ;; CHECK:      (global $g (ref $A) (struct.new $A
   ;; CHECK-NEXT:  (struct.new_default $struct)
   ;; CHECK-NEXT: ))
-  (global $g (ref $A) (struct.new $A (struct.new $struct (struct.new $desc (ref.null none)))))
+  (global $g (ref $A) (struct.new $A (struct.new_desc $struct (struct.new_desc $desc (ref.null none)))))
 )
