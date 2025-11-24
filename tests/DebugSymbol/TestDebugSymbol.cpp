@@ -21,7 +21,7 @@ warpo::cli::Opt<bool> updateFixturesFlag{
 };
 } // namespace
 
-class TestDebugSymbol_P : public ::testing::TestWithParam<std::string> {
+class TestDebugSymbol_P : public ::testing::TestWithParam<const char *> {
 protected:
   void SetUp() override { warpo::frontend::init(); }
 };
@@ -63,8 +63,13 @@ TEST_P(TestDebugSymbol_P, DebugInfo) {
 }
 
 INSTANTIATE_TEST_SUITE_P(DebugSymbolTests, TestDebugSymbol_P,
-                         ::testing::Values("TestClassMemberBasic", "TestTemplateClass", "TestGlobal",
-                                           "TestFunctionParameter"));
+                         ::testing::ValuesIn({
+                             "TestClassMemberBasic",
+                             "TestTemplateClass",
+                             "TestGlobal",
+                             "TestFunctionParameter",
+                             "TestLambda",
+                         }));
 
 int main(int argc, char **argv) {
   ::testing::InitGoogleTest(&argc, argv);
