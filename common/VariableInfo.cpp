@@ -295,9 +295,8 @@ TEST(TestVariableInfo, TestAddParameter) {
 
 TEST(TestVariableInfo, TestAddLocal) {
   VariableInfo variableInfo;
-
-  // Test global function
   variableInfo.addSubProgram("processData", "");
+
   BinaryenExpressionRef const startExpr = reinterpret_cast<BinaryenExpressionRef>(0x1000);
   BinaryenExpressionRef const endExpr = reinterpret_cast<BinaryenExpressionRef>(0x2000);
   uint32_t const scopeId = variableInfo.addScope(startExpr, endExpr);
@@ -316,13 +315,17 @@ TEST(TestVariableInfo, TestAddLocal) {
   EXPECT_EQ(locals[0].getIndex(), 1);
   EXPECT_EQ(locals[0].getScopeId(), scopeId);
 
-  // Verify scope info
   const VariableInfo::ScopeInfoMap &scopeInfoMap = variableInfo.getScopeInfoMap();
   ASSERT_EQ(scopeInfoMap.size(), 1);
   ASSERT_TRUE(scopeInfoMap.count(scopeId) > 0);
-  const VariableInfo::ScopeInfo &scopeInfo = scopeInfoMap.at(scopeId);
-  EXPECT_EQ(scopeInfo.getStartExpr(), startExpr);
-  EXPECT_EQ(scopeInfo.getEndExpr(), endExpr);
+  const ScopeInfo &scopeInfo = scopeInfoMap.at(scopeId);
+
+  EXPECT_EQ(scopeInfo.getScopeStartSubTreeRoot(), startExpr);
+  EXPECT_EQ(scopeInfo.getScopeEndSubTreeRoot(), endExpr);
+}
+
+TEST(TestVariableInfo, TestAddLocalToClassMemberFunction) {
+  VariableInfo variableInfo;
 
   // Test class member function
   variableInfo.createClass("Math", "Object", 300);
@@ -348,5 +351,6 @@ TEST(TestVariableInfo, TestAddLocal) {
   EXPECT_EQ(computeLocals[0].getIndex(), 1);
   EXPECT_EQ(computeLocals[0].getScopeId(), scopeId2);
 }
+
 } // namespace warpo::ut
 #endif
