@@ -33,8 +33,9 @@ namespace warpo {
 
 class SubProgramInfo final {
 public:
-  using LocalsMap = std::map<uint32_t, std::vector<LocalInfo>>;
-  using ScopeInfoMap = std::unordered_map<uint32_t, ScopeInfo>;
+  using ScopeId = uint32_t;
+  using ScopeInfoMap = std::unordered_map<ScopeId, ScopeInfo>;
+  using LocalsMap = std::map<ScopeId, std::vector<LocalInfo>>;
 
   explicit inline SubProgramInfo(std::string_view const name) noexcept : name_(name) {}
 
@@ -46,14 +47,14 @@ public:
 
   inline void addParameter(ParameterInfo parameter) noexcept { parameters_.push_back(std::move(parameter)); }
   inline void addLocal(LocalInfo local) noexcept {
-    uint32_t const scopeId = local.getScopeId();
+    ScopeId const scopeId = local.getScopeId();
     locals_[scopeId].push_back(std::move(local));
   }
 
   void addParameter(std::string variableName, std::string_view const typeName, uint32_t const index,
                     bool const nullable);
 
-  void addLocal(std::string variableName, std::string_view const typeName, uint32_t const index, uint32_t const scopeId,
+  void addLocal(std::string variableName, std::string_view const typeName, uint32_t const index, ScopeId const scopeId,
                 bool const nullable);
 
   uint32_t addScope(BinaryenExpressionRef const startExpr, BinaryenExpressionRef const endExpr);
@@ -63,7 +64,7 @@ private:
   std::vector<ParameterInfo> parameters_;
   LocalsMap locals_;
   ScopeInfoMap scopeInfoMap_;
-  uint32_t nextScopeId_ = 0;
+  ScopeId nextScopeId_ = 0;
 };
 
 } // namespace warpo
