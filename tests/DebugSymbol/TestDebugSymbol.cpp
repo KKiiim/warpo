@@ -1,4 +1,6 @@
+#include <algorithm>
 #include <cstddef>
+#include <filesystem>
 #include <gtest/gtest.h>
 #include <sstream>
 #include <string>
@@ -23,7 +25,17 @@ warpo::cli::Opt<bool> updateFixturesFlag{
 };
 
 // Filter out subprogram sections with names starting with "~lib" or "start:~lib"
-std::string filterLibSubprograms(std::string const &dump) {
+std::string
+filterLibSubprograms(std::string const &dump,
+                     std::deque<std::pair<size_t, const wasm::Function::DebugLocation *>> const &sourceMapLocations,
+                     std::vector<std::string> const &debugInfoFileNames) {
+  // Cache filenames without paths
+  std::vector<std::string> fileNamesOnly;
+  fileNamesOnly.reserve(debugInfoFileNames.size());
+  for (std::string const &fullPath : debugInfoFileNames) {
+    fileNamesOnly.push_back(std::filesystem::path(fullPath).filename().string());
+  }
+
   std::istringstream input(dump);
   std::ostringstream output;
   std::string line;
@@ -43,6 +55,37 @@ std::string filterLibSubprograms(std::string const &dump) {
         // Fall through to process this line normally
       } else {
         // Still inside the subprogram, skip this line
+        continue;
+      }
+    }
+
+    // Check for DW_AT_low_pc or DW_AT_high_pc
+    size_t const lowPcPos = line.find("DW_AT_low_pc");
+    size_t const highPcPos = line.find("DW_AT_high_pc");
+    if ((lowPcPos != std::string::npos) || (highPcPos != std::string::npos)) {
+      // Extract the hex address from the line
+      size_t const openParen = line.find('(');
+      if (openParen != std::string::npos) {
+        size_t const closeParen = line.find(')');
+        assert(closeParen != std::string::npos && closeParen > openParen);
+        std::string const addressStr = line.substr(openParen + 1U, closeParen - openParen - 1);
+        assert(addressStr.find("0x") == 0);
+        // Parse the hex address
+        uint64_t const address = std::stoull(addressStr, nullptr, 16);
+
+        // Find the corresponding source location using binary search
+        auto const it = std::lower_bound(sourceMapLocations.begin(), sourceMapLocations.end(), address,
+                                         [](auto const &pair, size_t addr) { return pair.first < addr; });
+        assert(it != sourceMapLocations.end() && it->first == address &&
+               "Address should be found in source map locations");
+        wasm::Function::DebugLocation const *const debugLoc = it->second;
+
+        // Replace the address with file:line
+        size_t const indentEnd = line.find_first_not_of(' ');
+        std::string const indent = (indentEnd != std::string::npos) ? line.substr(0, indentEnd) : "";
+        std::string const attrName = (lowPcPos != std::string::npos) ? "scope start" : "scope end";
+        std::string const &fileName = fileNamesOnly[debugLoc->fileIndex];
+        output << indent << attrName << "\t" << fileName << ":" << debugLoc->lineNumber << "\n";
         continue;
       }
     }
@@ -94,6 +137,7 @@ TEST_P(TestDebugSymbol_P, DebugInfo) {
   warpo::frontend::Config config = warpo::frontend::getDefaultConfig();
   config.useColorfulDiagMessage = false;
   config.emitDebugInfo = true;
+  config.emitDebugLine = true;
   Colors::setEnabled(false);
 
   std::string const testCaseName = GetParam();
@@ -115,7 +159,8 @@ TEST_P(TestDebugSymbol_P, DebugInfo) {
   runner.run();
 
   wasm::WasmBinaryWriter writer(compileResult.m.get(), buffer, options);
-
+  std::stringstream sourceMapStream;
+  writer.setSourceMap(&sourceMapStream, "");
   writer.setNamesSection(true);
   writer.setEmitModuleName(true);
   writer.write();
@@ -125,7 +170,8 @@ TEST_P(TestDebugSymbol_P, DebugInfo) {
                                                            writer.getExpressionOffsets());
 
   std::string const rawDump = warpo::passes::DwarfGenerator::dumpDwarf(debugSections);
-  std::string const dumpOutput = filterLibSubprograms(rawDump);
+  std::string const dumpOutput =
+      filterLibSubprograms(rawDump, writer.getSourceMapLocations(), compileResult.m.get()->debugInfoFileNames);
   std::string const fixtureName = testCaseName + "Fixture.txt";
   std::filesystem::path const expectedDumpPath = testDir / fixtureName;
 
@@ -148,6 +194,11 @@ INSTANTIATE_TEST_SUITE_P(DebugSymbolTests, TestDebugSymbol_P,
                              "TestGlobal",
                              "TestLambda",
                              "TestTemplateClass",
+                             "TestLocalInFor",
+                             "TestLocalInIf",
+                             "TestLocalInWhile",
+                             "TestLocalInBlock",
+                             "TestLocalInSwitch",
                          }));
 
 int main(int argc, char **argv) {

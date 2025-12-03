@@ -1786,6 +1786,7 @@ export class Compiler extends DiagnosticEmitter {
         flow.set(FlowFlags.Returns | FlowFlags.Terminates);
       }
     }
+    flow.addLocalsToBlock(stmts);
 
     // Make constructors return their instance pointer, and prepend a conditional
     // allocation if any code path accesses `this`.
@@ -2349,6 +2350,7 @@ export class Compiler extends DiagnosticEmitter {
     this.currentFlow = innerFlow;
 
     let stmts = this.compileStatements(statements);
+    innerFlow.addLocalsToBlock(stmts);
     outerFlow.inherit(innerFlow);
     this.currentFlow = outerFlow;
     return this.module.flatten(stmts);
@@ -2523,6 +2525,7 @@ export class Compiler extends DiagnosticEmitter {
 
     // Finalize and leave everything else to the optimizer
     this.currentFlow = outerFlow;
+    flow.addLocalsToBlock(bodyStmts);
     let expr = module.loop(loopLabel,
       module.flatten(bodyStmts)
     );
@@ -2683,6 +2686,7 @@ export class Compiler extends DiagnosticEmitter {
     // Finalize
     outerFlow.inherit(flow);
     this.currentFlow = outerFlow;
+    bodyFlow.addLocalsToBlock(bodyStmts);
     let expr = module.if(condExprTrueish,
       module.flatten(bodyStmts)
     );
@@ -2696,6 +2700,7 @@ export class Compiler extends DiagnosticEmitter {
     if (outerFlow.is(FlowFlags.Terminates)) {
       stmts.push(module.unreachable());
     }
+    flow.addLocalsToBlock(stmts);
     return module.flatten(stmts);
   }
 
@@ -2780,6 +2785,8 @@ export class Compiler extends DiagnosticEmitter {
         elseStmts.push(this.compileStatement(ifFalse));
       }
       flow.inheritAlternatives(thenFlow, elseFlow); // terminates if both do
+      thenFlow.addLocalsToBlock(thenStmts);
+      elseFlow.addLocalsToBlock(elseStmts);
       this.currentFlow = flow;
       return module.if(condExprTrueish,
         module.flatten(thenStmts),
@@ -2795,6 +2802,7 @@ export class Compiler extends DiagnosticEmitter {
         flow.inheritAlternatives(thenFlow, elseFlow);
       }
       this.currentFlow = flow;
+      thenFlow.addLocalsToBlock(thenStmts);
       return module.if(condExprTrueish,
         module.flatten(thenStmts)
       );
@@ -2930,6 +2938,7 @@ export class Compiler extends DiagnosticEmitter {
           break;
         }
       }
+      this.currentFlow.addLocalsToBlock(stmts.slice(1)); // need to slice off the container block
       stmts.length = count;
       fallThroughFlow = possiblyFallsThrough ? innerFlow : null;
       let possiblyBreaks = innerFlow.isAny(FlowFlags.Breaks | FlowFlags.ConditionallyBreaks);
@@ -3311,6 +3320,7 @@ export class Compiler extends DiagnosticEmitter {
 
     // Finalize and leave everything else to the optimizer
     this.currentFlow = outerFlow;
+    thenFlow.addLocalsToBlock(bodyStmts);
     let stmts: ExpressionRef[] = [
       module.loop(continueLabel,
         module.if(condExprTrueish,
