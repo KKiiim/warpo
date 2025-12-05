@@ -39,16 +39,16 @@ export default defineConfig({
         link: "/about_documentation",
       },
       {
+        text: "new features",
+        link: "/new_features",
+      },
+      {
         text: "Using the Language",
         link: "/using_language/index",
         items: [
           {
             text: "current status",
             link: "/using_language/current_status",
-          },
-          {
-            text: "new features",
-            link: "/using_language/new_features",
           },
           {
             text: "details",
@@ -72,6 +72,16 @@ export default defineConfig({
           {
             text: "garbage collection",
             link: "/using_runtime/garbage_collection",
+            items: [
+              {
+                text: "shadow stack",
+                link: "/using_runtime/shadow_stack",
+              },
+              {
+                text: "radical GC",
+                link: "/using_runtime/radical_gc",
+              },
+            ],
           },
         ],
       },
