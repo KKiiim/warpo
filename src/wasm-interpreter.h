@@ -184,9 +184,42 @@ struct ExnData {
 // but the shared idea is that to resume code we simply need to get to where we
 // were when we suspended, so we have a "resuming" mode in which we walk the IR
 // but do not execute normally. While resuming we basically re-wind the stack,
-// using data we stashed on the side while unwinding. For example, if we unwind
-// an If instruction then we note which arm of the If we unwound from, and then
-// when we re-wind we enter that proper arm, etc.
+// using data we stashed on the side while unwinding.
+//
+// The key idea in this approach to suspending and resuming is that to suspend
+// you want to unwind the stack - you "jump" back to some outer scope - and to
+// reume, we want to rewind the stack - to get everything back exactly the way
+// it was, so we can pick things back up. And, to achieve that, we really just
+// need two things:
+//    * To rewind the call stack. If we called foo() and then bar(), we want to
+//      have foo and bar on the stack, so that when bar finishes, we return to
+//      foo, etc., as if we never suspended/resumed.
+//    * To have the same values as before. If we are an i32.add, and we
+//      suspended in the second arm, we need to have the same value for the
+//      first arm as before the suspend.
+//
+// Implementing these is conceptually simple:
+//    * For control flow, each structure handles itself. For example, if we
+//      unwind an If instruction then we note which arm of the If we unwound
+//      from, and then when we re-wind we enter that proper arm. For a Block,
+//      we can note the index we had executed up to, etc.
+//    * For values, we just save them automatically (specific visitFoo methods
+//      do not need to do anything themselves), see below on |valueStack|. (Note
+//      that we do an optimization for speed that avoids using that stack unless
+//      actually necessary.)
+//
+// Once we have those two things handled, pretty much everything else "just
+// works," and 99% of instructions need no special handling at all. Even some
+// instructions you might think would need custom code do not, like CallRef:
+// while that instruction does a call and changes the call stack, it calls the
+// value of its last child, so if we restore that child's value while resuming,
+// the normal code is exactly what we want (calling that child rewinds the stack
+// in exactly the right way). That is, once control flow structures know what to
+// do (which is unique to each one, but trivial), and once we have values
+// restored, the interpreter "wants" to return to the exact place we suspended
+// at, and we just let it do that. (And when it reaches the place we suspended
+// from, we do a special operation to stop resuming, and to proceed with normal
+// execution, as if we never suspended.)
 //
 // This is not the most efficient way to pause and resume execution (a program
 // counter/goto would be much faster!) but this is very simple to implement in
@@ -240,8 +273,13 @@ struct ContData {
   // suspend).
   Literals resumeArguments;
 
-  // If set, this is the exception to be thrown at the resume point.
+  // If set, this is the tag for an exception to be thrown at the resume point
+  // (from resume_throw).
   Tag* exceptionTag = nullptr;
+
+  // If set, this is the exception ref to be thrown at the resume point (from
+  // resume_throw_ref).
+  Literal exception;
 
   // Whether we executed. Continuations are one-shot, so they may not be
   // executed a second time.
@@ -4447,7 +4485,6 @@ public:
     }
   }
   Flow visitTryTable(TryTable* curr) {
-    assert(!self()->isResuming()); // TODO
     try {
       return self()->visit(curr->body);
     } catch (const WasmException& e) {
@@ -4524,6 +4561,22 @@ public:
     old->executed = true;
     return Literal(std::make_shared<ContData>(newData));
   }
+
+  void maybeThrowAfterResuming(std::shared_ptr<ContData>& currContinuation) {
+    // We may throw by creating a tag, or an exnref.
+    auto* tag = currContinuation->exceptionTag;
+    auto exnref = currContinuation->exception.type != Type::none;
+    assert(!(tag && exnref));
+    if (tag) {
+      // resume_throw
+      throwException(WasmException{
+        self()->makeExnData(tag, currContinuation->resumeArguments)});
+    } else if (exnref) {
+      // resume_throw_ref
+      throwException(WasmException{currContinuation->exception});
+    }
+  }
+
   Flow visitSuspend(Suspend* curr) {
     // Process the arguments, whether or not we are resuming. If we are resuming
     // then we don't need these values (we sent them as part of the suspension),
@@ -4546,11 +4599,7 @@ public:
       // restoredValues map.
       assert(currContinuation->resumeInfo.empty());
       assert(self()->restoredValuesMap.empty());
-      // Throw, if we were resumed by resume_throw;
-      if (auto* tag = currContinuation->exceptionTag) {
-        throwException(WasmException{
-          self()->makeExnData(tag, currContinuation->resumeArguments)});
-      }
+      maybeThrowAfterResuming(currContinuation);
       return currContinuation->resumeArguments;
     }
 
@@ -4583,7 +4632,7 @@ public:
     new_->resumeExpr = curr;
     return Flow(SUSPEND_FLOW, tag, std::move(arguments));
   }
-  template<typename T> Flow doResume(T* curr, Tag* exceptionTag = nullptr) {
+  template<typename T> Flow doResume(T* curr) {
     Literals arguments;
     VISIT_ARGUMENTS(flow, curr->operands, arguments)
     VISIT_REUSE(flow, curr->cont);
@@ -4603,13 +4652,26 @@ public:
         trap("continuation already executed");
       }
       contData->executed = true;
+
       if (contData->resumeArguments.empty()) {
         // The continuation has no bound arguments. For now, we just handle the
         // simple case of binding all of them, so that means we can just use all
         // the immediate ones here. TODO
         contData->resumeArguments = arguments;
       }
-      contData->exceptionTag = exceptionTag;
+      // Fill in the continuation data. How we do this depends on whether we
+      // are resume or resume_throw*.
+      if (auto* resumeThrow = curr->template dynCast<ResumeThrow>()) {
+        if (resumeThrow->tag) {
+          // resume_throw
+          contData->exceptionTag =
+            self()->getModule()->getTag(resumeThrow->tag);
+        } else {
+          // resume_throw_ref
+          contData->exception = arguments[0];
+        }
+      }
+
       self()->pushCurrContinuation(contData);
       self()->continuationStore->resuming = true;
 #if WASM_INTERPRETER_DEBUG
@@ -4676,10 +4738,7 @@ public:
     return ret;
   }
   Flow visitResume(Resume* curr) { return doResume(curr); }
-  Flow visitResumeThrow(ResumeThrow* curr) {
-    // TODO: should the Resume and ResumeThrow classes be merged?
-    return doResume(curr, self()->getModule()->getTag(curr->tag));
-  }
+  Flow visitResumeThrow(ResumeThrow* curr) { return doResume(curr); }
   Flow visitStackSwitch(StackSwitch* curr) { return Flow(NONCONSTANT_FLOW); }
 
   void trap(const char* why) override {
@@ -4751,10 +4810,7 @@ public:
         // to do is just start calling this function (with the arguments we've
         // set), so resuming is done. (And throw, if resume_throw.)
         self()->continuationStore->resuming = false;
-        if (auto* tag = currContinuation->exceptionTag) {
-          throwException(WasmException{
-            self()->makeExnData(tag, currContinuation->resumeArguments)});
-        }
+        maybeThrowAfterResuming(currContinuation);
       }
     }
 
@@ -4861,9 +4917,17 @@ public:
       // There was a return call, so we need to call the next function before
       // returning to the caller. The flow carries the function arguments and a
       // function reference.
-      name = flow.values.back().getFunc();
+      auto nextData = flow.values.back().getFuncData();
+      name = nextData->name;
       flow.values.pop_back();
       arguments = flow.values;
+
+      if (nextData->self != this) {
+        // This function is in another module. Call from there.
+        auto other = (decltype(this))nextData->self;
+        flow = other->callFunction(name, arguments);
+        break;
+      }
     }
 
     if (flow.breaking() && flow.breakTo == NONCONSTANT_FLOW) {
