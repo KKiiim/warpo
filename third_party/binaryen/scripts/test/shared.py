@@ -12,17 +12,17 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from __future__ import print_function
 
 import argparse
 import difflib
 import fnmatch
 import glob
 import os
-from pathlib import Path
 import shutil
+import stat
 import subprocess
 import sys
+from pathlib import Path
 
 # The C++ standard whose features are required to build Binaryen.
 # Keep in sync with CMakeLists.txt CXX_STANDARD
@@ -114,7 +114,6 @@ warnings = []
 
 
 def warn(text):
-    global warnings
     warnings.append(text)
     print('warning:', text, file=sys.stderr)
 
@@ -176,7 +175,7 @@ def which(program):
             # Prefer tools installed using third_party/setup.py
             os.path.join(options.binaryen_root, 'third_party', 'mozjs'),
             os.path.join(options.binaryen_root, 'third_party', 'v8'),
-            os.path.join(options.binaryen_root, 'third_party', 'wabt', 'bin')
+            os.path.join(options.binaryen_root, 'third_party', 'wabt', 'bin'),
         ] + os.environ['PATH'].split(os.pathsep)
         for path in paths:
             path = path.strip('"')
@@ -265,9 +264,7 @@ V8_OPTS = [
 
 try:
     if NODEJS is not None:
-        subprocess.check_call([NODEJS, '--version'],
-                              stdout=subprocess.PIPE,
-                              stderr=subprocess.PIPE)
+        subprocess.run([NODEJS, '--version'], check=True, capture_output=True)
 except (OSError, subprocess.CalledProcessError):
     NODEJS = None
 if NODEJS is None:
@@ -291,7 +288,6 @@ def delete_from_orbit(filename):
     if not os.path.exists(filename):
         return
     try:
-        import stat
         os.chmod(filename, os.stat(filename).st_mode | stat.S_IWRITE)
 
         def remove_readonly_and_try_again(func, path, exc_info):
@@ -299,29 +295,16 @@ def delete_from_orbit(filename):
                 os.chmod(path, os.stat(path).st_mode | stat.S_IWRITE)
                 func(path)
             else:
-                raise
+                raise exc_info[1]
         shutil.rmtree(filename, onerror=remove_readonly_and_try_again)
     except OSError:
         pass
 
 
-# This is a workaround for https://bugs.python.org/issue9400
-class Py2CalledProcessError(subprocess.CalledProcessError):
-    def __init__(self, returncode, cmd, output=None, stderr=None):
-        super(Exception, self).__init__(returncode, cmd, output, stderr)
-        self.returncode = returncode
-        self.cmd = cmd
-        self.output = output
-        self.stderr = stderr
-
-
-def run_process(cmd, check=True, input=None, capture_output=False, decode_output=True, *args, **kw):
+def run_process(cmd, check=True, input=None, decode_output=True, *args, **kwargs):
     if input and type(input) is str:
         input = bytes(input, 'utf-8')
-    if capture_output:
-        kw['stdout'] = subprocess.PIPE
-        kw['stderr'] = subprocess.PIPE
-    ret = subprocess.run(cmd, check=check, input=input, *args, **kw)
+    ret = subprocess.run(cmd, *args, check=check, input=input, **kwargs)
     if decode_output and ret.stdout is not None:
         ret.stdout = ret.stdout.decode('utf-8')
     if ret.stderr is not None:
@@ -345,7 +328,7 @@ def fail(actual, expected, fromfile='expected'):
         expected.split('\n'), actual.split('\n'),
         fromfile=fromfile, tofile='actual')
     diff_str = ''.join([a.rstrip() + '\n' for a in diff_lines])[:]
-    fail_with_error("incorrect output, diff:\n\n%s" % diff_str)
+    fail_with_error(f'incorrect output, diff:\n\n{diff_str}')
 
 
 def fail_if_not_identical(actual, expected, fromfile='expected'):
@@ -443,22 +426,22 @@ SPEC_TESTSUITE_TESTS_TO_SKIP = [
     'imports.wast',  # Missing validation of missing function on instantiation
     'proposals/threads/imports.wast',  # Missing memory type validation on instantiation
     'linking.wast',  # Missing function type validation on instantiation
-    'memory.wast',   # Requires wast `module definition` support
     'proposals/threads/memory.wast',  # Missing memory type validation on instantiation
     'memory64-imports.wast',  # Missing validation on instantiation
     'annotations.wast',  # String annotations IDs should be allowed
     'id.wast',       # Empty IDs should be disallowed
-    'instance.wast',  # Requires wast `module definition` support
-    'table64.wast',   # Requires wast `module definition` support
+    # Requires correct handling of tag imports from different instances of the same module,
+    # ref.null wast constants, and splitting for module instances
+    'instance.wast',
+    'table64.wast',   # Requires validations for table size
     'table_grow.wast',  # Incorrect table linking semantics in interpreter
     'tag.wast',      # Non-empty tag results allowed by stack switching
     'try_table.wast',  # Requires try_table interpretation
     'local_init.wast',  # Requires local validation to respect unnamed blocks
     'ref_func.wast',   # Requires rejecting undeclared functions references
-    'ref_is_null.wast',  # Requires ref.null wast constants
-    'ref_null.wast',     # Requires ref.null wast constants
+    'ref_is_null.wast',  # Requires support for non-nullable reference types in tables
     'return_call_indirect.wast',  # Requires more precise unreachable validation
-    'select.wast',  # Requires ref.null wast constants
+    'select.wast',  # Missing validation of type annotation on select
     'table.wast',  # Requires support for table default elements
     'unreached-invalid.wast',  # Requires more precise unreachable validation
     'array.wast',  # Requires support for table default elements
@@ -473,7 +456,7 @@ SPEC_TESTSUITE_TESTS_TO_SKIP = [
     'type-rec.wast',  # Missing function type validation on instantiation
     'type-subtyping.wast',  # ShellExternalInterface::callTable does not handle subtyping
     'call_indirect.wast',   # Bug with 64-bit inline element segment parsing
-    'memory64.wast',        # Requires wast `module definition` support
+    'memory64.wast',        # Requires validations for memory size
     'imports0.wast',        # Missing memory type validation on instantiation
     'imports2.wast',        # Missing memory type validation on instantiation
     'imports3.wast',        # Missing memory type validation on instantiation
@@ -519,45 +502,37 @@ options.spec_tests = [t for t in options.spec_tests if _can_run_spec_test(t)]
 
 
 def binary_format_check(wast, verify_final_result=True, wasm_as_args=['-g'],
-                        binary_suffix='.fromBinary'):
+                        binary_suffix='.fromBinary', base_name=None, stdout=None):
     # checks we can convert the wast to binary and back
 
-    print('         (binary format check)')
-    cmd = WASM_AS + [wast, '-o', 'a.wasm', '-all'] + wasm_as_args
-    print('            ', ' '.join(cmd))
-    if os.path.exists('a.wasm'):
-        os.unlink('a.wasm')
-    subprocess.check_call(cmd, stdout=subprocess.PIPE)
-    assert os.path.exists('a.wasm')
+    as_file = f"{base_name}-a.wasm" if base_name is not None else "a.wasm"
+    disassembled_file = f"{base_name}-ab.wast" if base_name is not None else "ab.wast"
 
-    cmd = WASM_DIS + ['a.wasm', '-o', 'ab.wast', '-all']
-    print('            ', ' '.join(cmd))
-    if os.path.exists('ab.wast'):
-        os.unlink('ab.wast')
+    print('         (binary format check)', file=stdout)
+    cmd = WASM_AS + [wast, '-o', as_file, '-all'] + wasm_as_args
+    print('            ', ' '.join(cmd), file=stdout)
+    if os.path.exists(as_file):
+        os.unlink(as_file)
     subprocess.check_call(cmd, stdout=subprocess.PIPE)
-    assert os.path.exists('ab.wast')
+    assert os.path.exists(as_file)
+
+    cmd = WASM_DIS + [as_file, '-o', disassembled_file, '-all']
+    print('            ', ' '.join(cmd), file=stdout)
+    if os.path.exists(disassembled_file):
+        os.unlink(disassembled_file)
+    subprocess.check_call(cmd, stdout=subprocess.PIPE)
+    assert os.path.exists(disassembled_file)
 
     # make sure it is a valid wast
-    cmd = WASM_OPT + ['ab.wast', '-all', '-q']
-    print('            ', ' '.join(cmd))
+    cmd = WASM_OPT + [disassembled_file, '-all', '-q']
+    print('            ', ' '.join(cmd), file=stdout)
     subprocess.check_call(cmd, stdout=subprocess.PIPE)
 
     if verify_final_result:
-        actual = open('ab.wast').read()
+        actual = open(disassembled_file).read()
         fail_if_not_identical_to_file(actual, wast + binary_suffix)
 
-    return 'ab.wast'
-
-
-def minify_check(wast, verify_final_result=True):
-    # checks we can parse minified output
-
-    print('     (minify check)')
-    cmd = WASM_OPT + [wast, '--print-minified', '-all']
-    print('      ', ' '.join(cmd))
-    subprocess.check_call(cmd, stdout=open('a.wast', 'w'), stderr=subprocess.PIPE)
-    subprocess.check_call(WASM_OPT + ['a.wast', '-all'],
-                          stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    return disassembled_file
 
 
 # run a check with BINARYEN_PASS_DEBUG set, to do full validation
@@ -569,9 +544,8 @@ def with_pass_debug(check):
     finally:
         if old_pass_debug is not None:
             os.environ['BINARYEN_PASS_DEBUG'] = old_pass_debug
-        else:
-            if 'BINARYEN_PASS_DEBUG' in os.environ:
-                del os.environ['BINARYEN_PASS_DEBUG']
+        elif 'BINARYEN_PASS_DEBUG' in os.environ:
+            del os.environ['BINARYEN_PASS_DEBUG']
 
 
 # checks if we are on windows, and if so logs out that a test is being skipped,
@@ -579,7 +553,7 @@ def with_pass_debug(check):
 # windows, so that we can easily find which tests are skipped.
 def skip_if_on_windows(name):
     if get_platform() == 'windows':
-        print('skipping test "%s" on windows' % name)
+        print(f'skipping test "{name}" on windows')
         return True
     return False
 

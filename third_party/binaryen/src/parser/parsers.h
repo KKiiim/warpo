@@ -2743,6 +2743,21 @@ Result<> makeResumeThrow(Ctx& ctx,
   return ctx.makeResumeThrow(pos, annotations, *type, *exnTag, *resumetable);
 }
 
+// resume_throw_ref ::= 'resume_throw' typeidx ('(' 'on' tagidx labelidx |
+// 'on' tagidx switch ')')*
+template<typename Ctx>
+Result<> makeResumeThrowRef(Ctx& ctx,
+                            Index pos,
+                            const std::vector<Annotation>& annotations) {
+  auto type = typeidx(ctx);
+  CHECK_ERR(type);
+
+  auto resumetable = makeResumeTable(ctx);
+  CHECK_ERR(resumetable);
+
+  return ctx.makeResumeThrowRef(pos, annotations, *type, *resumetable);
+}
+
 // switch ::= 'switch' typeidx tagidx
 template<typename Ctx>
 Result<> makeStackSwitch(Ctx& ctx,
@@ -3882,6 +3897,15 @@ template<typename Ctx> MaybeResult<> modulefield(Ctx& ctx) {
   return ctx.in.err("unrecognized module field");
 }
 
+// (m:modulefield)*
+template<typename Ctx> Result<> moduleBody(Ctx& ctx) {
+  while (auto field = modulefield(ctx)) {
+    CHECK_ERR(field);
+  }
+
+  return Ok{};
+}
+
 // module ::= '(' 'module' id? (m:modulefield)* ')'
 //          | (m:modulefield)* eof
 template<typename Ctx> Result<> module(Ctx& ctx) {
@@ -3893,9 +3917,7 @@ template<typename Ctx> Result<> module(Ctx& ctx) {
     }
   }
 
-  while (auto field = modulefield(ctx)) {
-    CHECK_ERR(field);
-  }
+  CHECK_ERR(moduleBody(ctx));
 
   if (outer && !ctx.in.takeRParen()) {
     return ctx.in.err("expected end of module");
