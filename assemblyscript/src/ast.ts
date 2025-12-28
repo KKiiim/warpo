@@ -1,20 +1,11 @@
-/**
- * @fileoverview Abstract syntax tree representing a source file once parsed.
- *
- * Each node in the AST is represented by an instance of a subclass of `Node`,
- * with its `Node#kind` represented by one of the `NodeKind` constants, which
- * dependent code typically switches over. The intended way to create a node
- * is to use the respective `Node.createX` method instead of its constructor.
- *
- * Note that the AST does not contain any type information except type names.
- *
- * @license Apache-2.0
- */
+// Copyright (C) 2025 Daniel Wirtz / The AssemblyScript Authors
+// Copyright (C) 2025 wasm-ecosystem
+// SPDX-License-Identifier: Apache-2.0
 
 // TODO: Make the AST more easily serializable by refactoring `Node#range` so
 // it doesn't reference the non-serializable `Source` object.
 
-import { CommonFlags, PATH_DELIMITER, LIBRARY_PREFIX, LIBRARY_SUBST } from "./common";
+import { CommonFlags, PATH_DELIMITER, LIBRARY_PREFIX } from "./common";
 
 import { Range } from "./diagnostics";
 
@@ -919,7 +910,7 @@ export enum DecoratorKind {
 }
 
 export namespace DecoratorKind {
-  /** Returns the kind of the specified decorator name node. Defaults to {@link DecoratorKind.CUSTOM}. */
+  /** Returns the kind of the specified decorator name node. Defaults to {@link DecoratorKind.Custom}. */
   export function fromNode(nameNode: Expression): DecoratorKind {
     if (nameNode.kind == NodeKind.Identifier) {
       let nameStr = (<IdentifierExpression>nameNode).text;

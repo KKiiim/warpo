@@ -1,7 +1,6 @@
-/**
- * @fileoverview The AssemblyScript compiler.
- * @license Apache-2.0
- */
+// Copyright (C) 2025 Daniel Wirtz / The AssemblyScript Authors
+// Copyright (C) 2025 wasm-ecosystem
+// SPDX-License-Identifier: Apache-2.0
 
 import {
   BuiltinNames,
@@ -174,11 +173,9 @@ import {
   v128_ones,
 } from "./util";
 
-import { RtraceMemory } from "./passes/rtrace";
-
 import { liftRequiresExportRuntime, lowerRequiresExportRuntime } from "./bindings/js";
 import { markDataElementImmutable, addGlobal, addSubProgram, markCallInlined } from "./warpo";
-import { mangleImportName, mangleInternalName } from "./mangle";
+import { mangleImportName } from "./mangle";
 
 /** Features enabled by default. */
 export const defaultFeatures =
@@ -733,10 +730,6 @@ export class Compiler extends DiagnosticEmitter {
         TypeRef.I32
       );
     }
-    if (program.lookup("ASC_RTRACE") != null) {
-      new RtraceMemory(this).walkModule();
-    }
-
     return module;
   }
 
