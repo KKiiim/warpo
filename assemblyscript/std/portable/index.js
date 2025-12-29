@@ -294,9 +294,9 @@ if (typeof globalScope.ASC_TARGET === "undefined") {
 
   if (!String.prototype.replaceAll) {
     Object.defineProperty(String.prototype, "replaceAll", {
-      value: function replaceAll(search, replacment) {
-        let res = this.split(search).join(replacment);
-        if (!search.length) res = replacment + res + replacment;
+      value: function replaceAll(search, replacement) {
+        let res = this.split(search).join(replacement);
+        if (!search.length) res = replacement + res + replacement;
         return res;
       },
       configurable: true,
