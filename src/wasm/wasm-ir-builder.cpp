@@ -1166,7 +1166,6 @@ IRBuilder::fixExtraOutput(ScopeCtx& scope, Name label, Expression* curr) {
 
     // If all the received values are in the scratch local, just fetch them out.
     if (receivedType == Type::none) {
-      assert(extraType == labelType);
       curr = builder.makeSequence(
         curr, builder.makeLocalGet(extraLocal, extraType), extraType);
       continue;
@@ -1484,24 +1483,23 @@ Result<> IRBuilder::makeStore(
   return Ok{};
 }
 
-Result<>
-IRBuilder::makeAtomicLoad(unsigned bytes, Address offset, Type type, Name mem) {
+Result<> IRBuilder::makeAtomicLoad(
+  unsigned bytes, Address offset, Type type, Name mem, MemoryOrder order) {
   Load curr;
   curr.memory = mem;
   CHECK_ERR(visitLoad(&curr));
-  push(builder.makeAtomicLoad(bytes, offset, curr.ptr, type, mem));
+  push(builder.makeAtomicLoad(bytes, offset, curr.ptr, type, mem, order));
   return Ok{};
 }
 
-Result<> IRBuilder::makeAtomicStore(unsigned bytes,
-                                    Address offset,
-                                    Type type,
-                                    Name mem) {
+Result<> IRBuilder::makeAtomicStore(
+  unsigned bytes, Address offset, Type type, Name mem, MemoryOrder order) {
   Store curr;
   curr.memory = mem;
   curr.valueType = type;
   CHECK_ERR(visitStore(&curr));
-  push(builder.makeAtomicStore(bytes, offset, curr.ptr, curr.value, type, mem));
+  push(builder.makeAtomicStore(
+    bytes, offset, curr.ptr, curr.value, type, mem, order));
   return Ok{};
 }
 
@@ -2168,6 +2166,9 @@ Result<> IRBuilder::makeStructGet(HeapType type,
                                   Index field,
                                   bool signed_,
                                   MemoryOrder order) {
+  if (!type.isStruct()) {
+    return Err{"expected struct type annotation on struct.get"};
+  }
   const auto& fields = type.getStruct().fields;
   StructGet curr;
   CHECK_ERR(ChildPopper{*this}.visitStructGet(&curr, type));
@@ -2268,6 +2269,9 @@ Result<> IRBuilder::makeArrayNewFixed(HeapType type, uint32_t arity) {
 
 Result<>
 IRBuilder::makeArrayGet(HeapType type, bool signed_, MemoryOrder order) {
+  if (!type.isArray()) {
+    return Err{"expected array type annotation on array.get"};
+  }
   ArrayGet curr;
   CHECK_ERR(ChildPopper{*this}.visitArrayGet(&curr, type));
   CHECK_ERR(validateTypeAnnotation(type, curr.ref));

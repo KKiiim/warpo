@@ -373,7 +373,6 @@ public:
                  Type type,
                  Name memory) {
     auto* ret = wasm.allocator.alloc<Load>();
-    ret->isAtomic = false;
     ret->bytes = bytes;
     ret->signed_ = signed_;
     ret->offset = offset;
@@ -381,13 +380,21 @@ public:
     ret->ptr = ptr;
     ret->type = type;
     ret->memory = memory;
+    ret->order = MemoryOrder::Unordered;
     ret->finalize();
     return ret;
   }
-  Load* makeAtomicLoad(
-    unsigned bytes, Address offset, Expression* ptr, Type type, Name memory) {
+  Load* makeAtomicLoad(unsigned bytes,
+                       Address offset,
+                       Expression* ptr,
+                       Type type,
+                       Name memory,
+                       MemoryOrder order) {
+    assert(order != MemoryOrder::Unordered &&
+           "Atomic loads can't be unordered");
+
     Load* load = makeLoad(bytes, false, offset, bytes, ptr, type, memory);
-    load->isAtomic = true;
+    load->order = order;
     return load;
   }
   AtomicWait* makeAtomicWait(Expression* ptr,
@@ -428,7 +435,6 @@ public:
                    Type type,
                    Name memory) {
     auto* ret = wasm.allocator.alloc<Store>();
-    ret->isAtomic = false;
     ret->bytes = bytes;
     ret->offset = offset;
     ret->align = align;
@@ -436,6 +442,7 @@ public:
     ret->value = value;
     ret->valueType = type;
     ret->memory = memory;
+    ret->order = MemoryOrder::Unordered;
     ret->finalize();
     return ret;
   }
@@ -444,9 +451,13 @@ public:
                          Expression* ptr,
                          Expression* value,
                          Type type,
-                         Name memory) {
+                         Name memory,
+                         MemoryOrder order) {
+    assert(order != MemoryOrder::Unordered &&
+           "Atomic stores can't be unordered");
+
     Store* store = makeStore(bytes, offset, bytes, ptr, value, type, memory);
-    store->isAtomic = true;
+    store->order = order;
     return store;
   }
   AtomicRMW* makeAtomicRMW(AtomicRMWOp op,

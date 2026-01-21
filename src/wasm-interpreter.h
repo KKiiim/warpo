@@ -29,15 +29,19 @@
 #define wasm_wasm_interpreter_h
 
 #include <cmath>
+#include <iomanip>
 #include <limits.h>
 #include <sstream>
 #include <variant>
 
 #include "fp16.h"
+#include "ir/import-utils.h"
 #include "ir/intrinsics.h"
 #include "ir/iteration.h"
+#include "ir/memory-utils.h"
 #include "ir/module-utils.h"
 #include "ir/properties.h"
+#include "ir/table-utils.h"
 #include "support/bits.h"
 #include "support/safe_integer.h"
 #include "support/stdckdint.h"
@@ -86,7 +90,7 @@ public:
   }
 
   Literals values;
-  Name breakTo; // if non-null, a break is going on
+  Name breakTo;              // if non-null, a break is going on
   Tag* suspendTag = nullptr; // if non-null, breakTo must be SUSPEND_FLOW, and
                              // this is the tag being suspended
 
@@ -2694,9 +2698,9 @@ public:
     return makeGCData(std::move(contents), curr->type);
   }
 
-  virtual void trap(const char* why) { WASM_UNREACHABLE("unimp"); }
+  virtual void trap(std::string_view why) { WASM_UNREACHABLE("unimp"); }
 
-  virtual void hostLimit(const char* why) { WASM_UNREACHABLE("unimp"); }
+  virtual void hostLimit(std::string_view why) { WASM_UNREACHABLE("unimp"); }
 
   virtual void throwException(const WasmException& exn) {
     WASM_UNREACHABLE("unimp");
@@ -2929,16 +2933,16 @@ public:
   Flow visitResumeThrow(ResumeThrow* curr) { return Flow(NONCONSTANT_FLOW); }
   Flow visitStackSwitch(StackSwitch* curr) { return Flow(NONCONSTANT_FLOW); }
 
-  void trap(const char* why) override { throw NonconstantException(); }
+  void trap(std::string_view why) override { throw NonconstantException(); }
 
-  void hostLimit(const char* why) override { throw NonconstantException(); }
+  void hostLimit(std::string_view why) override {
+    throw NonconstantException();
+  }
 
   virtual void throwException(const WasmException& exn) override {
     throw NonconstantException();
   }
 };
-
-using GlobalValueSet = std::map<Name, Literals>;
 
 //
 // A runner for a module. Each runner contains the information to execute the
@@ -2967,15 +2971,14 @@ public:
       std::map<Name, std::shared_ptr<SubType>> linkedInstances = {}) {}
     virtual ~ExternalInterface() = default;
     virtual void init(Module& wasm, SubType& instance) {}
-    virtual void importGlobals(GlobalValueSet& globals, Module& wasm) = 0;
     virtual Literal getImportedFunction(Function* import) = 0;
     virtual bool growMemory(Name name, Address oldSize, Address newSize) = 0;
     virtual bool growTable(Name name,
                            const Literal& value,
                            Index oldSize,
                            Index newSize) = 0;
-    virtual void trap(const char* why) = 0;
-    virtual void hostLimit(const char* why) = 0;
+    virtual void trap(std::string_view why) = 0;
+    virtual void hostLimit(std::string_view why) = 0;
     virtual void throwException(const WasmException& exn) = 0;
     // Get the Tag instance for a tag implemented in the host, that is, not
     // among the linked ModuleRunner instances, but imported from the host.
@@ -3172,18 +3175,23 @@ public:
   // TODO: this duplicates module in ExpressionRunner, and can be removed
   Module& wasm;
 
-  // Values of globals
-  GlobalValueSet globals;
-
   // Multivalue ABI support (see push/pop).
   std::vector<Literals> multiValues;
+
+  // Keyed by internal name. All globals in the module, including imports.
+  // `definedGlobals` contains non-imported globals. Points to `definedGlobals`
+  // of this instance and other instances.
+  std::map<Name, Literals*> allGlobals;
 
   ModuleRunnerBase(
     Module& wasm,
     ExternalInterface* externalInterface,
+    std::shared_ptr<ImportResolver> importResolver,
     std::map<Name, std::shared_ptr<SubType>> linkedInstances_ = {})
     : ExpressionRunner<SubType>(&wasm), wasm(wasm),
-      externalInterface(externalInterface), linkedInstances(linkedInstances_) {
+      externalInterface(externalInterface),
+      linkedInstances(std::move(linkedInstances_)),
+      importResolver(std::move(importResolver)) {
     // Set up a single shared CurrContinuations for all these linked instances,
     // reusing one if it exists.
     std::shared_ptr<ContinuationStore> shared;
@@ -3205,16 +3213,15 @@ public:
   // Start up this instance. This must be called before doing anything else.
   // (This is separate from the constructor so that it does not occur
   // synchronously, which makes some code patterns harder to write.)
-  void instantiate() {
-    // import globals from the outside
-    externalInterface->importGlobals(globals, wasm);
-    // generate internal (non-imported) globals
-    ModuleUtils::iterDefinedGlobals(wasm, [&](Global* global) {
-      globals[global->name] = self()->visit(global->init).values;
-    });
-
+  void instantiate(bool validateImports_ = false) {
     // initialize the rest of the external interface
     externalInterface->init(wasm, *self());
+
+    initializeGlobals();
+
+    if (validateImports_) {
+      validateImports();
+    }
 
     initializeTableContents();
     initializeMemoryContents();
@@ -3252,18 +3259,28 @@ public:
                    func->type);
   }
 
-  // get an exported global
-  Literals getExportedGlobal(Name name) {
+  Literals* getExportedGlobalOrNull(Name name) {
     Export* export_ = wasm.getExportOrNull(name);
     if (!export_ || export_->kind != ExternalKind::Global) {
-      externalInterface->trap("getExport external not found");
+      return nullptr;
     }
     Name internalName = *export_->getInternalName();
-    auto iter = globals.find(internalName);
-    if (iter == globals.end()) {
-      externalInterface->trap("getExport internal not found");
+    auto iter = allGlobals.find(internalName);
+    if (iter == allGlobals.end()) {
+      return nullptr;
     }
     return iter->second;
+  }
+
+  Literals& getExportedGlobalOrTrap(Name name) {
+    auto* global = getExportedGlobalOrNull(name);
+    if (!global) {
+      externalInterface->trap((std::stringstream()
+                               << "getExportedGlobal: export " << name
+                               << " not found.")
+                                .str());
+    }
+    return *global;
   }
 
   Tag* getExportedTag(Name name) {
@@ -3288,6 +3305,11 @@ public:
   }
 
 private:
+  // Globals that were defined in this module and not from an import.
+  // `allGlobals` contains these values + imported globals, keyed by their
+  // internal name.
+  std::vector<Literals> definedGlobals;
+
   // Keep a record of call depth, to guard against excessive recursion.
   size_t callDepth = 0;
 
@@ -3307,6 +3329,81 @@ private:
     Name name;
   };
 
+  // Validates that the export that provides `importable` exists and has the
+  // same kind that the import expects (`kind`).
+  void validateImportKindMatches(ExternalKind kind,
+                                 const Importable& importable) {
+    auto it = linkedInstances.find(importable.module);
+    if (it == linkedInstances.end()) {
+      trap((std::stringstream()
+            << "Import module " << std::quoted(importable.module.toString())
+            << " doesn't exist.")
+             .str());
+    }
+    auto* importedInstance = it->second.get();
+
+    Export* export_ = importedInstance->wasm.getExportOrNull(importable.base);
+
+    if (!export_) {
+      trap((std::stringstream()
+            << "Export " << importable.base << " doesn't exist.")
+             .str());
+    }
+    if (export_->kind != kind) {
+      trap((std::stringstream() << "Exported kind: " << export_->kind
+                                << " doesn't match expected kind: " << kind)
+             .str());
+    }
+  }
+
+  // Trap if types don't match between all imports and their corresponding
+  // exports. Imported memories and tables must also be a subtype of their
+  // export.
+  void validateImports() {
+    ModuleUtils::iterImportable(
+      wasm,
+      [this](ExternalKind kind,
+             std::variant<Function*, Memory*, Tag*, Global*, Table*> import) {
+        Importable* importable = std::visit(
+          [](const auto& import) -> Importable* { return import; }, import);
+
+        // These two modules are injected implicitly to tests. We won't find any
+        // import information for them.
+        if (importable->module == "binaryen-intrinsics" ||
+            (importable->module == "spectest" &&
+             importable->base.startsWith("print")) ||
+            importable->module == "fuzzing-support") {
+          return;
+        }
+
+        validateImportKindMatches(kind, *importable);
+
+        SubType* importedInstance =
+          linkedInstances.at(importable->module).get();
+        Export* export_ =
+          importedInstance->wasm.getExportOrNull(importable->base);
+
+        if (auto** memory = std::get_if<Memory*>(&import)) {
+          Memory exportedMemory =
+            *importedInstance->wasm.getMemory(*export_->getInternalName());
+          exportedMemory.initial =
+            importedInstance->getMemorySize(*export_->getInternalName());
+
+          if (!MemoryUtils::isSubType(exportedMemory, **memory)) {
+            trap("Imported memory isn't compatible.");
+          }
+        }
+
+        if (auto** table = std::get_if<Table*>(&import)) {
+          Table* exportedTable =
+            importedInstance->wasm.getTable(*export_->getInternalName());
+          if (!TableUtils::isSubType(*exportedTable, **table)) {
+            trap("Imported table isn't compatible");
+          }
+        }
+      });
+  }
+
   TableInstanceInfo getTableInstanceInfo(Name name) {
     auto* table = wasm.getTable(name);
     if (table->imported()) {
@@ -3317,6 +3414,41 @@ private:
     }
 
     return TableInstanceInfo{self(), name};
+  }
+
+  void initializeGlobals() {
+    int definedGlobalCount = 0;
+    ModuleUtils::iterDefinedGlobals(
+      wasm, [&definedGlobalCount](auto&& _) { ++definedGlobalCount; });
+    definedGlobals.reserve(definedGlobalCount);
+
+    for (auto& global : wasm.globals) {
+      if (global->imported()) {
+        auto importNames = global->importNames();
+        auto importedGlobal =
+          importResolver->getGlobalOrNull(importNames, global->type);
+        if (!importedGlobal) {
+          externalInterface->trap((std::stringstream()
+                                   << "Imported global " << importNames
+                                   << " not found.")
+                                    .str());
+        }
+        auto [_, inserted] =
+          allGlobals.try_emplace(global->name, importedGlobal);
+        (void)inserted; // for noassert builds
+        // parsing/validation checked this already.
+        assert(inserted && "Unexpected repeated global name");
+      } else {
+        Literals init = self()->visit(global->init).values;
+        auto& definedGlobal = definedGlobals.emplace_back(std::move(init));
+
+        auto [_, inserted] =
+          allGlobals.try_emplace(global->name, &definedGlobal);
+        (void)inserted; // for noassert builds
+        // parsing/validation checked this already.
+        assert(inserted && "Unexpected repeated global name");
+      }
+    }
   }
 
   void initializeTableContents() {
@@ -3364,12 +3496,16 @@ private:
   };
 
   MemoryInstanceInfo getMemoryInstanceInfo(Name name) {
-    auto* memory = wasm.getMemory(name);
-    if (memory->imported()) {
-      auto& importedInstance = linkedInstances.at(memory->module);
-      auto* memoryExport = importedInstance->wasm.getExport(memory->base);
-      return importedInstance->getMemoryInstanceInfo(
-        *memoryExport->getInternalName());
+    auto* instance = self();
+    Export* memoryExport = nullptr;
+    for (auto* memory = instance->wasm.getMemory(name); memory->imported();
+         memory = instance->wasm.getMemory(*memoryExport->getInternalName())) {
+      instance = instance->linkedInstances.at(memory->module).get();
+      memoryExport = instance->wasm.getExport(memory->base);
+    }
+
+    if (memoryExport) {
+      return instance->getMemoryInstanceInfo(*memoryExport->getInternalName());
     }
 
     return MemoryInstanceInfo{self(), name};
@@ -3423,6 +3559,11 @@ private:
   }
 
   Address getMemorySize(Name memory) {
+    auto info = getMemoryInstanceInfo(memory);
+    if (info.instance != self()) {
+      return info.instance->getMemorySize(info.name);
+    }
+
     auto iter = memorySizes.find(memory);
     if (iter == memorySizes.end()) {
       externalInterface->trap("getMemorySize called on non-existing memory");
@@ -3435,7 +3576,7 @@ private:
     if (iter == memorySizes.end()) {
       externalInterface->trap("setMemorySize called on non-existing memory");
     }
-    memorySizes[memory] = size;
+    iter->second = size;
   }
 
 public:
@@ -3509,20 +3650,8 @@ private:
   SmallVector<std::pair<WasmException, Name>, 4> exceptionStack;
 
 protected:
-  // Returns a reference to the current value of a potentially imported global.
-  Literals& getGlobal(Name name) {
-    auto* inst = self();
-    auto* global = inst->wasm.getGlobal(name);
-    while (global->imported()) {
-      inst = inst->linkedInstances.at(global->module).get();
-      Export* globalExport = inst->wasm.getExport(global->base);
-      global = inst->wasm.getGlobal(*globalExport->getInternalName());
-    }
-
-    return inst->globals[global->name];
-  }
-
-  // As above, but for a function.
+  // Returns a reference to the current value of a potentially imported
+  // function.
   Literal getFunction(Name name) {
     auto* inst = self();
     auto* func = inst->wasm.getFunction(name);
@@ -3844,13 +3973,13 @@ public:
 
   Flow visitGlobalGet(GlobalGet* curr) {
     auto name = curr->name;
-    return getGlobal(name);
+    return *allGlobals.at(name);
   }
   Flow visitGlobalSet(GlobalSet* curr) {
     auto name = curr->name;
     VISIT(flow, curr->value)
 
-    getGlobal(name) = flow.values;
+    *allGlobals.at(name) = flow.values;
     return Flow();
   }
 
@@ -3860,7 +3989,7 @@ public:
     auto memorySize = info.instance->getMemorySize(info.name);
     auto addr =
       info.instance->getFinalAddress(curr, flow.getSingleValue(), memorySize);
-    if (curr->isAtomic) {
+    if (curr->isAtomic()) {
       info.instance->checkAtomicAddress(addr, curr->bytes, memorySize);
     }
     auto ret = info.interface()->load(curr, addr, info.name);
@@ -3873,7 +4002,7 @@ public:
     auto memorySize = info.instance->getMemorySize(info.name);
     auto addr =
       info.instance->getFinalAddress(curr, ptr.getSingleValue(), memorySize);
-    if (curr->isAtomic) {
+    if (curr->isAtomic()) {
       info.instance->checkAtomicAddress(addr, curr->bytes, memorySize);
     }
     info.interface()->store(curr, addr, value.getSingleValue(), info.name);
@@ -3993,7 +4122,7 @@ public:
     load.signed_ = false;
     load.offset = curr->offset;
     load.align = curr->align;
-    load.isAtomic = false;
+    load.order = MemoryOrder::Unordered;
     load.ptr = curr->ptr;
     Literal (Literal::*splat)() const = nullptr;
     switch (curr->op) {
@@ -4741,13 +4870,13 @@ public:
   Flow visitResumeThrow(ResumeThrow* curr) { return doResume(curr); }
   Flow visitStackSwitch(StackSwitch* curr) { return Flow(NONCONSTANT_FLOW); }
 
-  void trap(const char* why) override {
+  void trap(std::string_view why) override {
     // Traps break all current continuations - they will never be resumable.
     self()->clearContinuationStore();
     externalInterface->trap(why);
   }
 
-  void hostLimit(const char* why) override {
+  void hostLimit(std::string_view why) override {
     self()->clearContinuationStore();
     externalInterface->hostLimit(why);
   }
@@ -4965,7 +5094,7 @@ protected:
     if (lhs > rhs) {
       std::stringstream ss;
       ss << msg << ": " << lhs << " > " << rhs;
-      externalInterface->trap(ss.str().c_str());
+      externalInterface->trap(ss.str());
     }
   }
 
@@ -5021,7 +5150,7 @@ protected:
     // always an unsigned extension.
     load.signed_ = false;
     load.align = bytes;
-    load.isAtomic = true; // understatement
+    load.order = MemoryOrder::SeqCst;
     load.ptr = &ptr;
     load.type = type;
     load.memory = memoryName;
@@ -5043,7 +5172,7 @@ protected:
     Store store;
     store.bytes = bytes;
     store.align = bytes;
-    store.isAtomic = true; // understatement
+    store.order = MemoryOrder::SeqCst;
     store.ptr = &ptr;
     store.value = &value;
     store.valueType = value.type;
@@ -5053,6 +5182,7 @@ protected:
 
   ExternalInterface* externalInterface;
   std::map<Name, std::shared_ptr<SubType>> linkedInstances;
+  std::shared_ptr<ImportResolver> importResolver;
 };
 
 class ModuleRunner : public ModuleRunnerBase<ModuleRunner> {
@@ -5061,7 +5191,12 @@ public:
     Module& wasm,
     ExternalInterface* externalInterface,
     std::map<Name, std::shared_ptr<ModuleRunner>> linkedInstances = {})
-    : ModuleRunnerBase(wasm, externalInterface, linkedInstances) {}
+    : ModuleRunnerBase(
+        wasm,
+        externalInterface,
+        std::make_shared<LinkedInstancesImportResolver<ModuleRunner>>(
+          linkedInstances),
+        linkedInstances) {}
 
   Literal makeFuncData(Name name, Type type) {
     // As the super's |makeFuncData|, but here we also provide a way to

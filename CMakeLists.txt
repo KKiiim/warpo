@@ -2,10 +2,8 @@
 # https://launchpad.net/ubuntu/focal/+source/cmake
 cmake_minimum_required(VERSION 3.16.3)
 
-# Needed for C++17 (std::variant)
-# TODO(https://github.com/WebAssembly/binaryen/issues/4299): We need
-# to reduce this for compatability with emsdk.
-set(CMAKE_OSX_DEPLOYMENT_TARGET "10.14" CACHE STRING "Minimum OS X deployment version")
+# Needed for C++17 (std::path)
+set(CMAKE_OSX_DEPLOYMENT_TARGET "10.15" CACHE STRING "Minimum OS X deployment version")
 
 project(binaryen LANGUAGES C CXX VERSION 125)
 include(GNUInstallDirs)
@@ -221,11 +219,15 @@ if(NOT MSVC AND NOT EMSCRIPTEN)
   endif()
 endif()
 
+# The version of clang currently on our Mac bots doesn't seem to support this flag.
+if (CMAKE_CXX_COMPILER_ID MATCHES "Clang" AND NOT APPLE)
+  add_link_flag("-fuse-ld=lld")
+endif()
+
 if(BYN_ENABLE_LTO)
   if(NOT CMAKE_CXX_COMPILER_ID MATCHES "Clang")
     message(FATAL_ERROR "ThinLTO is only supported by clang")
   endif()
-  add_link_flag("-fuse-ld=lld")
   set_property(GLOBAL APPEND PROPERTY JOB_POOLS link_job_pool=2)
   set(CMAKE_JOB_POOL_LINK link_job_pool)
   add_compile_flag("-flto=thin")
@@ -469,14 +471,15 @@ if(BUILD_STATIC_LIB)
 else()
   message(STATUS "Building libbinaryen as shared library.")
   add_library(binaryen SHARED)
-  if(LINUX)
+  if(CMAKE_SYSTEM_NAME STREQUAL "Linux")
     # Disable interposition and resolve Binaryen symbols locally.
     add_link_flag("-Bsymbolic")
   endif()
 endif()
-target_link_libraries(binaryen Threads::Threads)
+target_link_libraries(binaryen PUBLIC Threads::Threads)
+binaryen_setup_rpath(binaryen)
 if(BUILD_LLVM_DWARF)
-  target_link_libraries(binaryen llvm_dwarf)
+  target_link_libraries(binaryen PRIVATE llvm_dwarf)
 endif()
 
 if(BUILD_MIMALLOC)
@@ -485,9 +488,12 @@ if(BUILD_MIMALLOC)
   endif()
   message(STATUS "Building with mimalloc allocator.")
   if(BUILD_STATIC_LIB)
-    target_link_libraries(binaryen mimalloc-static)
+    target_link_libraries(binaryen PRIVATE "-Wl,--push-state,--as-needed")
+    target_link_libraries(binaryen PRIVATE mimalloc-static)
+    target_link_libraries(binaryen PRIVATE "-Wl,--pop-state")
   else()
-    target_link_libraries(binaryen mimalloc)
+    target_link_options(mimalloc PRIVATE "-Wl,--as-needed")
+    target_link_libraries(binaryen PRIVATE mimalloc)
   endif()
 endif()
 

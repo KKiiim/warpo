@@ -129,18 +129,6 @@ struct ShellExternalInterface : ModuleRunner::ExternalInterface {
       wasm, [&](Table* table) { tables[table->name].resize(table->initial); });
   }
 
-  void importGlobals(std::map<Name, Literals>& globals, Module& wasm) override {
-    ModuleUtils::iterImportedGlobals(wasm, [&](Global* import) {
-      auto inst = getImportInstance(import);
-      auto* exportedGlobal = inst->wasm.getExportOrNull(import->base);
-      if (!exportedGlobal || exportedGlobal->kind != ExternalKind::Global) {
-        Fatal() << "importGlobals: unknown import: " << import->module.str
-                << "." << import->name.str;
-      }
-      globals[import->name] = inst->globals[*exportedGlobal->getInternalName()];
-    });
-  }
-
   Literal getImportedFunction(Function* import) override {
     // TODO: We should perhaps restrict the types with which the well-known
     // functions can be imported.
@@ -325,16 +313,15 @@ struct ShellExternalInterface : ModuleRunner::ExternalInterface {
     return true;
   }
 
-  void trap(const char* why) override {
+  void trap(std::string_view why) override {
     std::cout << "[trap " << why << "]\n";
     throw TrapException();
   }
 
-  void hostLimit(const char* why) override {
+  void hostLimit(std::string_view why) override {
     std::cout << "[host limit " << why << "]\n";
     throw HostLimitException();
   }
-
   void throwException(const WasmException& exn) override { throw exn; }
 };
 

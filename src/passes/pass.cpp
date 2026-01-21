@@ -192,6 +192,9 @@ void PassRegistry::registerPasses() {
     "global-refining", "refine the types of globals", createGlobalRefiningPass);
   registerPass(
     "gsi", "globally optimize struct values", createGlobalStructInferencePass);
+  registerPass("gsi-desc-cast",
+               "globally optimize struct values, also emitting ref.cast_desc",
+               createGlobalStructInferenceDescCastPass);
   registerPass(
     "gto", "globally optimize GC types", createGlobalTypeOptimizationPass);
   registerPass("gufa",
@@ -234,9 +237,6 @@ void PassRegistry::registerPasses() {
   registerPass("intrinsic-lowering",
                "lower away binaryen intrinsics",
                createIntrinsicLoweringPass);
-  registerPass("jspi",
-               "wrap imports and exports for JavaScript promise integration",
-               createJSPIPass);
   registerPass("legalize-js-interface",
                "legalizes i64 types on the import/export boundary",
                createLegalizeJSInterfacePass);

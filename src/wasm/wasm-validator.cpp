@@ -198,6 +198,10 @@ struct ValidationInfo {
                                 Expression* curr,
                                 const char* text,
                                 Function* func = nullptr) {
+    if (!ty.isBasic()) {
+      fail(text, curr, func);
+      return;
+    }
     switch (ty.getBasic()) {
       case Type::i32:
       case Type::i64:
@@ -1095,7 +1099,7 @@ void FunctionValidator::visitGlobalSet(GlobalSet* curr) {
 void FunctionValidator::visitLoad(Load* curr) {
   auto* memory = getModule()->getMemoryOrNull(curr->memory);
   shouldBeTrue(!!memory, curr, "memory.load memory must exist");
-  if (curr->isAtomic) {
+  if (curr->isAtomic()) {
     shouldBeTrue(getModule()->features.hasAtomics(),
                  curr,
                  "Atomic operations require threads [--enable-threads]");
@@ -1104,6 +1108,12 @@ void FunctionValidator::visitLoad(Load* curr) {
                  curr,
                  "Atomic load should be i32 or i64");
   }
+  if (curr->order == MemoryOrder::AcqRel) {
+    shouldBeTrue(getModule()->features.hasRelaxedAtomics(),
+                 curr,
+                 "Acquire/release operations require relaxed atomics "
+                 "[--enable-relaxed-atomics]");
+  }
   if (curr->type == Type::v128) {
     shouldBeTrue(getModule()->features.hasSIMD(),
                  curr,
@@ -1111,13 +1121,14 @@ void FunctionValidator::visitLoad(Load* curr) {
   }
   validateMemBytes(curr->bytes, curr->type, curr);
   validateOffset(curr->offset, memory, curr);
-  validateAlignment(curr->align, curr->type, curr->bytes, curr->isAtomic, curr);
+  validateAlignment(
+    curr->align, curr->type, curr->bytes, curr->isAtomic(), curr);
   shouldBeEqualOrFirstIsUnreachable(
     curr->ptr->type,
     memory->addressType,
     curr,
     "load pointer type must match memory index type");
-  if (curr->isAtomic) {
+  if (curr->isAtomic()) {
     shouldBeFalse(curr->signed_, curr, "atomic loads must be unsigned");
     shouldBeIntOrUnreachable(
       curr->type, curr, "atomic loads must be of integers");
@@ -1127,7 +1138,7 @@ void FunctionValidator::visitLoad(Load* curr) {
 void FunctionValidator::visitStore(Store* curr) {
   auto* memory = getModule()->getMemoryOrNull(curr->memory);
   shouldBeTrue(!!memory, curr, "memory.store memory must exist");
-  if (curr->isAtomic) {
+  if (curr->isAtomic()) {
     shouldBeTrue(getModule()->features.hasAtomics(),
                  curr,
                  "Atomic operations require threads [--enable-threads]");
@@ -1135,6 +1146,12 @@ void FunctionValidator::visitStore(Store* curr) {
                    curr->valueType == Type::unreachable,
                  curr,
                  "Atomic store should be i32 or i64");
+  }
+  if (curr->order == MemoryOrder::AcqRel) {
+    shouldBeTrue(getModule()->features.hasRelaxedAtomics(),
+                 curr,
+                 "Acquire/release operations require relaxed atomics "
+                 "[--enable-relaxed-atomics]");
   }
   if (curr->valueType == Type::v128) {
     shouldBeTrue(getModule()->features.hasSIMD(),
@@ -1144,7 +1161,7 @@ void FunctionValidator::visitStore(Store* curr) {
   validateMemBytes(curr->bytes, curr->valueType, curr);
   validateOffset(curr->offset, memory, curr);
   validateAlignment(
-    curr->align, curr->valueType, curr->bytes, curr->isAtomic, curr);
+    curr->align, curr->valueType, curr->bytes, curr->isAtomic(), curr);
   shouldBeEqualOrFirstIsUnreachable(
     curr->ptr->type,
     memory->addressType,
@@ -1156,7 +1173,7 @@ void FunctionValidator::visitStore(Store* curr) {
                   "store value type must not be none");
   shouldBeEqualOrFirstIsUnreachable(
     curr->value->type, curr->valueType, curr, "store value type must match");
-  if (curr->isAtomic) {
+  if (curr->isAtomic()) {
     shouldBeIntOrUnreachable(
       curr->valueType, curr, "atomic stores must be of integers");
   }
