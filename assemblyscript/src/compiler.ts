@@ -78,6 +78,7 @@ import {
   File,
   TypeDefinition,
   CompiledNameNode,
+  TupleIndexSignature,
 } from "./program";
 
 import { FlowFlags, Flow, LocalFlags, FieldFlags, ConditionKind } from "./flow";
@@ -155,7 +156,7 @@ import {
   VariableLikeBase,
 } from "./ast";
 
-import { Type, TypeKind, TypeFlags, Signature, typesToRefs } from "./types";
+import { Type, TypeKind, TypeFlags, Signature, typesToRefs, SmallTupleTypeInfo } from "./types";
 
 import {
   writeI8,
@@ -5771,6 +5772,15 @@ export class Compiler extends DiagnosticEmitter {
         }
         break;
       }
+      case ElementKind.TupleIndexSignature: {
+        return this.makeAssignmentForTupleIndexSignature(
+          (<TupleIndexSignature>target).tupleType.tupleInfo!,
+          valueExpression,
+          thisExpression!,
+          elementExpression!,
+          contextualType != Type.void
+        );
+      }
       default: {
         this.error(
           DiagnosticCode.Cannot_assign_to_0_because_it_is_a_constant_or_a_read_only_property,
@@ -5796,6 +5806,76 @@ export class Compiler extends DiagnosticEmitter {
       elementExpression,
       contextualType != Type.void
     );
+  }
+
+  private makeAssignmentForTupleIndexSignature(
+    tupleInfo: SmallTupleTypeInfo,
+    /** Expression reference. Has already been compiled to `valueExpr`. */
+    valueExpression: Expression,
+    /** `this` expression reference if a field or property set. */
+    tupleExpression: Expression,
+    /** Index expression reference if an indexed set. */
+    indexExpression: Expression,
+    /** Whether to tee the value. */
+    tee: bool
+  ): ExpressionRef {
+    let module = this.module;
+    let flow = this.currentFlow;
+    const program = this.program;
+
+    const tupleClass = program.smallTupleInstance;
+    const tupleExpr = this.compileExpression(
+      tupleExpression,
+      tupleClass.type,
+      Constraints.ConvImplicit | Constraints.IsThis
+    );
+    const usizeType = this.program.options.usizeType;
+    let indexExpr = this.compileExpression(indexExpression, usizeType, Constraints.ConvImplicit);
+    const precomp = module.runExpression(indexExpr, ExpressionRunnerFlags.Default);
+    if (precomp == 0) {
+      this.error(DiagnosticCode.Expression_must_be_a_compile_time_constant, indexExpression.range);
+      return module.unreachable();
+    }
+    const indexValue = getConstValueI32(precomp);
+    if (indexValue < 0 || indexValue >= tupleInfo.elementCount) {
+      this.error(
+        DiagnosticCode.Tuple_type_0_of_length_1_has_no_element_at_index_2,
+        indexExpression.range,
+        tupleInfo.elementCount.toString(),
+        indexValue.toString()
+      );
+      return module.unreachable();
+    }
+    const elementInfo = tupleInfo.elements[indexValue];
+    const getterInstance = tupleClass.getMethod("__get", [elementInfo.type])!;
+    const setterInstance = tupleClass.getMethod("__set", [elementInfo.type])!;
+    const valueExpr = this.compileExpression(valueExpression, elementInfo.type);
+    if (tee) {
+      const tempTarget = flow.getTempLocal(program.smallTupleInstance.type);
+      const ret = module.block(
+        null,
+        [
+          this.makeCallDirect(
+            setterInstance,
+            [module.local_tee(tempTarget.index, tupleExpr, true), module.usize(elementInfo.offset), valueExpr],
+            valueExpression
+          ),
+          this.makeCallDirect(
+            getterInstance,
+            [module.local_get(tempTarget.index, tempTarget.type.toRef()), module.usize(elementInfo.offset)],
+            valueExpression
+          ),
+        ],
+        elementInfo.type.toRef()
+      );
+      return ret;
+    } else {
+      return this.makeCallDirect(
+        setterInstance,
+        [tupleExpr, module.usize(elementInfo.offset), valueExpr],
+        valueExpression
+      );
+    }
   }
 
   /** Makes an assignment expression or block, assigning a value to a target. */
@@ -6009,6 +6089,9 @@ export class Compiler extends DiagnosticEmitter {
         } else {
           return this.makeCallDirect(setterInstance, [thisExpr, elementExpr, valueExpr], valueExpression);
         }
+      }
+      case ElementKind.TupleIndexSignature: {
+        throw Error("NYI");
       }
       default: {
         this.error(
@@ -7001,6 +7084,36 @@ export class Compiler extends DiagnosticEmitter {
     return this.module.flatten(exprs, this.currentType.toRef());
   }
 
+  private compileTupleElementAccessExpression(expression: ElementAccessExpression, tupleType: Type): ExpressionRef {
+    const module = this.module;
+    const tupleClass = this.program.smallTupleInstance;
+    const thisArg = this.compileExpression(expression.expression, tupleClass.type, Constraints.ConvImplicit);
+    const tupleInfo = tupleType.tupleInfo!;
+
+    const tupleIndexExpr = this.compileExpression(expression.elementExpression, Type.i32, Constraints.ConvImplicit);
+    const precomp = module.runExpression(tupleIndexExpr, ExpressionRunnerFlags.Default);
+    if (precomp == 0) {
+      this.error(DiagnosticCode.Expression_must_be_a_compile_time_constant, expression.elementExpression.range);
+      return module.unreachable();
+    }
+    const tupleIndex = getConstValueI32(precomp);
+    if (tupleIndex < 0 || tupleIndex >= tupleInfo.elementCount) {
+      this.error(
+        DiagnosticCode.Tuple_type_0_of_length_1_has_no_element_at_index_2,
+        expression.range,
+        tupleType.toString(),
+        tupleInfo.elementCount.toString(),
+        tupleIndex.toString()
+      );
+      return module.unreachable();
+    }
+    const elementInfo = tupleInfo.elements[tupleIndex];
+    const getter = tupleClass.getMethod("__get", [elementInfo.type])!;
+    const expr = this.makeCallDirect(getter, [thisArg, module.usize(elementInfo.offset)], expression);
+    this.currentType = elementInfo.type;
+    return expr;
+  }
+
   private compileElementAccessExpression(
     expression: ElementAccessExpression,
     contextualType: Type,
@@ -7020,6 +7133,9 @@ export class Compiler extends DiagnosticEmitter {
 
     let targetType = resolver.resolveExpression(targetExpression, this.currentFlow);
     if (targetType) {
+      if (targetType.isTuple) {
+        return this.compileTupleElementAccessExpression(expression, targetType);
+      }
       let classReference = targetType.getClassOrWrapper(this.program);
       if (classReference) {
         let isUnchecked = this.currentFlow.is(FlowFlags.UncheckedContext);
@@ -8068,6 +8184,78 @@ export class Compiler extends DiagnosticEmitter {
     return this.compileCallExpressionLike(tag, null, args, expression.range, stringType);
   }
 
+  /** Makes a new tuple instance from a static buffer segment. */
+  private makeNewTuple(elementSlotSize: i32, bitmap: i64, reportNode: Node): ExpressionRef {
+    const program = this.program;
+    const module = this.module;
+    const expr = this.makeCallDirect(
+      program.newTupleInstance,
+      [module.usize(elementSlotSize), module.i64(i64_low(bitmap), i64_high(bitmap))],
+      reportNode
+    );
+    return expr;
+  }
+
+  private compileTupleLiteral(
+    expression: ArrayLiteralExpression,
+    contextualType: Type,
+    constraints: Constraints
+  ): ExpressionRef {
+    let module = this.module;
+    let flow = this.currentFlow;
+
+    let tupleInfo = assert(contextualType.tupleInfo);
+    const tupleClass = contextualType.getClass();
+    if (!tupleClass) {
+      this.error(DiagnosticCode.Expression_cannot_be_represented_by_a_type, expression.range);
+      this.currentType = contextualType;
+      return module.unreachable();
+    }
+
+    let expressions = expression.elementExpressions;
+    if (expressions.length != tupleInfo.elementCount) {
+      this.error(
+        DiagnosticCode.Type_0_is_not_assignable_to_type_1,
+        expression.range,
+        `tuple literal of length ${expressions.length}`,
+        contextualType.toString()
+      );
+      this.currentType = contextualType;
+      return module.unreachable();
+    }
+
+    const tempThis = flow.getTempLocal(this.options.usizeType);
+
+    let stmts = new Array<ExpressionRef>();
+    stmts.push(
+      module.local_set(
+        tempThis.index,
+        this.makeNewTuple(tupleInfo.getElementsAreaByteSize(), tupleInfo.getBitmap(), expression),
+        true
+      )
+    );
+    for (let i = 0, k = tupleInfo.elementCount; i < k; ++i) {
+      const elementExpression = expressions[i];
+      const elementTypeInfo = tupleInfo.elements[i];
+      const elementType = elementTypeInfo.type;
+      const setter = tupleClass.getMethod("__set", [elementType])!;
+      const setExpr = this.makeCallDirect(
+        setter,
+        [
+          module.local_get(tempThis.index, contextualType.toRef()),
+          module.usize(elementTypeInfo.offset),
+          this.compileExpression(<Expression>elementExpression, elementType, constraints),
+        ],
+        elementExpression,
+        true
+      );
+      stmts.push(setExpr);
+    }
+    stmts.push(module.local_get(tempThis.index, contextualType.toRef()));
+    this.currentType = contextualType;
+    return module.block(null, stmts, contextualType.toRef());
+  }
+
   private compileArrayLiteral(
     expression: ArrayLiteralExpression,
     contextualType: Type,
@@ -8077,6 +8265,10 @@ export class Compiler extends DiagnosticEmitter {
     let flow = this.currentFlow;
     let program = this.program;
 
+    // handle tuple literals
+    if (contextualType.tupleInfo) {
+      return this.compileTupleLiteral(expression, contextualType, constraints);
+    }
     // handle static arrays
     let contextualClass = contextualType.getClass();
     if (contextualClass && contextualClass.extendsPrototype(program.staticArrayPrototype)) {

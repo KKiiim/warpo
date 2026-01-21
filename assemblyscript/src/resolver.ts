@@ -26,6 +26,7 @@ import {
   DeclaredElement,
   CompiledNameKind,
   CompiledNameNode,
+  TupleIndexSignature,
 } from "./program";
 
 import { Flow } from "./flow";
@@ -64,15 +65,13 @@ import {
   ArrayLiteralExpression,
   ArrowKind,
   ExpressionStatement,
-  PropertyName,
-  ComputedPropertyName,
   TupleTypeNode,
 } from "./ast";
-import { Type, Signature, TypeKind, TypeFlags } from "./types";
+import { Type, Signature, TypeKind, TypeFlags, TupleElementInfo, SmallTupleTypeInfo } from "./types";
 
 import { CommonFlags, CommonNames } from "./common";
 
-import { cloneMap, isPowerOf2 } from "./util";
+import { alignUpToPowerOf2, cloneMap, isPowerOf2 } from "./util";
 
 import { Token, operatorTokenToString } from "./tokenizer";
 
@@ -80,6 +79,7 @@ import { BuiltinNames, builtinTypes, BuiltinTypesContext } from "./builtins";
 
 import { addField, createClass, addTemplateType } from "./warpo";
 import { mangleComputedPropertyName, mangleGenericInstanceKey, mangleGenericInstanceName } from "./mangle";
+import { Evaluator } from "./eval";
 
 /** Indicates whether errors are reported or not. */
 export const enum ReportMode {
@@ -368,7 +368,50 @@ export class Resolver extends DiagnosticEmitter {
     /** How to proceed with eventual diagnostics. */
     reportMode: ReportMode = ReportMode.Report
   ): Type | null {
-    this.error(DiagnosticCode.Not_implemented_0, node.range, "tuple type");
+    let elementTypeNodes = node.elementTypes;
+    let elementCount = elementTypeNodes.length;
+    let elementTypes = new Array<Type>(elementCount);
+
+    for (let i = 0; i < elementCount; ++i) {
+      let elementType = this.resolveType(elementTypeNodes[i], flow, ctxElement, ctxTypes, reportMode);
+      if (!elementType) return null;
+      if (elementType.kind == TypeKind.Void) {
+        if (reportMode == ReportMode.Report) this.error(DiagnosticCode.Not_implemented_0, node.range, "tuple type");
+        return null;
+      }
+      elementTypes[i] = elementType;
+    }
+
+    const tupleElementInfo = new Array<TupleElementInfo>(elementCount);
+    let memoryOffset = 0;
+    for (let i = 0; i < elementCount; ++i) {
+      let t = unchecked(elementTypes[i]);
+      if (t.isExternalReference || !t.isMemory) {
+        // SmallTuple uses AS runtime GC hooks, so only internal managed references are supported.
+        if (reportMode == ReportMode.Report) this.error(DiagnosticCode.Not_implemented_0, node.range, "tuple type");
+        return null;
+      }
+      const byteSize = t.byteSize;
+      memoryOffset = alignUpToPowerOf2(memoryOffset, byteSize);
+      tupleElementInfo[i] = new TupleElementInfo(t, memoryOffset);
+      memoryOffset += byteSize;
+    }
+
+    // small tuple use u64 for memory layout, so that it can hold max 64 * sizeof<usize> bytes
+    const smallTupleThreshold = 64 * this.program.options.usizeType.byteSize;
+    if (memoryOffset <= smallTupleThreshold) {
+      let smallTupleClass = this.program.smallTupleInstance;
+      let baseType = smallTupleClass.type;
+
+      let tupleType = new Type(baseType.kind, baseType.flags, baseType.size);
+      tupleType.classReference = smallTupleClass;
+
+      tupleType.tupleInfo = new SmallTupleTypeInfo(tupleElementInfo, this.program);
+      return tupleType;
+    }
+    if (reportMode == ReportMode.Report) {
+      this.error(DiagnosticCode.Not_implemented_0, node.range, `tuple large than ${smallTupleThreshold} bytes`);
+    }
     return null;
   }
 
@@ -1176,6 +1219,25 @@ export class Resolver extends DiagnosticEmitter {
         target = classReference;
         break;
       }
+      case ElementKind.TupleIndexSignature: {
+        // someTuple[x].prop
+        let type = this.getTypeOfElement(target);
+        if (!type) return null;
+        let classReference = type.getClassOrWrapper(this.program);
+        if (!classReference) {
+          if (reportMode == ReportMode.Report) {
+            this.error(
+              DiagnosticCode.Property_0_does_not_exist_on_type_1,
+              node.property.range,
+              propertyName,
+              type.toString()
+            );
+          }
+          return null;
+        }
+        target = classReference;
+        break;
+      }
       case ElementKind.FunctionPrototype: {
         // Function with shadow type, i.e. function Symbol() + type Symbol = _Symbol
         let shadowType = target.shadowType;
@@ -1316,6 +1378,34 @@ export class Resolver extends DiagnosticEmitter {
     const elementExpression = node.elementExpression;
     const targetType = this.resolveExpression(targetExpression, ctxFlow, ctxType, reportMode);
     if (!targetType) return null;
+
+    if (targetType.isTuple) {
+      const tupleInfo = assert(targetType.tupleInfo);
+      const evaluator = new Evaluator(elementExpression);
+      const tupleIndexEvalResult = evaluator.evalI32();
+      if (!tupleIndexEvalResult.success) {
+        this.error(DiagnosticCode.Expression_must_be_a_compile_time_constant, elementExpression.range);
+        return null;
+      }
+      const tupleIndex = tupleIndexEvalResult.value;
+      if (tupleIndex < 0 || tupleIndex >= tupleInfo.elementCount) {
+        if (reportMode == ReportMode.Report) {
+          this.error(
+            DiagnosticCode.Tuple_type_0_of_length_1_has_no_element_at_index_2,
+            node.range,
+            targetType.toString(),
+            tupleInfo.elementCount.toString(),
+            tupleIndex.toString()
+          );
+        }
+        return null;
+      }
+      this.currentThisExpression = targetExpression;
+      this.currentElementExpression = elementExpression;
+      const signature = new TupleIndexSignature(this.program, targetType);
+      signature.setType(tupleInfo.elements[tupleIndex].type);
+      return signature;
+    }
 
     let elementElement = this.lookupExpression(elementExpression, ctxFlow, ctxType, reportMode);
     if (elementElement && elementElement.kind != ElementKind.Global) elementElement = null;
@@ -2104,6 +2194,48 @@ export class Resolver extends DiagnosticEmitter {
         return this.program.regexpInstance;
       }
       case LiteralKind.Array: {
+        // If contextually typed as a tuple, treat an array literal as a tuple literal.
+        // This enables `[1, "hello"]` to satisfy a contextual type like `[i32, string]`.
+        if (ctxType.tupleInfo) {
+          let tupleInfo = ctxType.tupleInfo!;
+          let expressions = (<ArrayLiteralExpression>node).elementExpressions;
+          let length = expressions.length;
+          let elementCount = tupleInfo.elementCount;
+
+          if (length != elementCount) {
+            let expressionTypes = new Array<string>(length);
+            for (let i = 0; i < length; ++i) {
+              const type = this.resolveExpression(expressions[i], ctxFlow, Type.auto);
+              expressionTypes[i] = type ? type.toString() : "unknown";
+            }
+            this.error(
+              DiagnosticCode.Type_0_is_not_assignable_to_type_1,
+              node.range,
+              `[${expressionTypes.join(", ")}]`,
+              ctxType.toString()
+            );
+            return null;
+          }
+          for (let i = 0; i < elementCount; ++i) {
+            let expression = expressions[i];
+            let expectedType = tupleInfo.elements[i].type;
+            let currentType = this.resolveExpression(<Expression>expression, ctxFlow, expectedType);
+            if (!currentType) return null;
+            if (!currentType.isAssignableTo(expectedType)) {
+              if (reportMode == ReportMode.Report) {
+                this.error(
+                  DiagnosticCode.Type_0_is_not_assignable_to_type_1,
+                  expression.range,
+                  currentType.toString(),
+                  expectedType.toString()
+                );
+              }
+              return null;
+            }
+          }
+          return this.getElementOfType(ctxType);
+        }
+
         let classReference = ctxType.getClass();
         if (classReference && classReference.prototype == this.program.arrayPrototype) {
           return this.getElementOfType(ctxType);

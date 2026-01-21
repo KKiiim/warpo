@@ -648,6 +648,16 @@ export class Program extends DiagnosticEmitter {
   }
   private _float64ArrayPrototype: ClassPrototype | null = null;
 
+  get smallTupleInstance(): Class {
+    let cached = this._smallTupleInstance;
+    if (!cached) this._smallTupleInstance = cached = this.requireClass(CommonNames.SmallTuple);
+    return cached;
+  }
+  isTupleInstance(instance: Class): bool {
+    return instance == this._smallTupleInstance;
+  }
+  private _smallTupleInstance: Class | null = null;
+
   /** Gets the standard `String` instance. */
   get stringInstance(): Class {
     let cached = this._stringInstance;
@@ -801,6 +811,14 @@ export class Program extends DiagnosticEmitter {
     return cached;
   }
   private _newArrayInstance: Function | null = null;
+
+  /** Gets the runtime `__newTuple` instance. */
+  get newTupleInstance(): Function {
+    let cached = this._newTupleInstance;
+    if (!cached) this._newTupleInstance = cached = this.requireFunction(CommonNames.newTuple);
+    return cached;
+  }
+  private _newTupleInstance: Function | null = null;
 
   /** Gets the runtime's internal `BLOCK` instance. */
   get BLOCKInstance(): Class {
@@ -3220,6 +3238,8 @@ export const enum ElementKind {
   TypeDefinition,
   /** An {@link IndexSignature}. */
   IndexSignature,
+  /** A {@link TupleIndexSignature}. */
+  TupleIndexSignature,
 }
 
 /** Indicates built-in decorators that are present. */
@@ -4747,6 +4767,23 @@ export class IndexSignature extends TypedElement {
       parent.program,
       parent,
       new DeclarationBase(null, CommonFlags.None, Source.native.range, null)
+    );
+  }
+}
+
+export class TupleIndexSignature extends TypedElement {
+  constructor(
+    program: Program,
+    public tupleType: Type
+  ) {
+    const smallTupleInstance = program.smallTupleInstance;
+    super(
+      ElementKind.TupleIndexSignature,
+      "[]",
+      smallTupleInstance.internalName + "[]",
+      program,
+      smallTupleInstance,
+      program.makeNativeVariableDeclaration("[]").toDeclarationBase() // is fine
     );
   }
 }
