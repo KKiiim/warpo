@@ -210,6 +210,9 @@
 ;; CHECK-NEXT:
 ;; CHECK-NEXT:   --gsi                                         globally optimize struct values
 ;; CHECK-NEXT:
+;; CHECK-NEXT:   --gsi-desc-cast                               globally optimize struct values,
+;; CHECK-NEXT:                                                 also emitting ref.cast_desc
+;; CHECK-NEXT:
 ;; CHECK-NEXT:   --gto                                         globally optimize GC types
 ;; CHECK-NEXT:
 ;; CHECK-NEXT:   --gufa                                        Grand Unified Flow Analysis:
@@ -252,9 +255,6 @@
 ;; CHECK-NEXT:                                                 stores
 ;; CHECK-NEXT:
 ;; CHECK-NEXT:   --intrinsic-lowering                          lower away binaryen intrinsics
-;; CHECK-NEXT:
-;; CHECK-NEXT:   --jspi                                        wrap imports and exports for
-;; CHECK-NEXT:                                                 JavaScript promise integration
 ;; CHECK-NEXT:
 ;; CHECK-NEXT:   --legalize-and-prune-js-interface             legalizes the import/export
 ;; CHECK-NEXT:                                                 boundary and prunes when needed
@@ -820,6 +820,12 @@
 ;; CHECK-NEXT:
 ;; CHECK-NEXT:   --disable-custom-descriptors                  Disable custom descriptors
 ;; CHECK-NEXT:                                                 (RTTs) and exact references
+;; CHECK-NEXT:
+;; CHECK-NEXT:   --enable-relaxed-atomics                      Enable acquire/release atomic
+;; CHECK-NEXT:                                                 memory operations
+;; CHECK-NEXT:
+;; CHECK-NEXT:   --disable-relaxed-atomics                     Disable acquire/release atomic
+;; CHECK-NEXT:                                                 memory operations
 ;; CHECK-NEXT:
 ;; CHECK-NEXT:   --enable-typed-function-references            Deprecated compatibility flag
 ;; CHECK-NEXT:

@@ -33,9 +33,10 @@
 #include <unordered_map>
 #include <vector>
 
+#include "ir/import-name.h"
 #include "literal.h"
-#include "mixed_arena.h"
 #include "support/index.h"
+#include "support/mixed_arena.h"
 #include "support/name.h"
 #include "wasm-features.h"
 #include "wasm-type.h"
@@ -993,9 +994,11 @@ public:
   bool signed_ = false;
   Address offset;
   Address align;
-  bool isAtomic;
   Expression* ptr;
   Name memory;
+  MemoryOrder order = MemoryOrder::Unordered;
+
+  bool isAtomic() const { return order != MemoryOrder::Unordered; }
 
   // type must be set during creation, cannot be inferred
 
@@ -1010,11 +1013,13 @@ public:
   uint8_t bytes;
   Address offset;
   Address align;
-  bool isAtomic;
   Expression* ptr;
   Expression* value;
   Type valueType;
   Name memory;
+  MemoryOrder order;
+
+  bool isAtomic() const { return order != MemoryOrder::Unordered; }
 
   void finalize();
 };
@@ -2172,6 +2177,7 @@ struct Importable : Named {
   Name module, base;
 
   bool imported() const { return module.is(); }
+  ImportNames importNames() const { return ImportNames{module, base}; };
 };
 
 class Function;
@@ -2648,6 +2654,16 @@ struct ShallowExpression {
   Module* module = nullptr;
 };
 
+std::ostream& operator<<(std::ostream& o, wasm::Module& module);
+std::ostream& operator<<(std::ostream& o, wasm::Function& func);
+std::ostream& operator<<(std::ostream& o, wasm::Expression& expression);
+std::ostream& operator<<(std::ostream& o, wasm::ModuleExpression pair);
+std::ostream& operator<<(std::ostream& o, wasm::ShallowExpression expression);
+std::ostream& operator<<(std::ostream& o, wasm::ModuleType pair);
+std::ostream& operator<<(std::ostream& o, wasm::ModuleHeapType pair);
+std::ostream& operator<<(std::ostream& os, wasm::MemoryOrder mo);
+std::ostream& operator<<(std::ostream& o, const wasm::ImportNames& importNames);
+
 } // namespace wasm
 
 namespace std {
@@ -2656,14 +2672,6 @@ template<> struct hash<wasm::Address> {
     return std::hash<wasm::Address::address64_t>()(a.addr);
   }
 };
-
-std::ostream& operator<<(std::ostream& o, wasm::Module& module);
-std::ostream& operator<<(std::ostream& o, wasm::Function& func);
-std::ostream& operator<<(std::ostream& o, wasm::Expression& expression);
-std::ostream& operator<<(std::ostream& o, wasm::ModuleExpression pair);
-std::ostream& operator<<(std::ostream& o, wasm::ShallowExpression expression);
-std::ostream& operator<<(std::ostream& o, wasm::ModuleType pair);
-std::ostream& operator<<(std::ostream& o, wasm::ModuleHeapType pair);
 
 } // namespace std
 
