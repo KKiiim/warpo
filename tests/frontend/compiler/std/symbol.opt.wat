@@ -2906,166 +2906,151 @@
    block $~lib/staticarray/StaticArray<~lib/string/String>
     block $"~lib/iterator/Iterable<[usize, ~lib/string/String]>"
      block $"~lib/map/Map<usize,~lib/string/String>"
-      block $"~lib/iterator/Iterable<[~lib/string/String, usize]>"
-       block $"~lib/map/Map<~lib/string/String,usize>"
-        block $"~lib/iterator/Iterable<[usize, ~lib/string/String|null]>"
-         block $~lib/tuple/SmallTuple
-          block $"~lib/map/Map<usize,~lib/string/String|null>"
-           block $~lib/arraybuffer/ArrayBufferView
-            block $~lib/string/String
-             block $~lib/arraybuffer/ArrayBuffer
-              block $~lib/object/Object
-               local.get $0
-               i32.const 8
-               i32.sub
-               i32.load
-               br_table $~lib/object/Object $~lib/arraybuffer/ArrayBuffer $~lib/string/String $~lib/arraybuffer/ArrayBufferView $"~lib/map/Map<usize,~lib/string/String|null>" $~lib/tuple/SmallTuple $"~lib/iterator/Iterable<[usize, ~lib/string/String|null]>" $"~lib/map/Map<~lib/string/String,usize>" $"~lib/iterator/Iterable<[~lib/string/String, usize]>" $"~lib/map/Map<usize,~lib/string/String>" $"~lib/iterator/Iterable<[usize, ~lib/string/String]>" $~lib/staticarray/StaticArray<~lib/string/String> $invalid
-              end
-              return
-             end
-             return
-            end
-            return
-           end
-           local.get $0
-           i32.load
-           call $~lib/rt/itcms/__visit
-           return
-          end
+      block $"~lib/map/Map<~lib/string/String,usize>"
+       block $~lib/tuple/SmallTuple
+        block $"~lib/map/Map<usize,~lib/string/String|null>"
+         block $~lib/arraybuffer/ArrayBufferView
           local.get $0
+          i32.const 8
+          i32.sub
           i32.load
-          call $~lib/rt/itcms/__visit
-          local.get $0
-          i32.load offset=8
-          local.tee $2
-          local.tee $1
-          local.get $0
-          i32.load offset=16
-          i32.const 12
-          i32.mul
-          i32.add
-          local.set $0
-          loop $while-continue|0
-           local.get $0
-           local.get $1
-           i32.gt_u
-           if
-            local.get $1
-            i32.load offset=8
-            i32.const 1
-            i32.and
-            i32.eqz
-            if
-             local.get $1
-             i32.load offset=4
-             local.tee $3
-             if
-              local.get $3
-              call $~lib/rt/itcms/__visit
-             end
-            end
-            local.get $1
-            i32.const 12
-            i32.add
-            local.set $1
-            br $while-continue|0
-           end
-          end
-          local.get $2
-          call $~lib/rt/itcms/__visit
-          return
+          br_table $"~lib/iterator/Iterable<[usize, ~lib/string/String]>" $"~lib/iterator/Iterable<[usize, ~lib/string/String]>" $"~lib/iterator/Iterable<[usize, ~lib/string/String]>" $~lib/arraybuffer/ArrayBufferView $"~lib/map/Map<usize,~lib/string/String|null>" $~lib/tuple/SmallTuple $"~lib/iterator/Iterable<[usize, ~lib/string/String]>" $"~lib/map/Map<~lib/string/String,usize>" $"~lib/iterator/Iterable<[usize, ~lib/string/String]>" $"~lib/map/Map<usize,~lib/string/String>" $"~lib/iterator/Iterable<[usize, ~lib/string/String]>" $~lib/staticarray/StaticArray<~lib/string/String> $invalid
          end
          local.get $0
-         i32.const 20
-         i32.sub
-         i32.load offset=16
-         local.tee $1
-         i32.const 8
-         i32.sub
-         i32.const 2
-         i32.shr_u
-         local.set $2
-         local.get $0
-         local.get $1
-         i32.add
-         i32.const 8
-         i32.sub
-         i64.load
-         local.set $4
-         i32.const 0
-         local.set $1
-         loop $for-loop|0
-          local.get $1
-          local.get $2
-          i32.lt_u
-          if
-           local.get $4
-           i64.const 1
-           local.get $1
-           i64.extend_i32_u
-           i64.shl
-           i64.and
-           i64.const 0
-           i64.ne
-           if
-            local.get $0
-            local.get $1
-            i32.const 2
-            i32.shl
-            i32.add
-            i32.load
-            call $~lib/rt/itcms/__visit
-           end
-           local.get $1
-           i32.const 1
-           i32.add
-           local.set $1
-           br $for-loop|0
-          end
-         end
+         i32.load
+         call $~lib/rt/itcms/__visit
          return
         end
+        local.get $0
+        i32.load
+        call $~lib/rt/itcms/__visit
+        local.get $0
+        i32.load offset=8
+        local.tee $2
+        local.tee $1
+        local.get $0
+        i32.load offset=16
+        i32.const 12
+        i32.mul
+        i32.add
+        local.set $0
+        loop $while-continue|0
+         local.get $0
+         local.get $1
+         i32.gt_u
+         if
+          local.get $1
+          i32.load offset=8
+          i32.const 1
+          i32.and
+          i32.eqz
+          if
+           local.get $1
+           i32.load offset=4
+           local.tee $3
+           if
+            local.get $3
+            call $~lib/rt/itcms/__visit
+           end
+          end
+          local.get $1
+          i32.const 12
+          i32.add
+          local.set $1
+          br $while-continue|0
+         end
+        end
+        local.get $2
+        call $~lib/rt/itcms/__visit
         return
        end
        local.get $0
-       i32.load
-       call $~lib/rt/itcms/__visit
-       local.get $0
-       i32.load offset=8
-       local.tee $2
-       local.tee $1
-       local.get $0
+       i32.const 20
+       i32.sub
        i32.load offset=16
-       i32.const 12
-       i32.mul
+       local.tee $1
+       i32.const 8
+       i32.sub
+       i32.const 2
+       i32.shr_u
+       local.set $2
+       local.get $0
+       local.get $1
        i32.add
-       local.set $0
-       loop $while-continue|00
-        local.get $0
+       i32.const 8
+       i32.sub
+       i64.load
+       local.set $4
+       i32.const 0
+       local.set $1
+       loop $for-loop|0
         local.get $1
-        i32.gt_u
+        local.get $2
+        i32.lt_u
         if
+         local.get $4
+         i64.const 1
          local.get $1
-         i32.load offset=8
-         i32.const 1
-         i32.and
-         i32.eqz
+         i64.extend_i32_u
+         i64.shl
+         i64.and
+         i64.const 0
+         i64.ne
          if
+          local.get $0
           local.get $1
+          i32.const 2
+          i32.shl
+          i32.add
           i32.load
           call $~lib/rt/itcms/__visit
          end
          local.get $1
-         i32.const 12
+         i32.const 1
          i32.add
          local.set $1
-         br $while-continue|00
+         br $for-loop|0
         end
        end
-       local.get $2
-       call $~lib/rt/itcms/__visit
        return
       end
+      local.get $0
+      i32.load
+      call $~lib/rt/itcms/__visit
+      local.get $0
+      i32.load offset=8
+      local.tee $2
+      local.tee $1
+      local.get $0
+      i32.load offset=16
+      i32.const 12
+      i32.mul
+      i32.add
+      local.set $0
+      loop $while-continue|00
+       local.get $0
+       local.get $1
+       i32.gt_u
+       if
+        local.get $1
+        i32.load offset=8
+        i32.const 1
+        i32.and
+        i32.eqz
+        if
+         local.get $1
+         i32.load
+         call $~lib/rt/itcms/__visit
+        end
+        local.get $1
+        i32.const 12
+        i32.add
+        local.set $1
+        br $while-continue|00
+       end
+      end
+      local.get $2
+      call $~lib/rt/itcms/__visit
       return
      end
      local.get $0

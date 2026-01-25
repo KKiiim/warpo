@@ -5557,159 +5557,66 @@
    block $folding-inner0
     block $invalid
      block $"~lib/iterator/Iterable<[f64, f64]>"
-      block $~lib/iterator/Iterable<f64>
-       block $"~lib/iterator/Iterable<[f64, i32]>"
-        block $"~lib/iterator/Iterable<[f32, f32]>"
-         block $~lib/iterator/Iterable<f32>
-          block $"~lib/iterator/Iterable<[f32, i32]>"
-           block $"~lib/iterator/Iterable<[u64, u64]>"
-            block $~lib/iterator/Iterable<u64>
-             block $"~lib/iterator/Iterable<[u64, i32]>"
-              block $"~lib/iterator/Iterable<[i64, i64]>"
-               block $~lib/iterator/Iterable<i64>
-                block $"~lib/iterator/Iterable<[i64, i32]>"
-                 block $"~lib/iterator/Iterable<[u32, u32]>"
-                  block $~lib/iterator/Iterable<u32>
-                   block $"~lib/iterator/Iterable<[u32, i32]>"
-                    block $"~lib/iterator/Iterable<[u16, u16]>"
-                     block $~lib/iterator/Iterable<u16>
-                      block $"~lib/iterator/Iterable<[u16, i32]>"
-                       block $"~lib/iterator/Iterable<[i16, i16]>"
-                        block $~lib/iterator/Iterable<i16>
-                         block $"~lib/iterator/Iterable<[i16, i32]>"
-                          block $"~lib/iterator/Iterable<[u8, u8]>"
-                           block $~lib/iterator/Iterable<u8>
-                            block $"~lib/iterator/Iterable<[u8, i32]>"
-                             block $"~lib/iterator/Iterable<[i32, i32]>"
-                              block $"~lib/iterator/Iterable<[i8, i8]>"
-                               block $~lib/iterator/Iterable<i32>
-                                block $~lib/iterator/Iterable<i8>
-                                 block $"~lib/iterator/Iterable<[i8, i32]>"
-                                  block $~lib/tuple/SmallTuple
-                                   block $~lib/arraybuffer/ArrayBufferView
-                                    block $~lib/string/String
-                                     block $~lib/arraybuffer/ArrayBuffer
-                                      block $~lib/object/Object
-                                       local.get $0
-                                       i32.const 8
-                                       i32.sub
-                                       i32.load
-                                       br_table $~lib/object/Object $~lib/arraybuffer/ArrayBuffer $~lib/string/String $~lib/arraybuffer/ArrayBufferView $folding-inner0 $~lib/tuple/SmallTuple $"~lib/iterator/Iterable<[i8, i32]>" $folding-inner1 $~lib/iterator/Iterable<i8> $folding-inner1 $~lib/iterator/Iterable<i32> $folding-inner0 $"~lib/iterator/Iterable<[i8, i8]>" $folding-inner0 $"~lib/iterator/Iterable<[i32, i32]>" $folding-inner0 $"~lib/iterator/Iterable<[u8, i32]>" $folding-inner1 $~lib/iterator/Iterable<u8> $folding-inner0 $"~lib/iterator/Iterable<[u8, u8]>" $folding-inner0 $"~lib/iterator/Iterable<[i16, i32]>" $folding-inner1 $~lib/iterator/Iterable<i16> $folding-inner0 $"~lib/iterator/Iterable<[i16, i16]>" $folding-inner0 $"~lib/iterator/Iterable<[u16, i32]>" $folding-inner1 $~lib/iterator/Iterable<u16> $folding-inner0 $"~lib/iterator/Iterable<[u16, u16]>" $folding-inner0 $"~lib/iterator/Iterable<[u32, i32]>" $folding-inner1 $~lib/iterator/Iterable<u32> $folding-inner0 $"~lib/iterator/Iterable<[u32, u32]>" $folding-inner0 $"~lib/iterator/Iterable<[i64, i32]>" $folding-inner1 $~lib/iterator/Iterable<i64> $folding-inner0 $"~lib/iterator/Iterable<[i64, i64]>" $folding-inner0 $"~lib/iterator/Iterable<[u64, i32]>" $folding-inner1 $~lib/iterator/Iterable<u64> $folding-inner0 $"~lib/iterator/Iterable<[u64, u64]>" $folding-inner0 $"~lib/iterator/Iterable<[f32, i32]>" $folding-inner1 $~lib/iterator/Iterable<f32> $folding-inner0 $"~lib/iterator/Iterable<[f32, f32]>" $folding-inner0 $"~lib/iterator/Iterable<[f64, i32]>" $folding-inner1 $~lib/iterator/Iterable<f64> $folding-inner0 $"~lib/iterator/Iterable<[f64, f64]>" $invalid
-                                      end
-                                      return
-                                     end
-                                     return
-                                    end
-                                    return
-                                   end
-                                   local.get $0
-                                   i32.load
-                                   call $~lib/rt/itcms/__visit
-                                   return
-                                  end
-                                  local.get $0
-                                  i32.const 20
-                                  i32.sub
-                                  i32.load offset=16
-                                  local.tee $1
-                                  i32.const 8
-                                  i32.sub
-                                  i32.const 2
-                                  i32.shr_u
-                                  local.set $2
-                                  local.get $0
-                                  local.get $1
-                                  i32.add
-                                  i32.const 8
-                                  i32.sub
-                                  i64.load
-                                  local.set $3
-                                  i32.const 0
-                                  local.set $1
-                                  loop $for-loop|0
-                                   local.get $1
-                                   local.get $2
-                                   i32.lt_u
-                                   if
-                                    local.get $3
-                                    i64.const 1
-                                    local.get $1
-                                    i64.extend_i32_u
-                                    i64.shl
-                                    i64.and
-                                    i64.const 0
-                                    i64.ne
-                                    if
-                                     local.get $0
-                                     local.get $1
-                                     i32.const 2
-                                     i32.shl
-                                     i32.add
-                                     i32.load
-                                     call $~lib/rt/itcms/__visit
-                                    end
-                                    local.get $1
-                                    i32.const 1
-                                    i32.add
-                                    local.set $1
-                                    br $for-loop|0
-                                   end
-                                  end
-                                  return
-                                 end
-                                 return
-                                end
-                                return
-                               end
-                               return
-                              end
-                              return
-                             end
-                             return
-                            end
-                            return
-                           end
-                           return
-                          end
-                          return
-                         end
-                         return
-                        end
-                        return
-                       end
-                       return
-                      end
-                      return
-                     end
-                     return
-                    end
-                    return
-                   end
-                   return
-                  end
-                  return
-                 end
-                 return
-                end
-                return
-               end
-               return
-              end
-              return
-             end
-             return
-            end
-            return
-           end
-           return
-          end
-          return
-         end
-         return
-        end
-        return
+      block $~lib/tuple/SmallTuple
+       block $~lib/arraybuffer/ArrayBufferView
+        local.get $0
+        i32.const 8
+        i32.sub
+        i32.load
+        br_table $"~lib/iterator/Iterable<[f64, f64]>" $"~lib/iterator/Iterable<[f64, f64]>" $"~lib/iterator/Iterable<[f64, f64]>" $~lib/arraybuffer/ArrayBufferView $folding-inner0 $~lib/tuple/SmallTuple $"~lib/iterator/Iterable<[f64, f64]>" $folding-inner1 $"~lib/iterator/Iterable<[f64, f64]>" $folding-inner1 $"~lib/iterator/Iterable<[f64, f64]>" $folding-inner0 $"~lib/iterator/Iterable<[f64, f64]>" $folding-inner0 $"~lib/iterator/Iterable<[f64, f64]>" $folding-inner0 $"~lib/iterator/Iterable<[f64, f64]>" $folding-inner1 $"~lib/iterator/Iterable<[f64, f64]>" $folding-inner0 $"~lib/iterator/Iterable<[f64, f64]>" $folding-inner0 $"~lib/iterator/Iterable<[f64, f64]>" $folding-inner1 $"~lib/iterator/Iterable<[f64, f64]>" $folding-inner0 $"~lib/iterator/Iterable<[f64, f64]>" $folding-inner0 $"~lib/iterator/Iterable<[f64, f64]>" $folding-inner1 $"~lib/iterator/Iterable<[f64, f64]>" $folding-inner0 $"~lib/iterator/Iterable<[f64, f64]>" $folding-inner0 $"~lib/iterator/Iterable<[f64, f64]>" $folding-inner1 $"~lib/iterator/Iterable<[f64, f64]>" $folding-inner0 $"~lib/iterator/Iterable<[f64, f64]>" $folding-inner0 $"~lib/iterator/Iterable<[f64, f64]>" $folding-inner1 $"~lib/iterator/Iterable<[f64, f64]>" $folding-inner0 $"~lib/iterator/Iterable<[f64, f64]>" $folding-inner0 $"~lib/iterator/Iterable<[f64, f64]>" $folding-inner1 $"~lib/iterator/Iterable<[f64, f64]>" $folding-inner0 $"~lib/iterator/Iterable<[f64, f64]>" $folding-inner0 $"~lib/iterator/Iterable<[f64, f64]>" $folding-inner1 $"~lib/iterator/Iterable<[f64, f64]>" $folding-inner0 $"~lib/iterator/Iterable<[f64, f64]>" $folding-inner0 $"~lib/iterator/Iterable<[f64, f64]>" $folding-inner1 $"~lib/iterator/Iterable<[f64, f64]>" $folding-inner0 $"~lib/iterator/Iterable<[f64, f64]>" $invalid
        end
+       local.get $0
+       i32.load
+       call $~lib/rt/itcms/__visit
        return
+      end
+      local.get $0
+      i32.const 20
+      i32.sub
+      i32.load offset=16
+      local.tee $1
+      i32.const 8
+      i32.sub
+      i32.const 2
+      i32.shr_u
+      local.set $2
+      local.get $0
+      local.get $1
+      i32.add
+      i32.const 8
+      i32.sub
+      i64.load
+      local.set $3
+      i32.const 0
+      local.set $1
+      loop $for-loop|0
+       local.get $1
+       local.get $2
+       i32.lt_u
+       if
+        local.get $3
+        i64.const 1
+        local.get $1
+        i64.extend_i32_u
+        i64.shl
+        i64.and
+        i64.const 0
+        i64.ne
+        if
+         local.get $0
+         local.get $1
+         i32.const 2
+         i32.shl
+         i32.add
+         i32.load
+         call $~lib/rt/itcms/__visit
+        end
+        local.get $1
+        i32.const 1
+        i32.add
+        local.set $1
+        br $for-loop|0
+       end
       end
       return
      end
