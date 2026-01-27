@@ -52,6 +52,14 @@ cli::Opt<bool> updateFlag{
     [](argparse::Argument &arg) { arg.help("update snapshot").flag(); },
 };
 
+cli::Opt<std::vector<std::string>> testFilesOpt{
+    cli::Category::OnlyForTest,
+    "test_files",
+    [](argparse::Argument &arg) {
+      arg.help("optional test file names to run (without .ts extension)").nargs(argparse::nargs_pattern::any);
+    },
+};
+
 enum class TestResult : uint8_t { Success, Failure, Skip };
 
 class TestConfigJson {
@@ -322,6 +330,30 @@ std::vector<std::filesystem::path> collectTestFiles(std::filesystem::path const 
   collectTestFilesImpl(testFiles, folder);
   return testFiles;
 }
+
+/// @brief Filter test files by provided test names.
+/// @param allTestFiles All available test files.
+/// @param testFileNames Test file names to filter by (without .ts extension).
+/// @return Filtered list of test files matching the provided names.
+std::vector<std::filesystem::path> filterTestFilesByNames(std::vector<std::filesystem::path> const &allTestFiles,
+                                                          std::vector<std::string> const &testFileNames) {
+  std::vector<std::filesystem::path> testFiles;
+  for (std::string const &testName : testFileNames) {
+    bool found = false;
+    for (std::filesystem::path const &testPath : allTestFiles) {
+      if (testPath.stem().string() == testName) {
+        testFiles.push_back(testPath);
+        found = true;
+      }
+    }
+    if (!found)
+      fmt::println("Warning: test file '{}' not found", testName);
+  }
+  if (testFiles.empty())
+    throw std::runtime_error("no matching test files found");
+  return testFiles;
+}
+
 // NOLINTNEXTLINE(modernize-avoid-c-arrays)
 void frontendTestMain(int argc, const char *argv[]) {
   frontend::init();
@@ -335,7 +367,17 @@ void frontendTestMain(int argc, const char *argv[]) {
 
   std::filesystem::path const testFolder = getTestFolder();
   std::filesystem::current_path(testFolder);
-  std::vector<std::filesystem::path> const testFiles = collectTestFiles(testFolder);
+  std::vector<std::filesystem::path> allTestFiles = collectTestFiles(testFolder);
+
+  // Filter test files if specific test names are provided
+  std::vector<std::filesystem::path> testFiles;
+  std::vector<std::string> const testFileNames = testFilesOpt.get();
+  if (!testFileNames.empty()) {
+    testFiles = filterTestFilesByNames(allTestFiles, testFileNames);
+  } else {
+    // No specific test files provided, run all tests
+    testFiles = std::move(allTestFiles);
+  }
 
   size_t const numThreads = std::max(1U, std::thread::hardware_concurrency());
   fmt::println("using {} threads for test execution.", numThreads);
