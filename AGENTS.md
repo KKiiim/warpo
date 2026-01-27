@@ -34,3 +34,14 @@ Please follow these instructions after modifying the code.
 
 - When C++ code changed, if needed, add unittest in the same file wrapped with `WARPO_ENABLE_UNIT_TESTS` macro.
 - When project level feature added, create a new test cases in `tests/driver`.
+
+## Docs
+
+- When add new features in documents, add version and stability svg also.
+  ```html
+  <p style="display: flex; gap: 10px;">
+    <img src="/version/nightly.svg" alt="nightly" />
+    <img src="/stability/experimental.svg" alt="experimental" />
+  </p>
+  ```
+- When add new features in documents, maintain the link in `docs/new_features.md`.
