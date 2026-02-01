@@ -20,15 +20,20 @@ void createBaseType(uint32_t const typeNamePtr, vb::WasmModule const *const ctx)
   pCompiler->asModule_.variableInfo_.createBaseType(WarpRunner::getString(ctx, typeNamePtr));
 }
 
-void createClass(uint32_t const classNamePtr, uint32_t const parentNamePtr, uint32_t const rtid,
-                 vb::WasmModule const *const ctx) {
-  // NOLINTNEXTLINE(misc-const-correctness) intentional non-const to allow efficient move
-  std::string className{WarpRunner::getString(ctx, classNamePtr)};
-  // NOLINTNEXTLINE(misc-const-correctness) intentional non-const to allow efficient move
-  std::string parentName{WarpRunner::getString(ctx, parentNamePtr)};
-
+void createClass(uint32_t const classNamePtr, uint32_t const rtid, vb::WasmModule const *const ctx) {
+  std::string const className{WarpRunner::getString(ctx, classNamePtr)};
   FrontendCompiler *const pCompiler = static_cast<FrontendCompiler *>(ctx->getContext());
-  pCompiler->asModule_.variableInfo_.createClass(std::move(className), std::move(parentName), rtid);
+  pCompiler->asModule_.variableInfo_.createClass(className, rtid);
+}
+
+void addBaseClass(uint32_t const classNamePtr, uint32_t const parentNamePtr, vb::WasmModule const *const ctx) {
+  std::string const className = WarpRunner::getString(ctx, classNamePtr);
+  std::string parentClassName;
+  if (parentNamePtr != 0U) {
+    parentClassName = WarpRunner::getString(ctx, parentNamePtr);
+    FrontendCompiler *const pCompiler = static_cast<FrontendCompiler *>(ctx->getContext());
+    pCompiler->asModule_.variableInfo_.addBaseClass(className, parentClassName);
+  }
 }
 
 void addField(uint32_t const classNamePtr, uint32_t const fieldNamePtr, uint32_t const typeNamePtr,
@@ -98,6 +103,7 @@ std::vector<vb::NativeSymbol> createVariableInfoAPI() {
   return std::vector<vb::NativeSymbol>{
       STATIC_LINK("warpo", "_WarpoCreateBaseType", createBaseType),
       STATIC_LINK("warpo", "_WarpoCreateClass", createClass),
+      STATIC_LINK("warpo", "_WarpoAddBaseClass", addBaseClass),
       STATIC_LINK("warpo", "_WarpoAddField", addField),
       STATIC_LINK("warpo", "_WarpoAddTemplateType", addTemplateType),
       STATIC_LINK("warpo", "_WarpoAddGlobal", addGlobal),
