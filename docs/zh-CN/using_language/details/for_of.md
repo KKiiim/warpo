@@ -1,20 +1,20 @@
 # `for ... of`
 
 <p style="display: flex; gap: 10px;">
-  <img src="/version/2.3.0.svg" alt="2.3.0" />
-  <img src="/stability/experimental.svg" alt="experimental" />
+	<img src="/version/2.3.0.svg" alt="2.3.0" />
+	<img src="/stability/experimental.svg" alt="experimental" />
 </p>
 
-`for...of` statement rely on [iterator](/using_language/details/iterator).
+`for...of` 语句依赖 [iterator](/zh-CN/using_language/details/iterator)。
 
-During compilation, the for...of statement is expanded using an iterator.
+编译期间，for...of 会使用 iterator 展开（desugar）。
 
 ```ts
 for (const value of myIterable) {
 }
 ```
 
-is equivalent to
+等价于：
 
 ```ts
 for (
