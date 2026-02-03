@@ -34,13 +34,18 @@ function get_binary(): string | null {
   const version =
     process.env["WARPO_DOWNLOAD_VERSION"] || JSON.parse(readFileSync(join(warpoRoot, "package.json"), "utf8")).version;
 
+  if (version === "0.0.0") {
+    // for development purpose, use local build
+    return join(warpoRoot, "build", "warpo", "warpo_asc");
+  }
+
   const url = download_url(version);
   console.log(`downloading warpo from ${url}`);
   execSync(`curl -L ${url} | tar xz -C ${dirname}`, { stdio: "inherit" });
   return join(dirname, "warpo", "warpo_asc");
 }
 
-export async function main(options: Option) {
+export async function main(options: Option): Promise<number> {
   const binary = get_binary();
   const ps = spawn(binary, options.argv, { stdio: "inherit", env: options.env });
   return new Promise<number>((resolve, reject) => {
@@ -50,10 +55,10 @@ export async function main(options: Option) {
     }
     process.on("SIGINT", shutdown);
     process.on("SIGTERM", shutdown);
-    ps.on("close", (e) => {
+    ps.on("close", (code: number | null) => {
       process.removeListener("SIGINT", shutdown);
       process.removeListener("SIGTERM", shutdown);
-      resolve(e);
+      resolve(code ?? 0);
     });
   });
 }
