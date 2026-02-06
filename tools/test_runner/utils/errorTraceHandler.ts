@@ -1,10 +1,10 @@
 // ref: https://v8.dev/docs/stack-trace-api
 
 import { readFile } from "node:fs/promises";
-import { parseSourceMapPath } from "./wasmparser.js";
 import { BasicSourceMapConsumer, IndexedSourceMapConsumer, SourceMapConsumer } from "source-map";
 import chalk from "chalk";
 import path from "node:path";
+import { WebAssemblyModule } from "./wasm.js";
 import { env } from "node:process";
 
 export interface WebAssemblyCallSite {
@@ -90,10 +90,7 @@ export interface ExecutionError {
   stacks: WebAssemblyCallSite[];
 }
 
-async function getSourceMapConsumer(sourceMapPath: string | null): Promise<SourceMapHandler | null> {
-  if (sourceMapPath === null) {
-    return null;
-  }
+async function getSourceMapConsumer(sourceMapPath: string): Promise<SourceMapHandler | null> {
   const sourceMapContent: string | null = await (async () => {
     try {
       return await readFile(sourceMapPath, "utf8");
@@ -112,7 +109,7 @@ async function getSourceMapConsumer(sourceMapPath: string | null): Promise<Sourc
 
 export async function handleWebAssemblyError(
   error: WebAssembly.RuntimeError,
-  wasmPath: string
+  wasmModule: WebAssemblyModule
 ): Promise<ExecutionError> {
   let stackTrace: NodeJS.CallSite[] = [];
   // eslint-disable-next-line @typescript-eslint/unbound-method
@@ -124,17 +121,9 @@ export async function handleWebAssemblyError(
   error.stack; // trigger prepareStackTrace
   Error.prepareStackTrace = originalPrepareStackTrace;
 
-  const wasmBuffer = await readFile(wasmPath);
-  const sourceMapUrl = parseSourceMapPath(
-    wasmBuffer.buffer.slice(wasmBuffer.byteOffset, wasmBuffer.byteLength) as ArrayBuffer
-  );
-  let sourceMapConsumer: SourceMapHandler | null = null;
-  if (sourceMapUrl != null) {
-    const sourceMapPath = path.join(path.dirname(wasmPath), sourceMapUrl);
-    sourceMapConsumer = await getSourceMapConsumer(sourceMapPath);
-  }
+  let sourceMapConsumer = await getSourceMapConsumer(wasmModule.sourceMap);
   const stacks = stackTrace
-    .map((callSite) => createWebAssemblyCallSite(callSite, { wasmPath, sourceMapConsumer }))
+    .map((callSite) => createWebAssemblyCallSite(callSite, { wasmPath: wasmModule.wasm, sourceMapConsumer }))
     .filter((callSite) => callSite !== null);
   sourceMapConsumer?.destroy(); // clean up the source map consumer
   return {
