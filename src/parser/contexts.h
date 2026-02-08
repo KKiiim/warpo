@@ -575,11 +575,17 @@ struct NullInstrParserCtx {
                          Type,
                          int,
                          MemoryIdxT*,
-                         MemargT) {
+                         MemargT,
+                         MemoryOrder) {
     return Ok{};
   }
-  Result<> makeAtomicCmpxchg(
-    Index, const std::vector<Annotation>&, Type, int, MemoryIdxT*, MemargT) {
+  Result<> makeAtomicCmpxchg(Index,
+                             const std::vector<Annotation>&,
+                             Type,
+                             int,
+                             MemoryIdxT*,
+                             MemargT,
+                             MemoryOrder) {
     return Ok{};
   }
   Result<> makeAtomicWait(
@@ -1296,39 +1302,63 @@ struct ParseImplicitTypeDefsCtx : TypeParserCtx<ParseImplicitTypeDefsCtx> {
 };
 
 struct AnnotationParserCtx {
-  // Return the inline hint for a call instruction, if there is one.
-  std::optional<std::uint8_t>
-  getInlineHint(const std::vector<Annotation>& annotations) {
-    // Find and apply (the last) inline hint.
-    const Annotation* hint = nullptr;
+  // Parse annotations into IR.
+  CodeAnnotation parseAnnotations(const std::vector<Annotation>& annotations) {
+    CodeAnnotation ret;
+
+    // Find the hints. For hints with content we must find the last one, which
+    // overrides the others.
+    const Annotation* branchHint = nullptr;
+    const Annotation* inlineHint = nullptr;
     for (auto& a : annotations) {
-      if (a.kind == Annotations::InlineHint) {
-        hint = &a;
+      if (a.kind == Annotations::BranchHint) {
+        branchHint = &a;
+      } else if (a.kind == Annotations::InlineHint) {
+        inlineHint = &a;
       }
     }
-    if (!hint) {
-      return std::nullopt;
+
+    // Apply the last branch hint, if valid.
+    if (branchHint) {
+      Lexer lexer(branchHint->contents);
+      if (lexer.empty()) {
+        std::cerr << "warning: empty BranchHint\n";
+      } else {
+        auto str = lexer.takeString();
+        if (!str || str->size() != 1) {
+          std::cerr << "warning: invalid BranchHint string\n";
+        } else {
+          auto value = (*str)[0];
+          if (value != 0 && value != 1) {
+            std::cerr << "warning: invalid BranchHint value\n";
+          } else {
+            ret.branchLikely = bool(value);
+          }
+        }
+      }
     }
 
-    Lexer lexer(hint->contents);
-    if (lexer.empty()) {
-      std::cerr << "warning: empty InlineHint\n";
-      return std::nullopt;
+    // Apply the last inline hint, if valid.
+    if (inlineHint) {
+      Lexer lexer(inlineHint->contents);
+      if (lexer.empty()) {
+        std::cerr << "warning: empty InlineHint\n";
+      } else {
+        auto str = lexer.takeString();
+        if (!str || str->size() != 1) {
+          std::cerr << "warning: invalid InlineHint string\n";
+        } else {
+          uint8_t value = (*str)[0];
+          if (value > 127) {
+            std::cerr << "warning: invalid InlineHint value\n";
+          } else {
+            ret.inline_ = value;
+          }
+        }
+      }
     }
 
-    auto str = lexer.takeString();
-    if (!str || str->size() != 1) {
-      std::cerr << "warning: invalid InlineHint string\n";
-      return std::nullopt;
-    }
-
-    uint8_t value = (*str)[0];
-    if (value > 127) {
-      std::cerr << "warning: invalid InlineHint value\n";
-      return std::nullopt;
-    }
-
-    return value;
+    return ret;
   }
 };
 
@@ -1424,7 +1454,7 @@ struct ParseModuleTypesCtx : TypeParserCtx<ParseModuleTypesCtx>,
                    TypeUse type,
                    Exactness exact,
                    std::optional<LocalsT> locals,
-                   std::vector<Annotation>&&,
+                   std::vector<Annotation>&& annotations,
                    Index pos) {
     auto& f = wasm.functions[index];
     if (!type.type.isSignature()) {
@@ -1444,13 +1474,11 @@ struct ParseModuleTypesCtx : TypeParserCtx<ParseModuleTypesCtx>,
         Builder::addVar(f.get(), l.name, l.type);
       }
     }
-    // TODO: Add function-level annotations (stored using the nullptr key, as
-    // they are tied to no instruction in particular), but this should wait on
-    // figuring out
-    // https://github.com/WebAssembly/tool-conventions/issues/251
-    // if (auto inline_ = getInlineHint(annotations)) {
-    //   f->codeAnnotations[nullptr].inline_ = inline_;
-    // }
+    // Function-level annotations are stored using the nullptr key, as they are
+    // not tied to a particular instruction.
+    if (!annotations.empty()) {
+      f->codeAnnotations[nullptr] = parseAnnotations(annotations);
+    }
     return Ok{};
   }
 
@@ -1999,10 +2027,10 @@ struct ParseDefsCtx : TypeParserCtx<ParseDefsCtx>, AnnotationParserCtx {
     if (!type.isSignature()) {
       return in.err(pos, "expected function type");
     }
-    auto likely = getBranchHint(annotations);
-    return withLoc(
-      pos,
-      irBuilder.makeIf(label ? *label : Name{}, type.getSignature(), likely));
+    return withLoc(pos,
+                   irBuilder.makeIf(label ? *label : Name{},
+                                    type.getSignature(),
+                                    parseAnnotations(annotations)));
   }
 
   Result<> visitElse() { return withLoc(irBuilder.visitElse()); }
@@ -2274,11 +2302,12 @@ struct ParseDefsCtx : TypeParserCtx<ParseDefsCtx>, AnnotationParserCtx {
                          Type type,
                          int bytes,
                          Name* mem,
-                         Memarg memarg) {
+                         Memarg memarg,
+                         MemoryOrder order) {
     auto m = getMemory(pos, mem);
     CHECK_ERR(m);
-    return withLoc(pos,
-                   irBuilder.makeAtomicRMW(op, bytes, memarg.offset, type, *m));
+    return withLoc(
+      pos, irBuilder.makeAtomicRMW(op, bytes, memarg.offset, type, *m, order));
   }
 
   Result<> makeAtomicCmpxchg(Index pos,
@@ -2286,11 +2315,12 @@ struct ParseDefsCtx : TypeParserCtx<ParseDefsCtx>, AnnotationParserCtx {
                              Type type,
                              int bytes,
                              Name* mem,
-                             Memarg memarg) {
+                             Memarg memarg,
+                             MemoryOrder order) {
     auto m = getMemory(pos, mem);
     CHECK_ERR(m);
-    return withLoc(pos,
-                   irBuilder.makeAtomicCmpxchg(bytes, memarg.offset, type, *m));
+    return withLoc(
+      pos, irBuilder.makeAtomicCmpxchg(bytes, memarg.offset, type, *m, order));
   }
 
   Result<> makeAtomicWait(Index pos,
@@ -2420,8 +2450,8 @@ struct ParseDefsCtx : TypeParserCtx<ParseDefsCtx>, AnnotationParserCtx {
                     const std::vector<Annotation>& annotations,
                     Name func,
                     bool isReturn) {
-    auto inline_ = getInlineHint(annotations);
-    return withLoc(pos, irBuilder.makeCall(func, isReturn, inline_));
+    return withLoc(
+      pos, irBuilder.makeCall(func, isReturn, parseAnnotations(annotations)));
   }
 
   Result<> makeCallIndirect(Index pos,
@@ -2431,52 +2461,18 @@ struct ParseDefsCtx : TypeParserCtx<ParseDefsCtx>, AnnotationParserCtx {
                             bool isReturn) {
     auto t = getTable(pos, table);
     CHECK_ERR(t);
-    auto inline_ = getInlineHint(annotations);
     return withLoc(pos,
-                   irBuilder.makeCallIndirect(*t, type, isReturn, inline_));
-  }
-
-  // Return the branch hint for a branching instruction, if there is one.
-  std::optional<bool>
-  getBranchHint(const std::vector<Annotation>& annotations) {
-    // Find and apply (the last) branch hint.
-    const Annotation* hint = nullptr;
-    for (auto& a : annotations) {
-      if (a.kind == Annotations::BranchHint) {
-        hint = &a;
-      }
-    }
-    if (!hint) {
-      return std::nullopt;
-    }
-
-    Lexer lexer(hint->contents);
-    if (lexer.empty()) {
-      std::cerr << "warning: empty BranchHint\n";
-      return std::nullopt;
-    }
-
-    auto str = lexer.takeString();
-    if (!str || str->size() != 1) {
-      std::cerr << "warning: invalid BranchHint string\n";
-      return std::nullopt;
-    }
-
-    auto value = (*str)[0];
-    if (value != 0 && value != 1) {
-      std::cerr << "warning: invalid BranchHint value\n";
-      return std::nullopt;
-    }
-
-    return bool(value);
+                   irBuilder.makeCallIndirect(
+                     *t, type, isReturn, parseAnnotations(annotations)));
   }
 
   Result<> makeBreak(Index pos,
                      const std::vector<Annotation>& annotations,
                      Index label,
                      bool isConditional) {
-    auto likely = getBranchHint(annotations);
-    return withLoc(pos, irBuilder.makeBreak(label, isConditional, likely));
+    return withLoc(
+      pos,
+      irBuilder.makeBreak(label, isConditional, parseAnnotations(annotations)));
   }
 
   Result<> makeSwitch(Index pos,
@@ -2615,8 +2611,9 @@ struct ParseDefsCtx : TypeParserCtx<ParseDefsCtx>, AnnotationParserCtx {
                        const std::vector<Annotation>& annotations,
                        HeapType type,
                        bool isReturn) {
-    auto inline_ = getInlineHint(annotations);
-    return withLoc(pos, irBuilder.makeCallRef(type, isReturn, inline_));
+    return withLoc(
+      pos,
+      irBuilder.makeCallRef(type, isReturn, parseAnnotations(annotations)));
   }
 
   Result<> makeRefI31(Index pos,
@@ -2656,8 +2653,9 @@ struct ParseDefsCtx : TypeParserCtx<ParseDefsCtx>, AnnotationParserCtx {
                     BrOnOp op,
                     Type in = Type::none,
                     Type out = Type::none) {
-    auto likely = getBranchHint(annotations);
-    return withLoc(pos, irBuilder.makeBrOn(label, op, in, out, likely));
+    return withLoc(
+      pos,
+      irBuilder.makeBrOn(label, op, in, out, parseAnnotations(annotations)));
   }
 
   Result<> makeStructNew(Index pos,

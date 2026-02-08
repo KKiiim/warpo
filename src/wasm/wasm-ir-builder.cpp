@@ -1075,7 +1075,7 @@ Result<> IRBuilder::visitEnd() {
     tryy->name = scope.label;
     tryy->finalize(tryy->type);
     push(maybeWrapForLabel(tryy));
-  } else if (Try * tryy;
+  } else if (Try* tryy;
              (tryy = scope.getCatch()) || (tryy = scope.getCatchAll())) {
     auto index = scope.getIndex();
     setCatchBody(tryy, *expr, index);
@@ -1313,11 +1313,12 @@ Result<> IRBuilder::makeBlock(Name label, Signature sig) {
   return visitBlockStart(block, sig.params);
 }
 
-Result<>
-IRBuilder::makeIf(Name label, Signature sig, std::optional<bool> likely) {
+Result<> IRBuilder::makeIf(Name label,
+                           Signature sig,
+                           const CodeAnnotation& annotations) {
   auto* iff = wasm.allocator.alloc<If>();
   iff->type = sig.results;
-  addBranchHint(iff, likely);
+  applyAnnotations(iff, annotations);
   return visitIfStart(iff, label, sig.params);
 }
 
@@ -1330,7 +1331,7 @@ Result<> IRBuilder::makeLoop(Name label, Signature sig) {
 
 Result<> IRBuilder::makeBreak(Index label,
                               bool isConditional,
-                              std::optional<bool> likely) {
+                              const CodeAnnotation& annotations) {
   auto name = getLabelName(label);
   CHECK_ERR(name);
   auto labelType = getLabelType(label);
@@ -1342,7 +1343,7 @@ Result<> IRBuilder::makeBreak(Index label,
   curr.condition = isConditional ? &curr : nullptr;
   CHECK_ERR(ChildPopper{*this}.visitBreak(&curr, *labelType));
   auto* br = builder.makeBreak(curr.name, curr.value, curr.condition);
-  addBranchHint(br, likely);
+  applyAnnotations(br, annotations);
   push(br);
 
   return Ok{};
@@ -1376,7 +1377,7 @@ Result<> IRBuilder::makeSwitch(const std::vector<Index>& labels,
 
 Result<> IRBuilder::makeCall(Name func,
                              bool isReturn,
-                             std::optional<std::uint8_t> inline_) {
+                             const CodeAnnotation& annotations) {
   auto sig = wasm.getFunction(func)->getSig();
   Call curr(wasm.allocator);
   curr.target = func;
@@ -1385,14 +1386,14 @@ Result<> IRBuilder::makeCall(Name func,
   auto* call =
     builder.makeCall(curr.target, curr.operands, sig.results, isReturn);
   push(call);
-  addInlineHint(call, inline_);
+  applyAnnotations(call, annotations);
   return Ok{};
 }
 
 Result<> IRBuilder::makeCallIndirect(Name table,
                                      HeapType type,
                                      bool isReturn,
-                                     std::optional<std::uint8_t> inline_) {
+                                     const CodeAnnotation& annotations) {
   if (!type.isSignature()) {
     return Err{"expected function type annotation on call_indirect"};
   }
@@ -1403,7 +1404,7 @@ Result<> IRBuilder::makeCallIndirect(Name table,
   auto* call =
     builder.makeCallIndirect(table, curr.target, curr.operands, type, isReturn);
   push(call);
-  addInlineHint(call, inline_);
+  applyAnnotations(call, annotations);
   return Ok{};
 }
 
@@ -1503,26 +1504,34 @@ Result<> IRBuilder::makeAtomicStore(
   return Ok{};
 }
 
-Result<> IRBuilder::makeAtomicRMW(
-  AtomicRMWOp op, unsigned bytes, Address offset, Type type, Name mem) {
+Result<> IRBuilder::makeAtomicRMW(AtomicRMWOp op,
+                                  unsigned bytes,
+                                  Address offset,
+                                  Type type,
+                                  Name mem,
+                                  MemoryOrder order) {
   AtomicRMW curr;
   curr.memory = mem;
   curr.type = type;
   CHECK_ERR(visitAtomicRMW(&curr));
-  push(
-    builder.makeAtomicRMW(op, bytes, offset, curr.ptr, curr.value, type, mem));
+  push(builder.makeAtomicRMW(
+    op, bytes, offset, curr.ptr, curr.value, type, mem, order));
   return Ok{};
 }
 
-Result<> IRBuilder::makeAtomicCmpxchg(unsigned bytes,
-                                      Address offset,
-                                      Type type,
-                                      Name mem) {
+Result<> IRBuilder::makeAtomicCmpxchg(
+  unsigned bytes, Address offset, Type type, Name mem, MemoryOrder order) {
   AtomicCmpxchg curr;
   curr.memory = mem;
   CHECK_ERR(ChildPopper{*this}.visitAtomicCmpxchg(&curr, type));
-  push(builder.makeAtomicCmpxchg(
-    bytes, offset, curr.ptr, curr.expected, curr.replacement, type, mem));
+  push(builder.makeAtomicCmpxchg(bytes,
+                                 offset,
+                                 curr.ptr,
+                                 curr.expected,
+                                 curr.replacement,
+                                 type,
+                                 mem,
+                                 order));
   return Ok{};
 }
 
@@ -1913,7 +1922,7 @@ Result<> IRBuilder::makeI31Get(bool signed_) {
 
 Result<> IRBuilder::makeCallRef(HeapType type,
                                 bool isReturn,
-                                std::optional<std::uint8_t> inline_) {
+                                const CodeAnnotation& annotations) {
   if (!type.isSignature()) {
     return Err{"expected function type annotation on call_ref"};
   }
@@ -1928,7 +1937,7 @@ Result<> IRBuilder::makeCallRef(HeapType type,
   auto* call =
     builder.makeCallRef(curr.target, curr.operands, sig.results, isReturn);
   push(call);
-  addInlineHint(call, inline_);
+  applyAnnotations(call, annotations);
   return Ok{};
 }
 
@@ -1952,7 +1961,7 @@ Result<> IRBuilder::makeRefCast(Type type, bool isDesc) {
 
   RefCast curr;
   curr.type = type;
-  // Placeholder value to differentiate ref.cast_desc.
+  // Placeholder value to differentiate ref.cast_desc_eq.
   curr.desc = isDesc ? &curr : nullptr;
   CHECK_ERR(visitRefCast(&curr));
 
@@ -1976,10 +1985,13 @@ Result<> IRBuilder::makeRefGetDesc(HeapType type) {
   return Ok{};
 }
 
-Result<> IRBuilder::makeBrOn(
-  Index label, BrOnOp op, Type in, Type out, std::optional<bool> likely) {
+Result<> IRBuilder::makeBrOn(Index label,
+                             BrOnOp op,
+                             Type in,
+                             Type out,
+                             const CodeAnnotation& annotations) {
   std::optional<HeapType> descriptor;
-  if (op == BrOnCastDesc || op == BrOnCastDescFail) {
+  if (op == BrOnCastDescEq || op == BrOnCastDescEqFail) {
     assert(out.isRef());
     descriptor = out.getHeapType().getDescriptorType();
     if (!descriptor) {
@@ -1998,8 +2010,8 @@ Result<> IRBuilder::makeBrOn(
     case BrOnNull:
     case BrOnNonNull:
       break;
-    case BrOnCastDesc:
-    case BrOnCastDescFail: {
+    case BrOnCastDescEq:
+    case BrOnCastDescEqFail: {
       CHECK_ERR(validateTypeAnnotation(out.with(*descriptor).with(Nullable),
                                        curr.desc));
     }
@@ -2021,8 +2033,8 @@ Result<> IRBuilder::makeBrOn(
     case BrOnNonNull:
     case BrOnCast:
     case BrOnCastFail:
-    case BrOnCastDesc:
-    case BrOnCastDescFail:
+    case BrOnCastDescEq:
+    case BrOnCastDescEqFail:
       // Modeled as sending one value.
       if (extraArity == 0) {
         return Err{"br_on target does not expect a value"};
@@ -2042,8 +2054,8 @@ Result<> IRBuilder::makeBrOn(
       break;
     case BrOnCast:
     case BrOnCastFail:
-    case BrOnCastDesc:
-    case BrOnCastDescFail:
+    case BrOnCastDescEq:
+    case BrOnCastDescEqFail:
       testType = in;
       break;
   }
@@ -2058,7 +2070,7 @@ Result<> IRBuilder::makeBrOn(
     CHECK_ERR(name);
 
     auto* br = builder.makeBrOn(op, *name, curr.ref, out, curr.desc);
-    addBranchHint(br, likely);
+    applyAnnotations(br, annotations);
     push(br);
     return Ok{};
   }
@@ -2082,7 +2094,7 @@ Result<> IRBuilder::makeBrOn(
   // Perform the branch.
   CHECK_ERR(visitBrOn(&curr));
   auto* br = builder.makeBrOn(op, extraLabel, curr.ref, out, curr.desc);
-  addBranchHint(br, likely);
+  applyAnnotations(br, annotations);
   push(br);
 
   // If the branch wasn't taken, we need to leave the extra values on the
@@ -2102,7 +2114,7 @@ Result<> IRBuilder::makeBrOn(
     case BrOnNonNull:
       WASM_UNREACHABLE("unexpected op");
     case BrOnCast:
-    case BrOnCastDesc:
+    case BrOnCastDescEq:
       if (out.isNullable()) {
         resultType = Type(in.getHeapType(), NonNullable);
       } else {
@@ -2110,7 +2122,7 @@ Result<> IRBuilder::makeBrOn(
       }
       break;
     case BrOnCastFail:
-    case BrOnCastDescFail:
+    case BrOnCastDescEqFail:
       if (in.isNonNullable()) {
         resultType = Type(out.getHeapType(), NonNullable);
       } else {
@@ -2135,10 +2147,9 @@ Result<> IRBuilder::makeStructNew(HeapType type, bool isDesc) {
   if (isDesc && !type.getDescriptorType()) {
     return Err{"struct.new_desc of type without descriptor"};
   }
-  // TODO: Uncomment this after a transition period.
-  // if (!isDesc && type.getDescriptorType()) {
-  //   return Err{"type with descriptor requires struct.new_desc"};
-  // }
+  if (!isDesc && type.getDescriptorType()) {
+    return Err{"type with descriptor requires struct.new_desc"};
+  }
   StructNew curr(wasm.allocator);
   curr.type = Type(type, NonNullable, Exact);
   curr.operands.resize(type.getStruct().fields.size());
@@ -2151,10 +2162,9 @@ Result<> IRBuilder::makeStructNewDefault(HeapType type, bool isDesc) {
   if (isDesc && !type.getDescriptorType()) {
     return Err{"struct.new_default_desc of type without descriptor"};
   }
-  // TODO: Uncomment this after a transition period.
-  // if (!isDesc && type.getDescriptorType()) {
-  //   return Err{"type with descriptor requires struct.new_default_desc"};
-  // }
+  if (!isDesc && type.getDescriptorType()) {
+    return Err{"type with descriptor requires struct.new_default_desc"};
+  }
   StructNew curr(wasm.allocator);
   curr.type = Type(type, NonNullable, Exact);
   CHECK_ERR(visitStructNew(&curr));
@@ -2638,20 +2648,18 @@ Result<> IRBuilder::makeStackSwitch(HeapType ct, Name tag) {
   return Ok{};
 }
 
-void IRBuilder::addBranchHint(Expression* expr, std::optional<bool> likely) {
-  if (likely) {
+void IRBuilder::applyAnnotations(Expression* expr,
+                                 const CodeAnnotation& annotation) {
+  if (annotation.branchLikely) {
     // Branches are only possible inside functions.
     assert(func);
-    func->codeAnnotations[expr].branchLikely = likely;
+    func->codeAnnotations[expr].branchLikely = annotation.branchLikely;
   }
-}
 
-void IRBuilder::addInlineHint(Expression* expr,
-                              std::optional<uint8_t> inline_) {
-  if (inline_) {
-    // Branches are only possible inside functions.
+  if (annotation.inline_) {
+    // Only possible inside functions.
     assert(func);
-    func->codeAnnotations[expr].inline_ = inline_;
+    func->codeAnnotations[expr].inline_ = annotation.inline_;
   }
 }
 

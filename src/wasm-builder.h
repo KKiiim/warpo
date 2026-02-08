@@ -466,7 +466,8 @@ public:
                            Expression* ptr,
                            Expression* value,
                            Type type,
-                           Name memory) {
+                           Name memory,
+                           MemoryOrder order) {
     auto* ret = wasm.allocator.alloc<AtomicRMW>();
     ret->op = op;
     ret->bytes = bytes;
@@ -474,8 +475,9 @@ public:
     ret->ptr = ptr;
     ret->value = value;
     ret->type = type;
-    ret->finalize();
     ret->memory = memory;
+    ret->order = order;
+    ret->finalize();
     return ret;
   }
   AtomicCmpxchg* makeAtomicCmpxchg(unsigned bytes,
@@ -484,7 +486,8 @@ public:
                                    Expression* expected,
                                    Expression* replacement,
                                    Type type,
-                                   Name memory) {
+                                   Name memory,
+                                   MemoryOrder order) {
     auto* ret = wasm.allocator.alloc<AtomicCmpxchg>();
     ret->bytes = bytes;
     ret->offset = offset;
@@ -492,8 +495,9 @@ public:
     ret->expected = expected;
     ret->replacement = replacement;
     ret->type = type;
-    ret->finalize();
     ret->memory = memory;
+    ret->order = order;
+    ret->finalize();
     return ret;
   }
   SIMDExtract*
@@ -957,8 +961,8 @@ public:
                  Expression* ref,
                  Type castType = Type::none,
                  Expression* desc = nullptr) {
-    assert((desc && (op == BrOnCastDesc || op == BrOnCastDescFail)) ||
-           (!desc && op != BrOnCastDesc && op != BrOnCastDescFail));
+    assert((desc && (op == BrOnCastDescEq || op == BrOnCastDescEqFail)) ||
+           (!desc && op != BrOnCastDescEq && op != BrOnCastDescEqFail));
     auto* ret = wasm.allocator.alloc<BrOn>();
     ret->op = op;
     ret->name = name;

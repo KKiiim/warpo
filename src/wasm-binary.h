@@ -1183,12 +1183,12 @@ enum ASTNodes {
   RefTestNull = 0x15,
   RefCast = 0x16,
   RefCastNull = 0x17,
-  RefCastDesc = 0x23,
-  RefCastDescNull = 0x24,
+  RefCastDescEq = 0x23,
+  RefCastDescEqNull = 0x24,
   BrOnCast = 0x18,
   BrOnCastFail = 0x19,
-  BrOnCastDesc = 0x25,
-  BrOnCastDescFail = 0x26,
+  BrOnCastDescEq = 0x25,
+  BrOnCastDescEqFail = 0x26,
   AnyConvertExtern = 0x1a,
   ExternConvertAny = 0x1b,
   RefI31 = 0x1c,
@@ -1719,17 +1719,19 @@ public:
   void readDylink(size_t payloadLen);
   void readDylink0(size_t payloadLen);
 
-  // We read branch hints *after* the code section, even though they appear
+  // We read code annotations *after* the code section, even though they appear
   // earlier. That is simpler for us as we note expression locations as we scan
-  // code, and then just need to match them up. To do this, we note the branch
-  // hint position and size in the first pass, and handle it later.
-  size_t branchHintsPos = 0;
-  size_t branchHintsLen = 0;
-  void readBranchHints(size_t payloadLen);
+  // code, and then just need to match them up. To do this, we note the
+  // positions of annotation sections in the first pass, and handle them later.
+  struct AnnotationSectionInfo {
+    // The start position of the section. We will rewind to there to read it.
+    size_t pos;
+    // A lambda that will read the section, from that position.
+    std::function<void()> read;
+  };
+  std::vector<AnnotationSectionInfo> deferredAnnotationSections;
 
-  // Like branch hints, we note where the section is to read it later.
-  size_t inlineHintsPos = 0;
-  size_t inlineHintsLen = 0;
+  void readBranchHints(size_t payloadLen);
   void readInlineHints(size_t payloadLen);
 
   std::tuple<Address, Address, Index, MemoryOrder>
