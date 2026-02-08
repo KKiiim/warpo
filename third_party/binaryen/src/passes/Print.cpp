@@ -661,6 +661,7 @@ struct PrintExpressionContents
     }
     restoreNormalColor(o);
     printMemoryName(curr->memory, o, wasm);
+    printMemoryOrder(curr->order);
     if (curr->offset) {
       o << " offset=" << curr->offset;
     }
@@ -675,6 +676,7 @@ struct PrintExpressionContents
     }
     restoreNormalColor(o);
     printMemoryName(curr->memory, o, wasm);
+    printMemoryOrder(curr->order);
     if (curr->offset) {
       o << " offset=" << curr->offset;
     }
@@ -2223,7 +2225,7 @@ struct PrintExpressionContents
   }
   void visitRefCast(RefCast* curr) {
     if (curr->desc) {
-      printMedium(o, "ref.cast_desc ");
+      printMedium(o, "ref.cast_desc_eq ");
     } else {
       printMedium(o, "ref.cast ");
     }
@@ -2257,9 +2259,9 @@ struct PrintExpressionContents
         curr->name.print(o);
         return;
       case BrOnCast:
-      case BrOnCastDesc:
+      case BrOnCastDescEq:
       case BrOnCastFail:
-      case BrOnCastDescFail:
+      case BrOnCastDescEqFail:
         switch (curr->op) {
           case BrOnCast:
             printMedium(o, "br_on_cast");
@@ -2267,11 +2269,11 @@ struct PrintExpressionContents
           case BrOnCastFail:
             printMedium(o, "br_on_cast_fail");
             break;
-          case BrOnCastDesc:
-            printMedium(o, "br_on_cast_desc");
+          case BrOnCastDescEq:
+            printMedium(o, "br_on_cast_desc_eq");
             break;
-          case BrOnCastDescFail:
-            printMedium(o, "br_on_cast_desc_fail");
+          case BrOnCastDescEqFail:
+            printMedium(o, "br_on_cast_desc_eq_fail");
             break;
           default:
             WASM_UNREACHABLE("unexpected op");
@@ -2292,7 +2294,7 @@ struct PrintExpressionContents
         return;
         printMedium(o,
                     curr->op == BrOnCastFail ? "br_on_cast_fail "
-                                             : "br_on_cast_desc_fail ");
+                                             : "br_on_cast_desc_eq_fail ");
         curr->name.print(o);
         o << ' ';
         if (curr->ref->type == Type::unreachable) {
@@ -3244,6 +3246,7 @@ void PrintSExpression::visitImportedFunction(Function* curr) {
   lastPrintedLocation = std::nullopt;
   o << '(';
   emitImportHeader(curr);
+  printCodeAnnotations(nullptr);
   handleSignature(curr);
   o << "))";
   o << maybeNewLine;
@@ -3257,9 +3260,7 @@ void PrintSExpression::visitDefinedFunction(Function* curr) {
   if (currFunction->prologLocation) {
     printDebugLocation(*currFunction->prologLocation);
   }
-  // TODO: print code annotations in the right place, depending on
-  // https://github.com/WebAssembly/tool-conventions/issues/251
-  // printCodeAnnotations(nullptr);
+  printCodeAnnotations(nullptr);
   handleSignature(curr, true);
   incIndent();
   for (size_t i = curr->getVarIndexBase(); i < curr->getNumLocals(); i++) {
@@ -3968,6 +3969,13 @@ std::ostream& operator<<(std::ostream& os, wasm::MemoryOrder mo) {
       break;
   }
   return os;
+}
+
+std::ostream& operator<<(std::ostream& o, const Table& table) {
+  wasm::PrintSExpression printer(o);
+  // TODO: printTableHeader should take a const Table*
+  printer.printTableHeader(const_cast<Table*>(&table));
+  return o;
 }
 
 } // namespace wasm

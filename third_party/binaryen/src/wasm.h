@@ -66,7 +66,7 @@ struct Address {
   }
 };
 
-enum class MemoryOrder {
+enum class MemoryOrder : uint8_t {
   Unordered,
   SeqCst,
   AcqRel,
@@ -609,8 +609,8 @@ enum BrOnOp {
   BrOnNonNull,
   BrOnCast,
   BrOnCastFail,
-  BrOnCastDesc,
-  BrOnCastDescFail,
+  BrOnCastDescEq,
+  BrOnCastDescEqFail,
 };
 
 enum StringNewOp {
@@ -1035,6 +1035,7 @@ public:
   Expression* ptr;
   Expression* value;
   Name memory;
+  MemoryOrder order = MemoryOrder::SeqCst;
 
   void finalize();
 };
@@ -1050,6 +1051,7 @@ public:
   Expression* expected;
   Expression* replacement;
   Name memory;
+  MemoryOrder order = MemoryOrder::SeqCst;
 
   void finalize();
 };
@@ -1644,7 +1646,7 @@ public:
 
   Expression* ref;
 
-  // Used only for ref.cast_desc.
+  // Used only for ref.cast_desc_eq.
   Expression* desc;
 
   void finalize();
@@ -1671,7 +1673,7 @@ public:
   Name name;
   Expression* ref;
 
-  // Only used for br_on_cast_desc{,_fail}
+  // Only used for br_on_cast_desc_eq{,_fail}
   Expression* desc;
 
   // Only used for br_on_cast{,_desc}{,_fail}
@@ -2231,6 +2233,21 @@ struct BinaryLocations {
 // Forward declaration for FuncEffectsMap.
 class EffectAnalyzer;
 
+// Code annotations for VMs.
+struct CodeAnnotation {
+  // Branch Hinting proposal: Whether the branch is likely, or unlikely.
+  std::optional<bool> branchLikely;
+
+  // Compilation Hints proposal.
+  static const uint8_t NeverInline = 0;
+  static const uint8_t AlwaysInline = 127;
+  std::optional<uint8_t> inline_;
+
+  bool operator==(const CodeAnnotation& other) const {
+    return branchLikely == other.branchLikely && inline_ == other.inline_;
+  }
+};
+
 class Function : public Importable {
 public:
   // A non-nullable reference to a function type. Exact for defined functions.
@@ -2284,25 +2301,10 @@ public:
     delimiterLocations;
   BinaryLocations::FunctionLocations funcLocation;
 
-  // Code annotations for VMs. As with debug info, we do not store these on
+  // Function-level annotations are implemented with a key of nullptr, matching
+  // the 0 byte offset in the spec. As with debug info, we do not store these on
   // Expressions as we assume most instances are unannotated, and do not want to
   // add constant memory overhead.
-  struct CodeAnnotation {
-    // Branch Hinting proposal: Whether the branch is likely, or unlikely.
-    std::optional<bool> branchLikely;
-
-    // Compilation Hints proposal.
-    static const uint8_t NeverInline = 0;
-    static const uint8_t AlwaysInline = 127;
-    std::optional<uint8_t> inline_;
-
-    bool operator==(const CodeAnnotation& other) const {
-      return branchLikely == other.branchLikely && inline_ == other.inline_;
-    }
-  };
-
-  // Function-level annotations are implemented with a key of nullptr, matching
-  // the 0 byte offset in the spec.
   std::unordered_map<Expression*, CodeAnnotation> codeAnnotations;
 
   // The effects for this function, if they have been computed. We use a shared
@@ -2663,6 +2665,7 @@ std::ostream& operator<<(std::ostream& o, wasm::ModuleType pair);
 std::ostream& operator<<(std::ostream& o, wasm::ModuleHeapType pair);
 std::ostream& operator<<(std::ostream& os, wasm::MemoryOrder mo);
 std::ostream& operator<<(std::ostream& o, const wasm::ImportNames& importNames);
+std::ostream& operator<<(std::ostream& o, const Table& table);
 
 } // namespace wasm
 

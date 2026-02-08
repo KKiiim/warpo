@@ -456,7 +456,11 @@ void WasmBinaryWriter::writeFunctions() {
         }
       }
     }
-    if (!binaryLocationTrackedExpressionsForFunc.empty()) {
+    // We need to track the function location if we are tracking the locations
+    // of expressions inside it, or, if it has code annotations (the function
+    // itself may be annotated, even if nothing inside it is).
+    if (!binaryLocationTrackedExpressionsForFunc.empty() ||
+        !func->codeAnnotations.empty()) {
       binaryLocations.functions[func] = BinaryLocations::FunctionLocations{
         BinaryLocation(sizePos),
         BinaryLocation(start - adjustmentForLEBShrinking),
@@ -1641,7 +1645,7 @@ std::optional<BufferWithRandomAccess> WasmBinaryWriter::writeExpressionHints(
     Expression* expr;
     // The offset we will write in the custom section.
     BinaryLocation offset;
-    Function::CodeAnnotation* hint;
+    CodeAnnotation* hint;
   };
 
   struct FuncHints {
@@ -1661,23 +1665,30 @@ std::optional<BufferWithRandomAccess> WasmBinaryWriter::writeExpressionHints(
 
     for (auto& [expr, annotation] : func->codeAnnotations) {
       if (has(annotation)) {
-        auto exprIter = binaryLocations.expressions.find(expr);
-        if (exprIter == binaryLocations.expressions.end()) {
-          // No expression exists for this annotation - perhaps optimizations
-          // removed it.
-          continue;
-        }
-        auto exprOffset = exprIter->second.start;
+        BinaryLocation offset;
+        if (expr == nullptr) {
+          // Function-level annotations have expr==0 and an offset of the start
+          // of the function.
+          offset = 0;
+        } else {
+          auto exprIter = binaryLocations.expressions.find(expr);
+          if (exprIter == binaryLocations.expressions.end()) {
+            // No expression exists for this annotation - perhaps optimizations
+            // removed it.
+            continue;
+          }
+          auto exprOffset = exprIter->second.start;
 
-        if (!funcDeclarationsOffset) {
-          auto funcIter = binaryLocations.functions.find(func.get());
-          assert(funcIter != binaryLocations.functions.end());
-          funcDeclarationsOffset = funcIter->second.declarations;
-        }
+          if (!funcDeclarationsOffset) {
+            auto funcIter = binaryLocations.functions.find(func.get());
+            assert(funcIter != binaryLocations.functions.end());
+            funcDeclarationsOffset = funcIter->second.declarations;
+          }
 
-        // Compute the offset: it should be relative to the start of the
-        // function locals (i.e. the function declarations).
-        auto offset = exprOffset - funcDeclarationsOffset;
+          // Compute the offset: it should be relative to the start of the
+          // function locals (i.e. the function declarations).
+          offset = exprOffset - funcDeclarationsOffset;
+        }
 
         funcHints.exprHints.push_back(ExprHint{expr, offset, &annotation});
       }
@@ -1733,11 +1744,8 @@ std::optional<BufferWithRandomAccess> WasmBinaryWriter::writeExpressionHints(
 std::optional<BufferWithRandomAccess> WasmBinaryWriter::getBranchHintsBuffer() {
   return writeExpressionHints(
     Annotations::BranchHint,
-    [](const Function::CodeAnnotation& annotation) {
-      return annotation.branchLikely;
-    },
-    [](const Function::CodeAnnotation& annotation,
-       BufferWithRandomAccess& buffer) {
+    [](const CodeAnnotation& annotation) { return annotation.branchLikely; },
+    [](const CodeAnnotation& annotation, BufferWithRandomAccess& buffer) {
       // Hint size, always 1 for now.
       buffer << U32LEB(1);
 
@@ -1752,11 +1760,8 @@ std::optional<BufferWithRandomAccess> WasmBinaryWriter::getBranchHintsBuffer() {
 std::optional<BufferWithRandomAccess> WasmBinaryWriter::getInlineHintsBuffer() {
   return writeExpressionHints(
     Annotations::InlineHint,
-    [](const Function::CodeAnnotation& annotation) {
-      return annotation.inline_;
-    },
-    [](const Function::CodeAnnotation& annotation,
-       BufferWithRandomAccess& buffer) {
+    [](const CodeAnnotation& annotation) { return annotation.inline_; },
+    [](const CodeAnnotation& annotation, BufferWithRandomAccess& buffer) {
       // Hint size, always 1 for now.
       buffer << U32LEB(1);
 
@@ -2165,14 +2170,11 @@ void WasmBinaryReader::read() {
     }
   }
 
-  // Go back and parse things we deferred.
-  if (branchHintsPos) {
-    pos = branchHintsPos;
-    readBranchHints(branchHintsLen);
-  }
-  if (inlineHintsPos) {
-    pos = inlineHintsPos;
-    readInlineHints(inlineHintsLen);
+  // Go back and parse annotations we deferred.
+  for (auto& [annotationPos, read] : deferredAnnotationSections) {
+    // Rewind to the right position, and read.
+    pos = annotationPos;
+    read();
   }
 
   validateBinary();
@@ -2196,12 +2198,12 @@ void WasmBinaryReader::readCustomSection(size_t payloadLen) {
   } else if (sectionName.equals(BinaryConsts::CustomSections::Dylink0)) {
     readDylink0(payloadLen);
   } else if (sectionName == Annotations::BranchHint) {
-    // Only note the position and length, we read this later.
-    branchHintsPos = pos;
-    branchHintsLen = payloadLen;
+    // Deferred.
+    deferredAnnotationSections.push_back(AnnotationSectionInfo{
+      pos, [this, payloadLen]() { this->readBranchHints(payloadLen); }});
   } else if (sectionName == Annotations::InlineHint) {
-    inlineHintsPos = pos;
-    inlineHintsLen = payloadLen;
+    deferredAnnotationSections.push_back(AnnotationSectionInfo{
+      pos, [this, payloadLen]() { this->readInlineHints(payloadLen); }});
   } else {
     // an unfamiliar custom section
     if (sectionName.equals(BinaryConsts::CustomSections::Linking)) {
@@ -3711,31 +3713,38 @@ Result<> WasmBinaryReader::readInst() {
 #define RMW(op)                                                                \
   case BinaryConsts::I32AtomicRMW##op: {                                       \
     auto [mem, align, offset, memoryOrder] = getRMWMemarg();                   \
-    return builder.makeAtomicRMW(RMW##op, 4, offset, Type::i32, mem);          \
+    return builder.makeAtomicRMW(                                              \
+      RMW##op, 4, offset, Type::i32, mem, memoryOrder);                        \
   }                                                                            \
   case BinaryConsts::I32AtomicRMW##op##8U: {                                   \
     auto [mem, align, offset, memoryOrder] = getRMWMemarg();                   \
-    return builder.makeAtomicRMW(RMW##op, 1, offset, Type::i32, mem);          \
+    return builder.makeAtomicRMW(                                              \
+      RMW##op, 1, offset, Type::i32, mem, memoryOrder);                        \
   }                                                                            \
   case BinaryConsts::I32AtomicRMW##op##16U: {                                  \
     auto [mem, align, offset, memoryOrder] = getRMWMemarg();                   \
-    return builder.makeAtomicRMW(RMW##op, 2, offset, Type::i32, mem);          \
+    return builder.makeAtomicRMW(                                              \
+      RMW##op, 2, offset, Type::i32, mem, memoryOrder);                        \
   }                                                                            \
   case BinaryConsts::I64AtomicRMW##op: {                                       \
     auto [mem, align, offset, memoryOrder] = getRMWMemarg();                   \
-    return builder.makeAtomicRMW(RMW##op, 8, offset, Type::i64, mem);          \
+    return builder.makeAtomicRMW(                                              \
+      RMW##op, 8, offset, Type::i64, mem, memoryOrder);                        \
   }                                                                            \
   case BinaryConsts::I64AtomicRMW##op##8U: {                                   \
     auto [mem, align, offset, memoryOrder] = getRMWMemarg();                   \
-    return builder.makeAtomicRMW(RMW##op, 1, offset, Type::i64, mem);          \
+    return builder.makeAtomicRMW(                                              \
+      RMW##op, 1, offset, Type::i64, mem, memoryOrder);                        \
   }                                                                            \
   case BinaryConsts::I64AtomicRMW##op##16U: {                                  \
     auto [mem, align, offset, memoryOrder] = getRMWMemarg();                   \
-    return builder.makeAtomicRMW(RMW##op, 2, offset, Type::i64, mem);          \
+    return builder.makeAtomicRMW(                                              \
+      RMW##op, 2, offset, Type::i64, mem, memoryOrder);                        \
   }                                                                            \
   case BinaryConsts::I64AtomicRMW##op##32U: {                                  \
     auto [mem, align, offset, memoryOrder] = getRMWMemarg();                   \
-    return builder.makeAtomicRMW(RMW##op, 4, offset, Type::i64, mem);          \
+    return builder.makeAtomicRMW(                                              \
+      RMW##op, 4, offset, Type::i64, mem, memoryOrder);                        \
   }
 
           RMW(Add);
@@ -3747,31 +3756,38 @@ Result<> WasmBinaryReader::readInst() {
 
         case BinaryConsts::I32AtomicCmpxchg: {
           auto [mem, align, offset, memoryOrder] = getRMWMemarg();
-          return builder.makeAtomicCmpxchg(4, offset, Type::i32, mem);
+          return builder.makeAtomicCmpxchg(
+            4, offset, Type::i32, mem, memoryOrder);
         }
         case BinaryConsts::I32AtomicCmpxchg8U: {
           auto [mem, align, offset, memoryOrder] = getRMWMemarg();
-          return builder.makeAtomicCmpxchg(1, offset, Type::i32, mem);
+          return builder.makeAtomicCmpxchg(
+            1, offset, Type::i32, mem, memoryOrder);
         }
         case BinaryConsts::I32AtomicCmpxchg16U: {
           auto [mem, align, offset, memoryOrder] = getRMWMemarg();
-          return builder.makeAtomicCmpxchg(2, offset, Type::i32, mem);
+          return builder.makeAtomicCmpxchg(
+            2, offset, Type::i32, mem, memoryOrder);
         }
         case BinaryConsts::I64AtomicCmpxchg: {
           auto [mem, align, offset, memoryOrder] = getRMWMemarg();
-          return builder.makeAtomicCmpxchg(8, offset, Type::i64, mem);
+          return builder.makeAtomicCmpxchg(
+            8, offset, Type::i64, mem, memoryOrder);
         }
         case BinaryConsts::I64AtomicCmpxchg8U: {
           auto [mem, align, offset, memoryOrder] = getRMWMemarg();
-          return builder.makeAtomicCmpxchg(1, offset, Type::i64, mem);
+          return builder.makeAtomicCmpxchg(
+            1, offset, Type::i64, mem, memoryOrder);
         }
         case BinaryConsts::I64AtomicCmpxchg16U: {
           auto [mem, align, offset, memoryOrder] = getRMWMemarg();
-          return builder.makeAtomicCmpxchg(2, offset, Type::i64, mem);
+          return builder.makeAtomicCmpxchg(
+            2, offset, Type::i64, mem, memoryOrder);
         }
         case BinaryConsts::I64AtomicCmpxchg32U: {
           auto [mem, align, offset, memoryOrder] = getRMWMemarg();
-          return builder.makeAtomicCmpxchg(4, offset, Type::i64, mem);
+          return builder.makeAtomicCmpxchg(
+            4, offset, Type::i64, mem, memoryOrder);
         }
         case BinaryConsts::I32AtomicWait: {
           auto [mem, align, offset, memoryOrder] = getAtomicMemarg();
@@ -4595,12 +4611,12 @@ Result<> WasmBinaryReader::readInst() {
           return builder.makeRefCast(Type(heapType, Nullable, exactness),
                                      false);
         }
-        case BinaryConsts::RefCastDesc: {
+        case BinaryConsts::RefCastDescEq: {
           auto [heapType, exactness] = getHeapType();
           return builder.makeRefCast(Type(heapType, NonNullable, exactness),
                                      true);
         }
-        case BinaryConsts::RefCastDescNull: {
+        case BinaryConsts::RefCastDescEqNull: {
           auto [heapType, exactness] = getHeapType();
           return builder.makeRefCast(Type(heapType, Nullable, exactness), true);
         }
@@ -4610,8 +4626,8 @@ Result<> WasmBinaryReader::readInst() {
         }
         case BinaryConsts::BrOnCast:
         case BinaryConsts::BrOnCastFail:
-        case BinaryConsts::BrOnCastDesc:
-        case BinaryConsts::BrOnCastDescFail: {
+        case BinaryConsts::BrOnCastDescEq:
+        case BinaryConsts::BrOnCastDescEqFail: {
           auto flags = getInt8();
           auto srcNull = (flags & BinaryConsts::BrOnCastFlag::InputNullable)
                            ? Nullable
@@ -4624,10 +4640,10 @@ Result<> WasmBinaryReader::readInst() {
           auto [dstType, dstExact] = getHeapType();
           auto in = Type(srcType, srcNull, srcExact);
           auto cast = Type(dstType, dstNull, dstExact);
-          auto kind = op == BinaryConsts::BrOnCast       ? BrOnCast
-                      : op == BinaryConsts::BrOnCastFail ? BrOnCastFail
-                      : op == BinaryConsts::BrOnCastDesc ? BrOnCastDesc
-                                                         : BrOnCastDescFail;
+          auto kind = op == BinaryConsts::BrOnCast         ? BrOnCast
+                      : op == BinaryConsts::BrOnCastFail   ? BrOnCastFail
+                      : op == BinaryConsts::BrOnCastDescEq ? BrOnCastDescEq
+                                                           : BrOnCastDescEqFail;
           return builder.makeBrOn(label, kind, in, cast);
         }
         case BinaryConsts::StructNew:
@@ -5436,15 +5452,24 @@ void WasmBinaryReader::readExpressionHints(Name sectionName,
 
     auto numHints = getU32LEB();
     for (Index hint = 0; hint < numHints; hint++) {
-      // To get the absolute offset, add the function's offset.
+      // Find the expression this hint is for. If the relative offset is 0, then
+      // it is for the entire function, with expr==null.
+      Expression* expr;
       auto relativeOffset = getU32LEB();
-      auto absoluteOffset = funcLocalsOffset + relativeOffset;
+      if (relativeOffset == 0) {
+        // Function-level annotations have expr==0 and an offset of the start
+        // of the function.
+        expr = nullptr;
+      } else {
+        // To get the absolute offset, add the function's offset.
+        auto absoluteOffset = funcLocalsOffset + relativeOffset;
 
-      auto iter = locationsMap.find(absoluteOffset);
-      if (iter == locationsMap.end()) {
-        throwError("bad offset in " + sectionName.toString());
+        auto iter = locationsMap.find(absoluteOffset);
+        if (iter == locationsMap.end()) {
+          throwError("bad offset in " + sectionName.toString());
+        }
+        expr = iter->second;
       }
-      auto* expr = iter->second;
 
       read(func->codeAnnotations[expr]);
     }
@@ -5456,39 +5481,37 @@ void WasmBinaryReader::readExpressionHints(Name sectionName,
 }
 
 void WasmBinaryReader::readBranchHints(size_t payloadLen) {
-  readExpressionHints(Annotations::BranchHint,
-                      payloadLen,
-                      [&](Function::CodeAnnotation& annotation) {
-                        auto size = getU32LEB();
-                        if (size != 1) {
-                          throwError("bad BranchHint size");
-                        }
+  readExpressionHints(
+    Annotations::BranchHint, payloadLen, [&](CodeAnnotation& annotation) {
+      auto size = getU32LEB();
+      if (size != 1) {
+        throwError("bad BranchHint size");
+      }
 
-                        auto likely = getU32LEB();
-                        if (likely != 0 && likely != 1) {
-                          throwError("bad BranchHint value");
-                        }
+      auto likely = getU32LEB();
+      if (likely != 0 && likely != 1) {
+        throwError("bad BranchHint value");
+      }
 
-                        annotation.branchLikely = likely;
-                      });
+      annotation.branchLikely = likely;
+    });
 }
 
 void WasmBinaryReader::readInlineHints(size_t payloadLen) {
-  readExpressionHints(Annotations::InlineHint,
-                      payloadLen,
-                      [&](Function::CodeAnnotation& annotation) {
-                        auto size = getU32LEB();
-                        if (size != 1) {
-                          throwError("bad InlineHint size");
-                        }
+  readExpressionHints(
+    Annotations::InlineHint, payloadLen, [&](CodeAnnotation& annotation) {
+      auto size = getU32LEB();
+      if (size != 1) {
+        throwError("bad InlineHint size");
+      }
 
-                        uint8_t inline_ = getInt8();
-                        if (inline_ > 127) {
-                          throwError("bad InlineHint value");
-                        }
+      uint8_t inline_ = getInt8();
+      if (inline_ > 127) {
+        throwError("bad InlineHint value");
+      }
 
-                        annotation.inline_ = inline_;
-                      });
+      annotation.inline_ = inline_;
+    });
 }
 
 std::tuple<Address, Address, Index, MemoryOrder>
