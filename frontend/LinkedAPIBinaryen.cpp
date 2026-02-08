@@ -459,33 +459,37 @@ uint64_t BinaryenRefFuncForLink(uint64_t module, uint64_t func, uint64_t type, [
                                                     static_cast<BinaryenType>(type)));
 }
 uint64_t BinaryenAtomicLoadForLink(uint64_t module, uint32_t bytes, uint32_t offset, uint64_t type, uint64_t ptr,
-                                   uint64_t memoryName, [[maybe_unused]] vb::WasmModule *ctx) {
+                                   uint64_t memoryName, uint32_t order, [[maybe_unused]] vb::WasmModule *ctx) {
   return reinterpret_cast<uint64_t>(
       BinaryenAtomicLoad(reinterpret_cast<BinaryenModuleRef>(module), bytes, offset, static_cast<BinaryenType>(type),
-                         reinterpret_cast<BinaryenExpressionRef>(ptr), reinterpret_cast<const char *>(memoryName)));
+                         reinterpret_cast<BinaryenExpressionRef>(ptr), reinterpret_cast<const char *>(memoryName),
+                         static_cast<BinaryenMemoryOrder>(order)));
 }
 uint64_t BinaryenAtomicStoreForLink(uint64_t module, uint32_t bytes, uint32_t offset, uint64_t ptr, uint64_t value,
-                                    uint64_t type, uint64_t memoryName, [[maybe_unused]] vb::WasmModule *ctx) {
-  return reinterpret_cast<uint64_t>(
-      BinaryenAtomicStore(reinterpret_cast<BinaryenModuleRef>(module), bytes, offset,
-                          reinterpret_cast<BinaryenExpressionRef>(ptr), reinterpret_cast<BinaryenExpressionRef>(value),
-                          static_cast<BinaryenType>(type), reinterpret_cast<const char *>(memoryName)));
+                                    uint64_t type, uint64_t memoryName, uint32_t order,
+                                    [[maybe_unused]] vb::WasmModule *ctx) {
+  return reinterpret_cast<uint64_t>(BinaryenAtomicStore(
+      reinterpret_cast<BinaryenModuleRef>(module), bytes, offset, reinterpret_cast<BinaryenExpressionRef>(ptr),
+      reinterpret_cast<BinaryenExpressionRef>(value), static_cast<BinaryenType>(type),
+      reinterpret_cast<const char *>(memoryName), static_cast<BinaryenMemoryOrder>(order)));
 }
 uint64_t BinaryenAtomicRMWForLink(uint64_t module, uint32_t op, uint32_t bytes, uint32_t offset, uint64_t ptr,
-                                  uint64_t value, uint64_t type, uint64_t memoryName,
+                                  uint64_t value, uint64_t type, uint64_t memoryName, uint32_t order,
                                   [[maybe_unused]] vb::WasmModule *ctx) {
   return reinterpret_cast<uint64_t>(
       BinaryenAtomicRMW(reinterpret_cast<BinaryenModuleRef>(module), static_cast<BinaryenOp>(op), bytes, offset,
                         reinterpret_cast<BinaryenExpressionRef>(ptr), reinterpret_cast<BinaryenExpressionRef>(value),
-                        static_cast<BinaryenType>(type), reinterpret_cast<const char *>(memoryName)));
+                        static_cast<BinaryenType>(type), reinterpret_cast<const char *>(memoryName),
+                        static_cast<BinaryenMemoryOrder>(order)));
 }
 uint64_t BinaryenAtomicCmpxchgForLink(uint64_t module, uint32_t bytes, uint32_t offset, uint64_t ptr, uint64_t expected,
-                                      uint64_t replacement, uint64_t type, uint64_t memoryName,
+                                      uint64_t replacement, uint64_t type, uint64_t memoryName, uint32_t order,
                                       [[maybe_unused]] vb::WasmModule *ctx) {
   return reinterpret_cast<uint64_t>(BinaryenAtomicCmpxchg(
       reinterpret_cast<BinaryenModuleRef>(module), bytes, offset, reinterpret_cast<BinaryenExpressionRef>(ptr),
       reinterpret_cast<BinaryenExpressionRef>(expected), reinterpret_cast<BinaryenExpressionRef>(replacement),
-      static_cast<BinaryenType>(type), reinterpret_cast<const char *>(memoryName)));
+      static_cast<BinaryenType>(type), reinterpret_cast<const char *>(memoryName),
+      static_cast<BinaryenMemoryOrder>(order)));
 }
 uint64_t BinaryenAtomicWaitForLink(uint64_t module, uint64_t ptr, uint64_t expected, uint64_t timeout, uint64_t type,
                                    uint64_t memoryName, [[maybe_unused]] vb::WasmModule *ctx) {

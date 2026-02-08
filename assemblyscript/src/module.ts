@@ -204,6 +204,13 @@ export const enum FeatureFlags {
   All = 4194303 /* _BinaryenFeatureAll */,
 }
 
+/** Binaryen memory order constants. */
+export const enum MemoryOrder {
+  Unordered = 0 /* BinaryenMemoryOrderUnordered */,
+  SeqCst = 1 /* BinaryenMemoryOrderSeqCst */,
+  AcqRel = 2 /* BinaryenMemoryOrderAcqRel */,
+}
+
 /** Binaryen expression id constants. See wasm-delegations.def in Binaryen. */
 export const enum ExpressionId {
   Invalid = 0 /* _BinaryenInvalidId */,
@@ -1600,10 +1607,11 @@ export class Module {
     ptr: ExpressionRef,
     type: TypeRef,
     offset: Index = 0,
-    name: string = CommonNames.DefaultMemory
+    name: string = CommonNames.DefaultMemory,
+    order: MemoryOrder = MemoryOrder.SeqCst
   ): ExpressionRef {
     let cStr = this.allocStringCached(name);
-    return binaryen._BinaryenAtomicLoad(this.ref, bytes, offset, type, ptr, cStr);
+    return binaryen._BinaryenAtomicLoad(this.ref, bytes, offset, type, ptr, cStr, order as u8);
   }
 
   atomic_store(
@@ -1612,10 +1620,11 @@ export class Module {
     value: ExpressionRef,
     type: TypeRef,
     offset: Index = 0,
-    name: string = CommonNames.DefaultMemory
+    name: string = CommonNames.DefaultMemory,
+    order: MemoryOrder = MemoryOrder.SeqCst
   ): ExpressionRef {
     let cStr = this.allocStringCached(name);
-    return binaryen._BinaryenAtomicStore(this.ref, bytes, offset, ptr, value, type, cStr);
+    return binaryen._BinaryenAtomicStore(this.ref, bytes, offset, ptr, value, type, cStr, order as u8);
   }
 
   atomic_rmw(
@@ -1625,10 +1634,11 @@ export class Module {
     ptr: ExpressionRef,
     value: ExpressionRef,
     type: TypeRef,
-    name: string = CommonNames.DefaultMemory
+    name: string = CommonNames.DefaultMemory,
+    order: MemoryOrder = MemoryOrder.SeqCst
   ): ExpressionRef {
     let cStr = this.allocStringCached(name);
-    return binaryen._BinaryenAtomicRMW(this.ref, op, bytes, offset, ptr, value, type, cStr);
+    return binaryen._BinaryenAtomicRMW(this.ref, op, bytes, offset, ptr, value, type, cStr, order as u8);
   }
 
   atomic_cmpxchg(
@@ -1638,10 +1648,21 @@ export class Module {
     expected: ExpressionRef,
     replacement: ExpressionRef,
     type: TypeRef,
-    name: string = CommonNames.DefaultMemory
+    name: string = CommonNames.DefaultMemory,
+    order: MemoryOrder = MemoryOrder.SeqCst
   ): ExpressionRef {
     let cStr = this.allocStringCached(name);
-    return binaryen._BinaryenAtomicCmpxchg(this.ref, bytes, offset, ptr, expected, replacement, type, cStr);
+    return binaryen._BinaryenAtomicCmpxchg(
+      this.ref,
+      bytes,
+      offset,
+      ptr,
+      expected,
+      replacement,
+      type,
+      cStr,
+      order as u8
+    );
   }
 
   atomic_wait(

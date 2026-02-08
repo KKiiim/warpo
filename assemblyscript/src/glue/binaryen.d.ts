@@ -316,7 +316,8 @@ export declare function _BinaryenAtomicLoad(
   offset: Index,
   type: TypeRef,
   ptrExpr: ExpressionRef,
-  memoryName: StringRef
+  memoryName: StringRef,
+  order: u8
 ): ExpressionRef;
 
 export declare function _BinaryenStore(
@@ -351,7 +352,8 @@ export declare function _BinaryenAtomicStore(
   ptrExpr: ExpressionRef,
   valueExpr: ExpressionRef,
   type: TypeRef,
-  memoryName: StringRef
+  memoryName: StringRef,
+  order: u8
 ): ExpressionRef;
 
 export declare function _BinaryenConst(module: ModuleRef, value: LiteralRef): ExpressionRef;
@@ -420,7 +422,8 @@ export declare function _BinaryenAtomicRMW(
   ptrExpr: ExpressionRef,
   valueExpr: ExpressionRef,
   type: TypeRef,
-  memoryName: StringRef
+  memoryName: StringRef,
+  order: u8
 ): ExpressionRef;
 export declare function _BinaryenAtomicRMWGetOp(expr: ExpressionRef): Op;
 export declare function _BinaryenAtomicRMWSetOp(expr: ExpressionRef, op: Op): void;
@@ -441,7 +444,8 @@ export declare function _BinaryenAtomicCmpxchg(
   expectedExpr: ExpressionRef,
   replacementExpr: ExpressionRef,
   type: TypeRef,
-  memoryName: StringRef
+  memoryName: StringRef,
+  order: u8
 ): ExpressionRef;
 export declare function _BinaryenAtomicCmpxchgGetBytes(expr: ExpressionRef): u32;
 export declare function _BinaryenAtomicCmpxchgSetBytes(expr: ExpressionRef, bytes: u32): void;
