@@ -5,6 +5,7 @@
 #include <binaryen-c.h>
 #include <sstream>
 #include <string_view>
+#include <utility>
 #include <wasm-type.h>
 #include <wasm.h>
 
@@ -72,3 +73,160 @@ void MockInstrumentationWalker::mockWalk() noexcept {
 }
 
 } // namespace warpo::passes::instrumentation
+
+#ifdef WARPO_ENABLE_UNIT_TESTS
+
+#include <gtest/gtest.h>
+
+#include "../Runner.hpp"
+#include "../helper/Matcher.hpp"
+
+namespace warpo::passes::instrumentation::ut {
+
+TEST(MockInstrumentationWalkerTest, CollectsExpectInfo) {
+  auto m = loadWat(R"(
+    (module
+      (func $Function<test>#equal (param i32 i32) (result i32)
+        local.get 0
+        local.get 1
+        i32.sub
+      )
+      (func $expectCaller (param i32 i32) (result i32)
+        local.get 0
+        local.get 1
+        call $Function<test>#equal
+      )
+    )
+  )");
+
+  wasm::Function *const expectCaller = m->getFunction("expectCaller");
+  wasm::Call *const expectCall = expectCaller->body->cast<wasm::Call>();
+
+  m->debugInfoFileNames.emplace_back("expect.ts");
+  wasm::Function::DebugLocation loc{};
+  loc.fileIndex = 0;
+  loc.lineNumber = 12;
+  loc.columnNumber = 3;
+  expectCaller->debugLocations.emplace(expectCall, loc);
+
+  MockInstrumentationWalker walker(m.get());
+  walker.mockWalk();
+
+  EXPECT_NE(m->getFunctionOrNull(checkMockInternalFunctionName), nullptr);
+
+  const auto &expectInfos = walker.getExpectInfos();
+  ASSERT_EQ(expectInfos.size(), 1U);
+  auto infoIt = expectInfos.find(0U);
+  ASSERT_NE(infoIt, expectInfos.end());
+  EXPECT_EQ(infoIt->second, "expect.ts:12:3");
+}
+
+TEST(MockInstrumentationWalkerTest, RewritesExpectCallOperand) {
+  auto m = loadWat(R"(
+    (module
+      (func $Function<test>#equal (param i32 i32) (result i32)
+        local.get 0
+        local.get 1
+        i32.sub
+      )
+      (func $expectCaller (param i32 i32) (result i32)
+        local.get 0
+        local.get 1
+        call $Function<test>#equal
+      )
+    )
+  )");
+
+  wasm::Function *const expectCaller = m->getFunction("expectCaller");
+  wasm::Call *const expectCall = expectCaller->body->cast<wasm::Call>();
+
+  MockInstrumentationWalker walker(m.get());
+  walker.mockWalk();
+
+  using namespace matcher;
+  auto expectCallMatch = isCall(call::callee("Function<test>#equal"), call::operands(allOf({
+                                                                          has(2),
+                                                                          at(0, isLocalGet()),
+                                                                          at(1, isConst(const_::v(wasm::Literal(0)))),
+                                                                      })));
+  isMatched(expectCallMatch, expectCall);
+}
+
+TEST(MockInstrumentationWalkerTest, MocksDirectCalls) {
+  auto m = loadWat(R"(
+    (module
+      (type $t0 (func (param i32 i32) (result i32)))
+      (table $tbl 2 funcref)
+      (elem (i32.const 0) $mocked)
+      (func $mocked (param i32 i32) (result i32)
+        local.get 0
+        local.get 1
+        i32.add
+      )
+      (func $caller (param i32 i32) (result i32)
+        local.get 0
+        local.get 1
+        call $mocked
+      )
+    )
+  )");
+
+  MockInstrumentationWalker walker(m.get());
+  walker.mockWalk();
+
+  EXPECT_NE(m->getFunctionOrNull(checkMockInternalFunctionName), nullptr);
+
+  using namespace matcher;
+  auto checkMockCall =
+      isCall(call::callee(checkMockInternalFunctionName), call::operands(allOf({
+                                                              has(2),
+                                                              at(0, isConst(const_::v(wasm::Literal(1)))),
+                                                              at(1, isConst(const_::v(wasm::Literal(1)))),
+                                                          })));
+  auto conditionMatch = isBinary(binary::op(wasm::BinaryOp::NeInt32),
+                                 binary::lhs(isLocalSet(local_set::tee(), local_set::v(std::move(checkMockCall)))),
+                                 binary::rhs(isConst(const_::v(wasm::Literal(-1)))));
+  auto mockIfMatch = isIf(_if::condition(std::move(conditionMatch)),
+                          _if::ifTrue(isCallIndirect(call_indirect::table("tbl"), call_indirect::target(isLocalGet()),
+                                                     call_indirect::operands(has(2)))),
+                          _if::ifFalse(isCall(call::callee("mocked"))));
+
+  wasm::Function *const caller = m->getFunction("caller");
+  isMatched(mockIfMatch, caller->body);
+}
+
+TEST(MockInstrumentationWalkerTest, RewritesIndirectCallTarget) {
+  auto m = loadWat(R"(
+    (module
+      (type $t0 (func (param i32 i32) (result i32)))
+      (table $tbl 2 funcref)
+      (elem (i32.const 0) $mocked)
+      (func $mocked (param i32 i32) (result i32)
+        local.get 0
+        local.get 1
+        i32.add
+      )
+      (func $indirectCaller (param i32 i32 i32) (result i32)
+        local.get 0
+        local.get 1
+        local.get 2
+        call_indirect (type $t0)
+      )
+    )
+  )");
+
+  MockInstrumentationWalker walker(m.get());
+  walker.mockWalk();
+
+  using namespace matcher;
+  wasm::Function *const indirectCaller = m->getFunction("indirectCaller");
+  auto indirectTargetMatch = isCall(call::callee(checkMockInternalFunctionName),
+                                    call::operands(allOf({has(2), at(0, isLocalGet(local_get::index(2))),
+                                                          at(1, isConst(const_::v(wasm::Literal(0))))})));
+  auto indirectCallMatch = isCallIndirect(call_indirect::target(std::move(indirectTargetMatch)));
+  isMatched(indirectCallMatch, indirectCaller->body);
+}
+
+} // namespace warpo::passes::instrumentation::ut
+
+#endif
