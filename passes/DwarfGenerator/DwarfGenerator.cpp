@@ -87,8 +87,7 @@ private:
 
 llvm::StringMap<std::unique_ptr<llvm::MemoryBuffer>>
 
-DwarfGenerator::generateDebugSections(VariableInfo const &variableInfo,
-                                      std::unordered_map<wasm::Expression *, size_t *> const &expressionOffsets) {
+DwarfGenerator::generateDebugSections(VariableInfo const &variableInfo, wasm::BinaryLocations const &binaryLocations) {
   VariableInfo::ClassRegistry const &classRegistry = variableInfo.getClassRegistry();
   VariableInfo::GlobalTypes const &globalTypes = variableInfo.getGlobalTypes();
   VariableInfo::BaseTypeRegistry const &baseTypeRegistry = variableInfo.getBaseTypeRegistry();
@@ -378,7 +377,7 @@ DwarfGenerator::generateDebugSections(VariableInfo const &variableInfo,
     SubProgramRegistry const &memberFunctions = classInfo.getSubProgramRegistry();
     std::deque<SubProgramInfo> const &memberFunctionList = memberFunctions.getList();
     for (SubProgramInfo const &subProgram : memberFunctionList) {
-      addSubProgramWithParameters(subProgram, rootUnit, abbrevCodes, expressionOffsets, typeRefFixups);
+      addSubProgramWithParameters(subProgram, rootUnit, abbrevCodes, binaryLocations, typeRefFixups);
     }
 
     // Add terminator for class children
@@ -414,7 +413,7 @@ DwarfGenerator::generateDebugSections(VariableInfo const &variableInfo,
   SubProgramRegistry const &globalFunctions = variableInfo.getSubProgramRegistry();
   std::deque<SubProgramInfo> const &globalFunctionList = globalFunctions.getList();
   for (SubProgramInfo const &subProgram : globalFunctionList) {
-    addSubProgramWithParameters(subProgram, rootUnit, abbrevCodes, expressionOffsets, typeRefFixups);
+    addSubProgramWithParameters(subProgram, rootUnit, abbrevCodes, binaryLocations, typeRefFixups);
   }
 
   compileUnits.push_back(rootUnit);
@@ -460,10 +459,10 @@ std::string DwarfGenerator::dumpDwarf(llvm::StringMap<std::unique_ptr<llvm::Memo
   return dumpOutput;
 }
 
-void DwarfGenerator::addSubProgramWithParameters(
-    SubProgramInfo const &subProgram, llvm::DWARFYAML::Unit &rootUnit, DwarfGenerator::AbbrevCodes const &abbrevCodes,
-    std::unordered_map<wasm::Expression *, size_t *> const &expressionOffsets,
-    std::vector<TypeRefFixup> &typeRefFixups) {
+void DwarfGenerator::addSubProgramWithParameters(SubProgramInfo const &subProgram, llvm::DWARFYAML::Unit &rootUnit,
+                                                 DwarfGenerator::AbbrevCodes const &abbrevCodes,
+                                                 wasm::BinaryLocations const &binaryLocations,
+                                                 std::vector<TypeRefFixup> &typeRefFixups) {
   llvm::DWARFYAML::Entry subprogramEntry;
   subprogramEntry.AbbrCode = abbrevCodes.subprogram;
 
@@ -512,7 +511,7 @@ void DwarfGenerator::addSubProgramWithParameters(
     for (std::pair<SubProgramInfo::ScopeId const, ScopeInfo> const &scopeEntry : scopeInfoMap) {
       SubProgramInfo::ScopeId const scopeId = scopeEntry.first;
       ScopeInfo const &scopeInfo = scopeEntry.second;
-      wasm::BinaryLocations::Span const span = getRangeOfScope(scopeInfo, expressionOffsets);
+      wasm::BinaryLocations::Span const span = getRangeOfScope(scopeInfo, binaryLocations);
       intervals.emplace_back(span, scopeId);
     }
 
