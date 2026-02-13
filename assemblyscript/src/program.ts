@@ -77,6 +77,7 @@ import {
   IPropertyName,
   ComputedPropertyName,
 } from "./ast";
+import { IVisitor } from "./ast/visitor";
 
 import { Module, ExpressionRef, FunctionRef, MemorySegment, getFunctionName, TypeRef } from "./module";
 
@@ -4127,6 +4128,7 @@ export class CompiledNameNode extends Node {
   ) {
     super(NodeKind.Compiled, range);
   }
+  accept(_visitor: IVisitor): void {}
   static fromComputedPropertyName(computedPropertyName: ComputedPropertyName, lookupName: string): CompiledNameNode {
     return new CompiledNameNode(CompiledNameKind.ComputedPropertyName, lookupName, computedPropertyName.range);
   }
